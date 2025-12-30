@@ -5,11 +5,22 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  redirect,
 } from "react-router";
 
 import type { Route } from "./+types/root";
 import "./app.css";
 import Providers from "./providers";
+import { shadcn } from "@clerk/themes";
+import { clerkMiddleware, rootAuthLoader } from "@clerk/react-router/server";
+import {
+  ClerkProvider,
+  SignedIn,
+  SignedOut,
+  UserButton,
+  SignInButton,
+} from "@clerk/react-router";
+import { locales } from "intlayer";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -23,6 +34,54 @@ export const links: Route.LinksFunction = () => [
     href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
 ];
+
+export const middleware: Route.MiddlewareFunction[] = [clerkMiddleware()];
+
+function getLocalizedPathFromPathname(pathname: string, targetPath: string) {
+  if (!targetPath.startsWith("/")) {
+    throw new Error("pathname must start with '/'");
+  }
+
+  const [, maybeLocale] = pathname.split("/");
+  const locale = locales.find((value) => value === maybeLocale);
+
+  return locale ? `/${locale}${targetPath}` : targetPath;
+}
+
+function isPublicAuthPath(pathname: string) {
+  const normalizedPathname = pathname.replace(/\/+$/, "");
+  const authSegmentPattern = /(^|\/)(sign-in|sign-up)(\/|$)/;
+
+  return authSegmentPattern.test(normalizedPathname);
+}
+
+function isOnboardingPath(pathname: string) {
+  const normalizedPathname = pathname.replace(/\/+$/, "");
+  const onboardingSegmentPattern = /(^|\/)onboarding(\/|$)/;
+
+  return onboardingSegmentPattern.test(normalizedPathname);
+}
+
+export const loader = (args: Route.LoaderArgs) =>
+  rootAuthLoader(args, async (loaderArgs) => {
+    const { pathname } = new URL(loaderArgs.request.url);
+    const { auth } = loaderArgs.request;
+
+    if (auth.userId) {
+      const onboardingComplete =
+        auth.sessionClaims?.metadata?.onboardingComplete === true;
+
+      if (
+        !onboardingComplete &&
+        !isOnboardingPath(pathname) &&
+        !isPublicAuthPath(pathname)
+      ) {
+        throw redirect(getLocalizedPathFromPathname(pathname, "/onboarding"));
+      }
+    }
+
+    return null;
+  });
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -42,13 +101,43 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function App() {
+export default function App({ loaderData }: Route.ComponentProps) {
   return (
-    <Providers>
+    <ClerkProvider
+      loaderData={loaderData}
+      appearance={{
+        theme: shadcn,
+        variables: {
+          colorBackground: "white",
+        },
+        layout: {
+          privacyPageUrl: "https://clerk.com/privacy",
+          termsPageUrl: "https://clerk.com/legal/privacy",
+          unsafe_disableDevelopmentModeWarnings: true,
+          socialButtonsPlacement: "bottom",
+          socialButtonsVariant: "iconButton",
+          logoPlacement: "outside",
+        },
+      }}
+    >
       <main className="h-dvh flex flex-col">
-        <Outlet />
+        <header className="flex items-center justify-center py-8 px-4">
+          {/* Show the sign-in button when the user is signed out */}
+          <SignedOut>
+            <SignInButton />
+          </SignedOut>
+          {/* Show the user button when the user is signed in */}
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
+        </header>
+        <Providers>
+          <main className="grow">
+            <Outlet />
+          </main>
+        </Providers>
       </main>
-    </Providers>
+    </ClerkProvider>
   );
 }
 
