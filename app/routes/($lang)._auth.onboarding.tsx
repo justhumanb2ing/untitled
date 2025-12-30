@@ -1,7 +1,9 @@
 import { clerkClient, getAuth } from "@clerk/react-router/server";
-import { Form, redirect } from "react-router";
+import { Form, redirect, useNavigation } from "react-router";
 
 import type { Route } from "./+types/($lang)._auth.onboarding";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
 function getLocalizedPath(lang: string | undefined, pathname: string) {
   if (!pathname.startsWith("/")) {
@@ -18,7 +20,7 @@ export async function action(args: Route.ActionArgs) {
 
   const clerk = clerkClient(args);
 
-  await clerk.users.updateUserMetadata(auth.userId, {
+  await clerk.users.updateUser(auth.userId, {
     publicMetadata: {
       onboardingComplete: true,
     },
@@ -28,12 +30,29 @@ export async function action(args: Route.ActionArgs) {
 }
 
 export default function OnboardingRoute() {
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state !== "idle";
+
   return (
     <main>
       <h1>Onboarding</h1>
       <p>Finish onboarding to continue.</p>
       <Form method="post">
-        <button type="submit">Complete onboarding</button>
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          aria-busy={isSubmitting}
+          data-icon={isSubmitting ? "inline-start" : undefined}
+        >
+          {isSubmitting ? (
+            <>
+              <Spinner />
+              Completing...
+            </>
+          ) : (
+            "Complete onboarding"
+          )}
+        </Button>
       </Form>
     </main>
   );

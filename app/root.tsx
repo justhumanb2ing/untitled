@@ -12,7 +12,11 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import Providers from "./providers";
 import { shadcn } from "@clerk/themes";
-import { clerkMiddleware, rootAuthLoader } from "@clerk/react-router/server";
+import {
+  clerkClient,
+  clerkMiddleware,
+  rootAuthLoader,
+} from "@clerk/react-router/server";
 import {
   ClerkProvider,
   SignedIn,
@@ -68,16 +72,25 @@ export const loader = (args: Route.LoaderArgs) =>
     const { auth } = loaderArgs.request;
 
     if (auth.userId) {
+      if (isOnboardingPath(pathname) || isPublicAuthPath(pathname)) {
+        return null;
+      }
+
       const onboardingComplete =
         auth.sessionClaims?.metadata?.onboardingComplete === true;
 
-      if (
-        !onboardingComplete &&
-        !isOnboardingPath(pathname) &&
-        !isPublicAuthPath(pathname)
-      ) {
-        throw redirect(getLocalizedPathFromPathname(pathname, "/onboarding"));
+      if (!onboardingComplete) {
+        const clerk = clerkClient(loaderArgs);
+        const user = await clerk.users.getUser(auth.userId);
+        const hasOnboardingComplete =
+          user.publicMetadata?.onboardingComplete === true;
+
+        if (!hasOnboardingComplete) {
+          throw redirect(getLocalizedPathFromPathname(pathname, "/onboarding"));
+        }
       }
+
+      return null;
     }
 
     return null;
