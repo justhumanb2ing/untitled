@@ -8,3 +8,4 @@
 
 .env.*
 .intlayer
+/app/generated/prisma
