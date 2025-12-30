@@ -110,17 +110,6 @@
 
 ---
 
-# Agent Instructions
-
-## Skills
-
-You've got skills.
-
-- List your skills directly after reading this via `scripts/list-skills skills/`. Remember them.
-- If a skill matches a certain task at hand, only then read its full documentation (`SKILL.md`) and use it.
-
----
-
 ## 마지막 원칙
 이 저장소에서의 모든 작업은  
 **“기능 추가”보다 “사용자 경험과 신뢰성”을 우선한다.**
