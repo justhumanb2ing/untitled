@@ -6,6 +6,7 @@ import { getSupabaseServerClient } from "@/lib/supabase";
 import { SealCheckIcon } from "@phosphor-icons/react";
 import VisibilityToggle from "@/components/visibility-toggle";
 import { OwnerGate } from "@/components/owner-gate";
+import LogoutButton from "@/components/logout-button";
 
 export async function loader(args: Route.LoaderArgs) {
   const { userId } = await getAuth(args);
@@ -69,6 +70,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
       <OwnerGate isOwner={isOwner}>
         <VisibilityToggle pageId={page.id} isPublic={page.is_public} />
       </OwnerGate>
+      <LogoutButton />
     </div>
   );
 }
