@@ -15,6 +15,7 @@
     "@clerk/react-router": "^2.3.7",
     "@clerk/themes": "^2.4.46",
     "@fontsource/pretendard": "^5.2.5",
+    "@hookform/resolvers": "^5.2.2",
     "@phosphor-icons/react": "^2.1.10",
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
@@ -34,11 +35,13 @@
     "radix-ui": "^1.4.3",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
+    "react-hook-form": "^7.69.0",
     "react-intlayer": "^7.5.7",
     "react-router": "7.10.1",
     "shadcn": "^3.6.2",
     "tailwind-merge": "^3.4.0",
-    "vaul": "^1.1.2"
+    "vaul": "^1.1.2",
+    "zod": "^4.3.0"
   },
   "devDependencies": {
     "@react-router/dev": "7.10.1",
