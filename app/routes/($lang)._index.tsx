@@ -1,6 +1,5 @@
 import LocaleSwitcher from "@/components/locale-switcher";
 import type { Route } from "./+types/($lang)._index";
-import { Link } from "react-router";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -14,7 +13,6 @@ export default function Home() {
     <div>
       <nav>
         <LocaleSwitcher />
-        <Link to={"/test"}>Test Route</Link>
       </nav>
     </div>
   );

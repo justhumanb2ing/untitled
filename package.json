@@ -7,7 +7,8 @@
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "gentype": "supabase gen types typescript --project-id mkkwldxodlabuyerxslb > types/database.types.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
@@ -30,6 +31,7 @@
     "lucide-react": "^0.562.0",
     "motion": "^12.23.26",
     "pg": "^8.16.3",
+    "radix-ui": "^1.4.3",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-intlayer": "^7.5.7",
