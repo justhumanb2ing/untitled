@@ -1,6 +1,6 @@
-import { ArrowsLeftRightIcon, CheckIcon } from "@phosphor-icons/react";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowsLeftRightIcon, CheckIcon } from "@phosphor-icons/react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -17,10 +17,9 @@ import {
 import { Input } from "./ui/input";
 import {
   Popover,
-  PopoverContent,
   PopoverDescription,
-  PopoverHeader,
   PopoverTitle,
+  PopoverPanel,
   PopoverTrigger,
 } from "./ui/popover";
 import { Spinner } from "./ui/spinner";
@@ -150,7 +149,9 @@ export default function ChangeHandleFormPopover({
     const sanitizedHandle = form.getValues("handle");
 
     try {
-      const { error } = await (await supabase)
+      const { error } = await (
+        await supabase
+      )
         .from("pages")
         .update({ handle: `@${sanitizedHandle}` })
         .eq("handle", handle);
@@ -210,17 +211,20 @@ export default function ChangeHandleFormPopover({
           <p>Change Handle</p>
         </TooltipContent>
       </Tooltip>
-      <PopoverContent
+      <PopoverPanel
         side="bottom"
         sideOffset={12}
+        transition={{
+          type: "spring",
+          stiffness: 260,
+          damping: 28,
+        }}
         className="w-84 rounded-3xl p-6 gap-0 ring-secondary"
       >
-        <PopoverHeader>
-          <PopoverTitle>Change handle</PopoverTitle>
-          <PopoverDescription>
-            Choose a unique handle for your page.
-          </PopoverDescription>
-        </PopoverHeader>
+        <PopoverTitle className={'font-medium'}>Change handle</PopoverTitle>
+        <PopoverDescription className={'text-muted-foreground text-sm'}>
+          Choose a unique handle for your page.
+        </PopoverDescription>
         <RhfForm {...form}>
           <form className="space-y-3" onSubmit={submitHandleChange}>
             <FormField
@@ -285,7 +289,7 @@ export default function ChangeHandleFormPopover({
             </Button>
           </form>
         </RhfForm>
-      </PopoverContent>
+      </PopoverPanel>
     </Popover>
   );
 }
