@@ -6,6 +6,7 @@ import {
   Scripts,
   ScrollRestoration,
   redirect,
+  useNavigation,
 } from "react-router";
 
 import type { Route } from "./+types/root";
@@ -19,6 +20,7 @@ import {
 } from "@clerk/react-router/server";
 import { ClerkProvider } from "@clerk/react-router";
 import { locales } from "intlayer";
+import { Spinner } from "./components/ui/spinner";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -91,6 +93,9 @@ export const loader = (args: Route.LoaderArgs) =>
   });
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const navigation = useNavigation();
+  const isNavigating = Boolean(navigation.location);
+
   return (
     <html lang="en">
       <head>
@@ -99,7 +104,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className="relative">
+        {isNavigating && (
+          <Spinner className="size-8 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+        )}
         {children}
         <ScrollRestoration />
         <Scripts />
