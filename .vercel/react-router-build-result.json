@@ -1,0 +1,227 @@
+{
+  "buildManifest": {
+    "serverBundles": {
+      "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0": {
+        "id": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+        "file": "build/server/nodejs_eyJydW50aW1lIjoibm9kZWpzIn0/index.js",
+        "config": {
+          "runtime": "nodejs"
+        }
+      }
+    },
+    "routeIdToServerBundleId": {
+      "routes/($lang)._index": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/($lang)._auth": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/($lang)._auth.user.$handle.setting": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/($lang)._auth.user.$handle._index": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/($lang)._auth.onboarding": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/($lang)._auth.sign-in": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/($lang)._auth.sign-in.create.sso-callback": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0"
+    },
+    "routes": {
+      "root": {
+        "id": "root",
+        "file": "app/root.tsx",
+        "path": "",
+        "config": {}
+      },
+      "routes/($lang)._index": {
+        "id": "routes/($lang)._index",
+        "parentId": "root",
+        "file": "app/routes/($lang)._index.tsx",
+        "path": ":lang?",
+        "index": true,
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/($lang)._auth": {
+        "id": "routes/($lang)._auth",
+        "parentId": "root",
+        "file": "app/routes/($lang)._auth.tsx",
+        "path": ":lang?",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/($lang)._auth.user.$handle": {
+        "id": "routes/($lang)._auth.user.$handle",
+        "parentId": "routes/($lang)._auth",
+        "file": "app/routes/($lang)._auth.user.$handle.tsx",
+        "path": "user/:handle",
+        "config": {}
+      },
+      "routes/($lang)._auth.user.$handle.setting": {
+        "id": "routes/($lang)._auth.user.$handle.setting",
+        "parentId": "routes/($lang)._auth.user.$handle",
+        "file": "app/routes/($lang)._auth.user.$handle.setting.tsx",
+        "path": "setting",
+        "config": {}
+      },
+      "routes/($lang)._auth.user.$handle._index": {
+        "id": "routes/($lang)._auth.user.$handle._index",
+        "parentId": "routes/($lang)._auth.user.$handle",
+        "file": "app/routes/($lang)._auth.user.$handle._index.tsx",
+        "index": true,
+        "config": {}
+      },
+      "routes/($lang)._auth.onboarding": {
+        "id": "routes/($lang)._auth.onboarding",
+        "parentId": "routes/($lang)._auth",
+        "file": "app/routes/($lang)._auth.onboarding.tsx",
+        "path": "onboarding",
+        "config": {}
+      },
+      "routes/($lang)._auth.sign-in": {
+        "id": "routes/($lang)._auth.sign-in",
+        "parentId": "routes/($lang)._auth",
+        "file": "app/routes/($lang)._auth.sign-in.tsx",
+        "path": "sign-in",
+        "config": {}
+      },
+      "routes/($lang)._auth.sign-in.create.sso-callback": {
+        "id": "routes/($lang)._auth.sign-in.create.sso-callback",
+        "parentId": "routes/($lang)._auth.sign-in",
+        "file": "app/routes/($lang)._auth.sign-in.create.sso-callback.tsx",
+        "path": "create/sso-callback",
+        "config": {}
+      }
+    }
+  },
+  "reactRouterConfig": {
+    "appDirectory": "/Users/zentechie/Documents/KINMONGSANG/untitled/app",
+    "basename": "/",
+    "buildDirectory": "/Users/zentechie/Documents/KINMONGSANG/untitled/build",
+    "future": {
+      "unstable_optimizeDeps": false,
+      "unstable_subResourceIntegrity": false,
+      "v8_middleware": true,
+      "v8_splitRouteModules": false,
+      "v8_viteEnvironmentApi": false
+    },
+    "routes": {
+      "root": {
+        "id": "root",
+        "file": "root.tsx",
+        "path": ""
+      },
+      "routes/($lang)._index": {
+        "id": "routes/($lang)._index",
+        "parentId": "root",
+        "file": "routes/($lang)._index.tsx",
+        "path": ":lang?",
+        "index": true
+      },
+      "routes/($lang)._auth": {
+        "id": "routes/($lang)._auth",
+        "parentId": "root",
+        "file": "routes/($lang)._auth.tsx",
+        "path": ":lang?"
+      },
+      "routes/($lang)._auth.user.$handle": {
+        "id": "routes/($lang)._auth.user.$handle",
+        "parentId": "routes/($lang)._auth",
+        "file": "routes/($lang)._auth.user.$handle.tsx",
+        "path": "user/:handle"
+      },
+      "routes/($lang)._auth.user.$handle.setting": {
+        "id": "routes/($lang)._auth.user.$handle.setting",
+        "parentId": "routes/($lang)._auth.user.$handle",
+        "file": "routes/($lang)._auth.user.$handle.setting.tsx",
+        "path": "setting"
+      },
+      "routes/($lang)._auth.user.$handle._index": {
+        "id": "routes/($lang)._auth.user.$handle._index",
+        "parentId": "routes/($lang)._auth.user.$handle",
+        "file": "routes/($lang)._auth.user.$handle._index.tsx",
+        "index": true
+      },
+      "routes/($lang)._auth.onboarding": {
+        "id": "routes/($lang)._auth.onboarding",
+        "parentId": "routes/($lang)._auth",
+        "file": "routes/($lang)._auth.onboarding.tsx",
+        "path": "onboarding"
+      },
+      "routes/($lang)._auth.sign-in": {
+        "id": "routes/($lang)._auth.sign-in",
+        "parentId": "routes/($lang)._auth",
+        "file": "routes/($lang)._auth.sign-in.tsx",
+        "path": "sign-in"
+      },
+      "routes/($lang)._auth.sign-in.create.sso-callback": {
+        "id": "routes/($lang)._auth.sign-in.create.sso-callback",
+        "parentId": "routes/($lang)._auth.sign-in",
+        "file": "routes/($lang)._auth.sign-in.create.sso-callback.tsx",
+        "path": "create/sso-callback"
+      }
+    },
+    "routeDiscovery": {
+      "mode": "lazy",
+      "manifestPath": "/__manifest"
+    },
+    "serverBuildFile": "index.js",
+    "serverModuleFormat": "esm",
+    "ssr": true,
+    "unstable_routeConfig": [
+      {
+        "id": "root",
+        "path": "",
+        "file": "root.tsx",
+        "children": [
+          {
+            "id": "routes/($lang)._index",
+            "file": "routes/($lang)._index.tsx",
+            "path": ":lang?",
+            "index": true
+          },
+          {
+            "id": "routes/($lang)._auth",
+            "file": "routes/($lang)._auth.tsx",
+            "path": ":lang?",
+            "children": [
+              {
+                "id": "routes/($lang)._auth.user.$handle",
+                "file": "routes/($lang)._auth.user.$handle.tsx",
+                "path": "user/:handle",
+                "children": [
+                  {
+                    "id": "routes/($lang)._auth.user.$handle.setting",
+                    "file": "routes/($lang)._auth.user.$handle.setting.tsx",
+                    "path": "setting"
+                  },
+                  {
+                    "id": "routes/($lang)._auth.user.$handle._index",
+                    "file": "routes/($lang)._auth.user.$handle._index.tsx",
+                    "index": true
+                  }
+                ]
+              },
+              {
+                "id": "routes/($lang)._auth.onboarding",
+                "file": "routes/($lang)._auth.onboarding.tsx",
+                "path": "onboarding"
+              },
+              {
+                "id": "routes/($lang)._auth.sign-in",
+                "file": "routes/($lang)._auth.sign-in.tsx",
+                "path": "sign-in",
+                "children": [
+                  {
+                    "id": "routes/($lang)._auth.sign-in.create.sso-callback",
+                    "file": "routes/($lang)._auth.sign-in.create.sso-callback.tsx",
+                    "path": "create/sso-callback"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "viteConfig": {
+    "build": {
+      "assetsDir": "assets"
+    }
+  }
+}

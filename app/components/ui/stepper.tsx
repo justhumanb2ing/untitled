@@ -1,4 +1,4 @@
-"use client";
+;
 
 import { CheckIcon, LoaderCircleIcon } from "lucide-react";
 import { Slot } from "radix-ui";
