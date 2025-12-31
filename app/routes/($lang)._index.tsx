@@ -43,7 +43,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     <main>
       <header className="flex items-center justify-end mx-auto max-w-7xl py-4 gap-2 px-2">
         <SignedOut>
-          <Button render={<SignInButton />} />
+          <SignInButton>
+            <Button>Start for free</Button>
+          </SignInButton>
         </SignedOut>
         <SignedIn>
           <UserButton primaryHandle={primaryHandle} />
