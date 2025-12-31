@@ -1,11 +1,7 @@
-import {
-  ArrowsLeftRightIcon,
-  ChartBarIcon,
-  GearSixIcon,
-  HouseSimpleIcon,
-} from "@phosphor-icons/react";
+import { ChartBarIcon, GearSixIcon, HouseSimpleIcon } from "@phosphor-icons/react";
 import { useLocale } from "react-intlayer";
 import { NavLink, useParams } from "react-router";
+import ChangeHandleFormPopover from "./change-handle-form-popover";
 import { locacalizeTo } from "./localized-link";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
@@ -20,6 +16,7 @@ export default function BottomActionBar() {
 
   return (
     <div className="bg-muted/80 backdrop-blur-sm rounded-3xl p-1 flex items-center justify-between px-2 gap-1">
+      {/* Home Link Button */}
       <Tooltip>
         <TooltipTrigger
           render={
@@ -44,6 +41,8 @@ export default function BottomActionBar() {
           <p>Home</p>
         </TooltipContent>
       </Tooltip>
+
+      {/* Analytics Link Button */}
       <Tooltip>
         <TooltipTrigger
           render={
@@ -60,22 +59,9 @@ export default function BottomActionBar() {
           <p>Analytics (Comming Soon!)</p>
         </TooltipContent>
       </Tooltip>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              variant={"ghost"}
-              size={"icon-lg"}
-              className={"p-6 rounded-2xl"}
-            >
-              <ArrowsLeftRightIcon weight="regular" className="size-6" />
-            </Button>
-          }
-        />
-        <TooltipContent side="bottom" sideOffset={8}>
-          <p>Change Handle</p>
-        </TooltipContent>
-      </Tooltip>
+      <ChangeHandleFormPopover handle={handle} />
+
+      {/* Setting Link Button */}
       <Tooltip>
         <TooltipTrigger
           render={
@@ -93,7 +79,7 @@ export default function BottomActionBar() {
                   )}
                 </NavLink>
               }
-            ></Button>
+            />
           }
         />
         <TooltipContent side="bottom" sideOffset={8}>
