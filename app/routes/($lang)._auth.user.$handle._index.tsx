@@ -1,9 +1,11 @@
 import BottomActionBar from "@/components/bottom-action-bar";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { useParams } from "react-router";
 import type { Route } from "./+types/($lang)._auth.user.$handle._index";
 import { getAuth } from "@clerk/react-router/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
+import { SealCheckIcon } from "@phosphor-icons/react";
+import VisibilityToggle from "@/components/visibility-toggle";
+import { OwnerGate } from "@/components/owner-gate";
 
 export async function loader(args: Route.LoaderArgs) {
   const { userId } = await getAuth(args);
@@ -15,7 +17,7 @@ export async function loader(args: Route.LoaderArgs) {
 
   const supabase = await getSupabaseServerClient(args);
   const pageSelectQuery =
-    "owner_id, handle, title, description, image_url, is_public, is_primary";
+    "id, owner_id, handle, title, description, image_url, is_public, is_primary";
 
   const { data: page, error } = await supabase
     .from("pages")
@@ -31,32 +33,42 @@ export async function loader(args: Route.LoaderArgs) {
     throw new Response("Not Found", { status: 404 });
   }
 
-  if (!page.is_public && page.owner_id !== userId)
+  const isOwner = page.owner_id === userId;
+  if (!page.is_public && !isOwner)
     throw new Response("Not Found", { status: 404 });
 
-  return { page, handle };
+  return { page, handle, isOwner };
 }
 
 export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
-  const { page, handle } = loaderData;
+  const { page, handle, isOwner } = loaderData;
 
   return (
-    <div>
-      <p>Current User handle: {handle}</p>
-      <p>Page title: {page.title}</p>
-      <p>Page description: {page.description}</p>
-      <div className="relative aspect-square rounded-full overflow-hidden size-40">
+    <div className="flex flex-col gap-4 items-center">
+      <p className="flex items-center gap-1 bg-muted/80 rounded-lg p-2">
+        <SealCheckIcon className="fill-blue-500 size-5" weight="fill" />
+        {handle}
+      </p>
+      <div className="relative aspect-square rounded-full overflow-hidden size-40 ring-2 ring-accent">
         {page.image_url ? (
-          <img src={page.image_url} alt={handle} className="w-full h-full " />
+          <img src={page.image_url} alt={handle} className="w-full h-full" />
         ) : (
           <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
             {handle}
           </div>
         )}
       </div>
+      <p className="text-3xl tracking-wider font-bold">{page.title}</p>
+      <p className="text-lg">{page.description}</p>
 
-      <BottomActionBar />
+      <OwnerGate isOwner={isOwner}>
+        <BottomActionBar />
+      </OwnerGate>
+
       <ThemeToggle />
+      <OwnerGate isOwner={isOwner}>
+        <VisibilityToggle pageId={page.id} isPublic={page.is_public} />
+      </OwnerGate>
     </div>
   );
 }
