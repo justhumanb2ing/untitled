@@ -17,13 +17,7 @@ import {
   clerkMiddleware,
   rootAuthLoader,
 } from "@clerk/react-router/server";
-import {
-  ClerkProvider,
-  SignedIn,
-  SignedOut,
-  UserButton,
-  SignInButton,
-} from "@clerk/react-router";
+import { ClerkProvider } from "@clerk/react-router";
 import { locales } from "intlayer";
 
 export const links: Route.LinksFunction = () => [
@@ -134,16 +128,6 @@ export default function App({ loaderData }: Route.ComponentProps) {
       }}
     >
       <main className="h-dvh flex flex-col">
-        <header className="flex items-center justify-center py-8 px-4">
-          {/* Show the sign-in button when the user is signed out */}
-          <SignedOut>
-            <SignInButton />
-          </SignedOut>
-          {/* Show the user button when the user is signed in */}
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
-        </header>
         <Providers>
           <main className="grow">
             <Outlet />
