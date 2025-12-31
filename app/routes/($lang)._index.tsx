@@ -19,7 +19,7 @@ export async function loader(args: Route.LoaderArgs) {
   const { userId } = await getAuth(args);
 
   if (!userId) return { primaryHandle: null };
-  
+
   const supabase = await getSupabaseServerClient(args);
 
   const { data, error } = await supabase
@@ -50,7 +50,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         </SignedIn>
         <Separator orientation="vertical" />
         <nav className="flex items-center justify-end gap-2">
-          <ThemeToggle className="rounded-md p-2 hover:bg-muted dark:hover:bg-muted/50" />
+          <ThemeToggle />
           <LocaleSwitcher />
         </nav>
       </header>

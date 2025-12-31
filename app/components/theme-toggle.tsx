@@ -7,11 +7,13 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 interface ThemeTogglerProps extends React.ComponentPropsWithoutRef<"button"> {
   duration?: number;
+  iconSize?: string;
 }
 
 export const ThemeToggle = ({
   className,
   duration = 400,
+  iconSize,
   ...props
 }: ThemeTogglerProps) => {
   const [isDark, setIsDark] = useState(false);
@@ -76,10 +78,17 @@ export const ThemeToggle = ({
           <button
             ref={buttonRef}
             onClick={toggleTheme}
-            className={cn(className)}
+            className={cn(
+              "rounded-md p-2 hover:bg-muted dark:hover:bg-muted/50",
+              className
+            )}
             {...props}
           >
-            {isDark ? <SunDimIcon /> : <MoonStarsIcon />}
+            {isDark ? (
+              <SunDimIcon className={iconSize} />
+            ) : (
+              <MoonStarsIcon className={iconSize} />
+            )}
             <span className="sr-only">Toggle theme</span>
           </button>
         }
