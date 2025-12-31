@@ -1,5 +1,6 @@
 import LocaleSwitcher from "@/components/locale-switcher";
 import type { Route } from "./+types/($lang)._index";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -11,9 +12,12 @@ export function meta({}: Route.MetaArgs) {
 export default function Home() {
   return (
     <div>
-      <nav>
-        <LocaleSwitcher />
-      </nav>
+      <header>
+        <nav className="flex items-center justify-end gap-4">
+          <ThemeToggle className="rounded-md p-2 hover:bg-muted dark:hover:bg-muted/50" />
+          <LocaleSwitcher />
+        </nav>
+      </header>
     </div>
   );
 }

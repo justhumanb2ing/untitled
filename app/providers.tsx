@@ -6,6 +6,6 @@ export default function Providers({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   useI18nHTMLAttributes();
-  
+
   return <IntlayerProvider>{children}</IntlayerProvider>;
 }

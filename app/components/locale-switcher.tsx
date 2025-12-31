@@ -8,9 +8,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function LocaleSwitcher() {
-  const { localeLabel } = useIntlayer('locale');
+  const { localeLabel } = useIntlayer("locale");
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
@@ -19,7 +20,7 @@ export default function LocaleSwitcher() {
   const pathWithoutLocale = getPathWithoutLocale(pathname);
 
   return (
-    <nav aria-label={localeLabel.value} className="flex justify-end">
+    <Tooltip>
       <Select
         value={locale ?? null}
         onValueChange={(nextLocale) => {
@@ -29,20 +30,23 @@ export default function LocaleSwitcher() {
           navigate(getLocalizedUrl(pathWithoutLocale, nextLocale));
         }}
       >
-        <SelectTrigger
-          size="sm"
-          aria-label={localeLabel.value}
-          className={"border-none bg-background hover:bg-muted rounded-md"}
-        >
-          <SelectValue>
-            {(value) =>
-              typeof value === "string"
-                ? getLocaleName(value)
-                : localeLabel
-            }
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent align="end" sideOffset={12} className={"p-2 shadow-xs"}>
+        <TooltipTrigger
+          render={(props) => (
+            <SelectTrigger
+              {...props}
+              size="sm"
+              aria-label={localeLabel.value}
+              className={"border-none bg-background hover:bg-muted rounded-md"}
+            >
+              <SelectValue>
+                {(value) =>
+                  typeof value === "string" ? getLocaleName(value) : localeLabel
+                }
+              </SelectValue>
+            </SelectTrigger>
+          )}
+        />
+        <SelectContent side="bottom" className={"p-2 shadow-xs"}>
           {availableLocales.map((localeItem) => {
             const label = getLocaleName(localeItem);
 
@@ -58,6 +62,9 @@ export default function LocaleSwitcher() {
           })}
         </SelectContent>
       </Select>
-    </nav>
+      <TooltipContent side="bottom" sideOffset={12}>
+        Language
+      </TooltipContent>
+    </Tooltip>
   );
 }
