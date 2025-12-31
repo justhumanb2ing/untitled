@@ -1,9 +1,11 @@
 import { SignOutButton, useUser } from "@clerk/react-router";
+import { useLocation } from "react-router";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function LogoutButton() {
   const { isSignedIn } = useUser();
+  const location = useLocation();
 
   if (!isSignedIn) return null;
 
@@ -11,7 +13,9 @@ export default function LogoutButton() {
     <Tooltip>
       <TooltipTrigger
         render={
-          <SignOutButton>
+          <SignOutButton
+            redirectUrl={`${location.pathname}${location.search}${location.hash}`}
+          >
             <Button
               variant={"ghost"}
               size={"lg"}

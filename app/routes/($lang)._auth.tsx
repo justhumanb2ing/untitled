@@ -17,9 +17,16 @@ function isPublicAuthPath(pathname: string) {
   return authSegmentPattern.test(normalizedPathname);
 }
 
+function isPublicUserProfilePath(pathname: string) {
+  const normalizedPathname = pathname.replace(/\/+$/, "");
+  const userProfilePattern = /(^|\/)user\/[^/]+$/;
+
+  return userProfilePattern.test(normalizedPathname);
+}
+
 export async function loader(args: Route.LoaderArgs) {
   const { pathname } = new URL(args.request.url);
-  if (isPublicAuthPath(pathname)) {
+  if (isPublicAuthPath(pathname) || isPublicUserProfilePath(pathname)) {
     return null;
   }
 
