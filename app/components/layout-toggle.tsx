@@ -1,5 +1,11 @@
 import { DesktopIcon, DeviceMobileCameraIcon } from "@phosphor-icons/react";
 import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 
 interface LayoutToggleProps {
   isDesktop: boolean;
@@ -35,20 +41,38 @@ export default function LayoutToggle({
         "rounded-xl fixed bottom-4 right-4 bg-background/40 p-1 shadow-sm backdrop-blur-sm z-50"
       }
     >
-      <ToggleGroupItem
-        value={DESKTOP_VALUE}
-        aria-label="Desktop width"
-        className="p-5 rounded-lg aria-pressed:bg-black aria-pressed:text-white"
-      >
-        <DesktopIcon weight="bold" className="size-6" />
-      </ToggleGroupItem>
-      <ToggleGroupItem
-        value={MOBILE_VALUE}
-        aria-label="Mobile width"
-        className="p-5 rounded-lg aria-pressed:bg-black aria-pressed:text-white"
-      >
-        <DeviceMobileCameraIcon weight="bold" className="size-6" />
-      </ToggleGroupItem>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <ToggleGroupItem
+                value={DESKTOP_VALUE}
+                aria-label="Desktop width"
+                disabled={isDesktop}
+                className="p-5 rounded-lg aria-pressed:bg-foreground aria-pressed:text-background disabled:bg-transparent disabled:opacity-100 disabled:cursor-not-allowed"
+              >
+                <DesktopIcon weight="bold" className="size-6" />
+              </ToggleGroupItem>
+            }
+          />
+          <TooltipContent>Desktop layout</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <ToggleGroupItem
+                value={MOBILE_VALUE}
+                aria-label="Mobile width"
+                disabled={!isDesktop}
+                className="p-5 rounded-lg aria-pressed:bg-foreground aria-pressed:text-background disabled:bg-transparent disabled:opacity-100 disabled:cursor-not-allowed"
+              >
+                <DeviceMobileCameraIcon weight="bold" className="size-6" />
+              </ToggleGroupItem>
+            }
+          />
+          <TooltipContent>Mobile layout</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </ToggleGroup>
   );
 }
