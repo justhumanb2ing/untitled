@@ -86,7 +86,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
         />
       </div>
 
-      <section className="p-12 py-6 grow">Page Layout Section</section>
+      <section className="p-10 py-6 grow">Page Layout Section</section>
 
       <OwnerGate isOwner={isOwner}>
         <BottomActionBar />

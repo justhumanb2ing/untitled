@@ -9,6 +9,7 @@ interface UserButtonProps {
 
 export default function UserButton({ primaryHandle }: UserButtonProps) {
   const { user, isLoaded } = useUser();
+  const name = [user?.firstName, user?.lastName].filter(Boolean).join(" ");
 
   if (!isLoaded) return <Spinner />;
 
@@ -33,7 +34,7 @@ export default function UserButton({ primaryHandle }: UserButtonProps) {
           width={32}
         />
       </div>
-      <span>{user?.firstName + " " + user?.lastName}</span>
+      <span>{name}</span>
     </Button>
   );
 }
