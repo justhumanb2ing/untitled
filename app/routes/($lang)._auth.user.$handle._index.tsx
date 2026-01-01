@@ -1,3 +1,4 @@
+import { useState } from "react";
 import BottomActionBar from "@/components/bottom-action-bar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import type { Route } from "./+types/($lang)._auth.user.$handle._index";
@@ -8,6 +9,8 @@ import VisibilityToggle from "@/components/visibility-toggle";
 import { OwnerGate } from "@/components/owner-gate";
 import UserAuthButton from "@/components/user-auth-button";
 import ProfileHeaderEditor from "@/components/profile-header-editor";
+import { cn } from "@/lib/utils";
+import LayoutToggle from "@/components/layout-toggle";
 
 export async function loader(args: Route.LoaderArgs) {
   const { userId } = await getAuth(args);
@@ -44,9 +47,15 @@ export async function loader(args: Route.LoaderArgs) {
 
 export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
   const { page, handle, isOwner } = loaderData;
+  const [isDesktop, setIsDesktop] = useState(true);
 
   return (
-    <div className="flex flex-col gap-4 items-center">
+    <div
+      className={cn(
+        `h-full mx-auto flex flex-col container gap-4 transition-all duration-300 py-4`,
+        isDesktop ? "max-w-7xl" : "max-w-lg border p-4 rounded-4xl shadow-lg"
+      )}
+    >
       <p className="flex items-center gap-1 bg-muted/80 rounded-lg p-2">
         <SealCheckIcon className="fill-blue-500 size-5" weight="fill" />
         {handle}
@@ -68,6 +77,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
         <VisibilityToggle pageId={page.id} isPublic={page.is_public} />
       </OwnerGate>
       <UserAuthButton />
+      <LayoutToggle isDesktop={isDesktop} onToggle={setIsDesktop} />
     </div>
   );
 }
