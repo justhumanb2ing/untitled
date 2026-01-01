@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/form";
 import { Button } from "./ui/button";
 import EditableParagraph from "./editable-paragraph";
+import { usePageAutoSaveActions } from "@/components/page-auto-save-controller";
+import { usePageImageUploader } from "@/hooks/use-page-image-uploader";
 
 const profileHeaderSchema = z.object({
   image_url: z
@@ -27,6 +29,7 @@ const profileHeaderSchema = z.object({
 type ProfileHeaderFormValues = z.infer<typeof profileHeaderSchema>;
 
 interface ProfileHeaderEditorProps {
+  pageId: string;
   imageUrl: string | null;
   title: string | null;
   description: string | null;
@@ -35,12 +38,15 @@ interface ProfileHeaderEditorProps {
 }
 
 export default function ProfileHeaderEditor({
+  pageId,
   imageUrl,
   title,
   description,
   handle,
   isOwner,
 }: ProfileHeaderEditorProps) {
+  const { updateDraft, markDirty, markError } = usePageAutoSaveActions();
+  const uploadPageImage = usePageImageUploader();
   const form = useForm<ProfileHeaderFormValues>({
     resolver: zodResolver(profileHeaderSchema),
     defaultValues: {
@@ -58,8 +64,9 @@ export default function ProfileHeaderEditor({
   const hasImage = resolvedImageUrl.length > 0;
   const isReadOnly = !isOwner;
   const titlePlaceholder = isReadOnly ? "" : "Add a title";
-  const descriptionPlaceholder = isReadOnly ? "" : "Add a description";
+  const descriptionPlaceholder = isReadOnly ? "" : "Add a bio";
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const uploadRequestIdRef = useRef(0);
   const handleSubmit = form.handleSubmit(() => undefined);
 
   useEffect(() => {
@@ -68,13 +75,86 @@ export default function ProfileHeaderEditor({
       return;
     }
 
-    const objectUrl = URL.createObjectURL(imageValue);
-    setPreviewUrl(objectUrl);
+    if (isReadOnly) {
+      return;
+    }
+
+    let cancelled = false;
+    let objectUrl: string | null = null;
+    const requestId = (uploadRequestIdRef.current += 1);
+
+    const runUpload = async () => {
+      const isValid = await form.trigger("image_url");
+      if (!isValid || cancelled || requestId !== uploadRequestIdRef.current) {
+        return;
+      }
+
+      objectUrl = URL.createObjectURL(imageValue);
+      setPreviewUrl(objectUrl);
+      markDirty();
+
+      try {
+        const { publicUrl } = await uploadPageImage({
+          pageId,
+          file: imageValue,
+        });
+
+        if (cancelled || requestId !== uploadRequestIdRef.current) {
+          return;
+        }
+
+        if (objectUrl) {
+          URL.revokeObjectURL(objectUrl);
+          objectUrl = null;
+        }
+
+        setPreviewUrl(publicUrl);
+        updateDraft({ image_url: publicUrl });
+      } catch (error) {
+        if (!cancelled && requestId === uploadRequestIdRef.current) {
+          if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+          }
+          setPreviewUrl(null);
+          markError();
+        }
+      }
+    };
+
+    void runUpload();
 
     return () => {
-      URL.revokeObjectURL(objectUrl);
+      cancelled = true;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
     };
-  }, [imageValue]);
+  }, [
+    imageValue,
+    isReadOnly,
+    form,
+    pageId,
+    updateDraft,
+    markDirty,
+    markError,
+    uploadPageImage,
+  ]);
+
+  useEffect(() => {
+    if (isReadOnly) {
+      return;
+    }
+
+    const subscription = form.watch((values) => {
+      updateDraft({
+        title: values.title ?? "",
+        description: values.description ?? null,
+      });
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form, isReadOnly, updateDraft]);
 
   return (
     <Form {...form}>
@@ -90,7 +170,7 @@ export default function ProfileHeaderEditor({
               <Button
                 type="button"
                 variant={"secondary"}
-                className="relative aspect-square size-40 overflow-hidden rounded-full"
+                className="relative aspect-square size-40 overflow-hidden rounded-full p-0"
                 onClick={() => imageInputRef.current?.click()}
                 disabled={isReadOnly}
               >
@@ -98,7 +178,7 @@ export default function ProfileHeaderEditor({
                   <img
                     src={resolvedImageUrl}
                     alt={handle}
-                    className="w-full h-full object-cover"
+                    className="absolute inset-0 h-full w-full object-cover transition-all hover:grayscale-25"
                   />
                 )}
                 <span className={cn("sr-only")}>{handle}</span>
@@ -159,7 +239,7 @@ export default function ProfileHeaderEditor({
                   placeholder={descriptionPlaceholder}
                   ariaLabel="Profile description"
                   multiline
-                  className="text-lg leading-relaxed line-clamp-5 truncate"
+                  className="text-lg leading-relaxed line-clamp-5 truncate font-light"
                 />
               </FormControl>
               <FormMessage />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import BottomActionBar from "@/components/bottom-action-bar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import type { Route } from "./+types/($lang)._auth.user.$handle._index";
@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 import LayoutToggle from "@/components/layout-toggle";
 import { NumberTicker } from "@/components/effects/number-ticker";
 import { Separator } from "@/components/ui/separator";
+import { PageAutoSaveController } from "@/components/page-auto-save-controller";
+import SavingStatusIndicator from "@/components/saving-status-indicator";
 
 export async function loader(args: Route.LoaderArgs) {
   const { userId } = await getAuth(args);
@@ -50,72 +52,91 @@ export async function loader(args: Route.LoaderArgs) {
 export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
   const { page, handle, isOwner } = loaderData;
   const [isDesktop, setIsDesktop] = useState(true);
+  const initialSnapshot = useMemo(
+    () => ({
+      title: page.title,
+      description: page.description,
+      image_url: page.image_url,
+      layout: null,
+    }),
+    [page.description, page.image_url, page.title]
+  );
 
   return (
-    <div
-      className={cn(
-        `flex flex-col gap-4 transition-all ease-in-out duration-500 pt-4 bg-background relative`,
-        isDesktop
-          ? "max-w-full w-full h-full"
-          : "self-start max-w-lg border rounded-4xl shadow-lg mx-auto container my-6 min-h-[calc(100dvh-3rem)]"
-      )}
+    <PageAutoSaveController
+      pageId={page.id}
+      initialSnapshot={initialSnapshot}
+      enabled={isOwner}
     >
-      <header className="flex justify-between items-center gap-1 bg-muted/50 rounded-lg p-2 backdrop-blur-md sticky top-3 mx-4 px-4 z-10">
-        <aside className="font-semibold flex items-center gap-1">
-          <SealCheckIcon className="fill-blue-500 size-5" weight="fill" />
-          {handle}
-        </aside>
-        <div className="flex items-center gap-4">
-          <OwnerGate isOwner={isOwner}>
-            <VisibilityToggle pageId={page.id} isPublic={page.is_public} />
-          </OwnerGate>
-          <Separator orientation="vertical" className={"my-1"} />
-          <p className="text-xs ">
-            <NumberTicker value={187} /> View
-          </p>
-        </div>
-      </header>
-
-      <div className="max-w-2xl p-6">
-        <ProfileHeaderEditor
-          imageUrl={page.image_url}
-          title={page.title}
-          description={page.description}
-          handle={handle}
-          isOwner={isOwner}
-        />
-      </div>
-
-      <section className="p-10 py-6 grow">Page Layout Section</section>
-
-      <OwnerGate isOwner={isOwner}>
-        <BottomActionBar />
-      </OwnerGate>
-
-      <LayoutToggle isDesktop={isDesktop} onToggle={setIsDesktop} />
-
-      <footer
+      <div
         className={cn(
-          "text-sm text-muted-foreground relative flex items-center gap-1 h-40 px-8",
-          !isDesktop && "flex-col justify-center"
+          `flex flex-col gap-4 transition-all ease-in-out duration-500 pt-4 bg-background relative`,
+          isDesktop
+            ? "max-w-full w-full h-full"
+            : "self-start max-w-lg border rounded-4xl shadow-lg mx-auto container my-6 min-h-[calc(100dvh-3rem)]"
         )}
       >
-        <div className="flex items-center gap-1">
-          <ThemeToggle />
-          <UserAuthButton />
+        <header className="flex justify-between items-center gap-1 bg-muted/50 rounded-lg p-2 backdrop-blur-md sticky top-3 mx-4 px-4 z-10">
+          <aside className="font-semibold flex items-center gap-1">
+            <SealCheckIcon className="fill-blue-500 size-5" weight="fill" />
+            {handle}
+          </aside>
+          <div className="flex items-center gap-4">
+            <OwnerGate isOwner={isOwner}>
+              <div className="flex items-center gap-3">
+                <SavingStatusIndicator className="mr-2" />
+                <VisibilityToggle pageId={page.id} isPublic={page.is_public} />
+              </div>
+            </OwnerGate>
+            <Separator orientation="vertical" className={"my-1"} />
+            <p className="text-xs ">
+              <NumberTicker value={187} /> View
+            </p>
+          </div>
+        </header>
+
+        <div className="max-w-2xl p-6">
+          <ProfileHeaderEditor
+            pageId={page.id}
+            imageUrl={page.image_url}
+            title={page.title}
+            description={page.description}
+            handle={handle}
+            isOwner={isOwner}
+          />
         </div>
-        <p
+
+        <section className="p-10 py-6 grow">Page Layout Section</section>
+
+        <OwnerGate isOwner={isOwner}>
+          <BottomActionBar />
+        </OwnerGate>
+
+        <LayoutToggle isDesktop={isDesktop} onToggle={setIsDesktop} />
+
+        <footer
           className={cn(
-            "flex items-center gap-1",
-            isDesktop
-              ? "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-              : "relative"
+            "text-sm text-muted-foreground relative flex items-center gap-1 h-40 px-8",
+            !isDesktop && "flex-col justify-center"
           )}
         >
-          <LightningIcon weight="fill" />
-          Powered by Untitled
-        </p>
-      </footer>
-    </div>
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <UserAuthButton />
+          </div>
+          <p
+            className={cn(
+              "flex items-center gap-1",
+              isDesktop
+                ? "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+                : "relative"
+            )}
+          >
+            <LightningIcon weight="fill" />
+            Powered by Untitled
+          </p>
+        </footer>
+      </div>
+    </PageAutoSaveController>
   );
 }
