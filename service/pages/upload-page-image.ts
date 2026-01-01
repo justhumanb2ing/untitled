@@ -25,12 +25,7 @@ export function createPageImageUploader(
     file,
   }: PageImageUploadPayload): Promise<PageImageUploadResult> {
     const supabase = await supabasePromise;
-    const extension = resolveImageExtension(file);
-    const uniqueId =
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : String(Date.now());
-    const path = `pages/${pageId}/profile-${uniqueId}.${extension}`;
+    const path = resolvePageImagePath(pageId, file);
 
     const { error } = await supabase.storage
       .from(PAGE_IMAGE_BUCKET)
@@ -52,8 +47,48 @@ export function createPageImageUploader(
       throw new Error("Failed to resolve image URL.");
     }
 
-    return { publicUrl: data.publicUrl, path };
+    return {
+      publicUrl: appendCacheKey(data.publicUrl, buildCacheKey(file)),
+      path,
+    };
   };
+}
+
+/**
+ * Resolves a stable storage path so identical filenames overwrite the same object.
+ */
+function resolvePageImagePath(pageId: string, file: File) {
+  const extension = resolveImageExtension(file);
+  const baseName = resolveImageBaseName(file.name);
+  const resolvedBaseName = baseName.length > 0 ? baseName : "profile";
+
+  return `pages/${pageId}/${resolvedBaseName}.${extension}`;
+}
+
+function resolveImageBaseName(fileName: string) {
+  const cleanedName = fileName
+    .trim()
+    .replace(/[\\/]/g, "-")
+    .replace(/\s+/g, "-");
+  if (!cleanedName) {
+    return "";
+  }
+
+  const lastDotIndex = cleanedName.lastIndexOf(".");
+  if (lastDotIndex > 0) {
+    return cleanedName.slice(0, lastDotIndex);
+  }
+
+  return cleanedName;
+}
+
+function buildCacheKey(file: File) {
+  return `${file.size}-${file.lastModified}`;
+}
+
+function appendCacheKey(publicUrl: string, cacheKey: string) {
+  const separator = publicUrl.includes("?") ? "&" : "?";
+  return `${publicUrl}${separator}v=${encodeURIComponent(cacheKey)}`;
 }
 
 function resolveImageExtension(file: File) {

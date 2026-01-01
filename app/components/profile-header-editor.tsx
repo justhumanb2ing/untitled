@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { XIcon } from "@phosphor-icons/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -59,8 +60,11 @@ export default function ProfileHeaderEditor({
 
   const imageValue = form.watch("image_url");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isImageCleared, setIsImageCleared] = useState(false);
   const existingImageUrl = imageUrl?.trim() ?? "";
-  const resolvedImageUrl = previewUrl ?? existingImageUrl;
+  const resolvedImageUrl = isImageCleared
+    ? ""
+    : (previewUrl ?? existingImageUrl);
   const hasImage = resolvedImageUrl.length > 0;
   const isReadOnly = !isOwner;
   const titlePlaceholder = isReadOnly ? "" : "Add a title";
@@ -69,8 +73,36 @@ export default function ProfileHeaderEditor({
   const uploadRequestIdRef = useRef(0);
   const handleSubmit = form.handleSubmit(() => undefined);
 
+  const handleRemoveImage = () => {
+    if (isReadOnly) {
+      return;
+    }
+
+    uploadRequestIdRef.current += 1;
+    if (previewUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(null);
+    setIsImageCleared(true);
+    form.setValue("image_url", null, { shouldValidate: true });
+    if (imageInputRef.current) {
+      imageInputRef.current.value = "";
+    }
+    markDirty();
+    updateDraft({ image_url: null });
+  };
+
+  useEffect(() => {
+    if (existingImageUrl.length > 0) {
+      setIsImageCleared(false);
+    }
+  }, [existingImageUrl]);
+
   useEffect(() => {
     if (!(imageValue instanceof File)) {
+      if (previewUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
       setPreviewUrl(null);
       return;
     }
@@ -91,6 +123,7 @@ export default function ProfileHeaderEditor({
 
       objectUrl = URL.createObjectURL(imageValue);
       setPreviewUrl(objectUrl);
+      setIsImageCleared(false);
       markDirty();
 
       try {
@@ -167,22 +200,36 @@ export default function ProfileHeaderEditor({
           name="image_url"
           render={({ field }) => (
             <FormItem className="gap-2 mb-8">
-              <Button
-                type="button"
-                variant={"secondary"}
-                className="relative aspect-square size-40 overflow-hidden rounded-full p-0"
-                onClick={() => imageInputRef.current?.click()}
-                disabled={isReadOnly}
-              >
-                {hasImage && (
-                  <img
-                    src={resolvedImageUrl}
-                    alt={handle}
-                    className="absolute inset-0 h-full w-full object-cover transition-all hover:grayscale-25"
-                  />
+              <div className="relative inline-flex group w-fit">
+                <Button
+                  type="button"
+                  variant={"secondary"}
+                  className="relative aspect-square size-40 overflow-hidden rounded-full p-0"
+                  onClick={() => imageInputRef.current?.click()}
+                  disabled={isReadOnly}
+                >
+                  {hasImage && (
+                    <img
+                      src={resolvedImageUrl}
+                      alt={""}
+                      className="absolute inset-0 h-full w-full object-cover transition-all hover:grayscale-25"
+                    />
+                  )}
+                  <span className={cn("sr-only")}>{handle}</span>
+                </Button>
+                {!isReadOnly && hasImage && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon-lg"
+                    className="hover:bg-secondary absolute -bottom-4 left-1/2 -translate-x-1/2 opacity-0 transition-opacity group-hover:opacity-100 rounded-full shadow-md"
+                    onClick={handleRemoveImage}
+                    aria-label="Remove profile image"
+                  >
+                    <XIcon className="size-5" weight="bold" />
+                  </Button>
                 )}
-                <span className={cn("sr-only")}>{handle}</span>
-              </Button>
+              </div>
               <FormControl>
                 <input
                   ref={imageInputRef}

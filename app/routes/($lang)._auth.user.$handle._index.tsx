@@ -90,7 +90,11 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
             </OwnerGate>
             <Separator orientation="vertical" className={"my-1"} />
             <p className="text-xs ">
-              <NumberTicker value={187} /> View
+              <NumberTicker
+                value={187}
+                className="text-foreground dark:text-foreground"
+              />{" "}
+              View
             </p>
           </div>
         </header>
