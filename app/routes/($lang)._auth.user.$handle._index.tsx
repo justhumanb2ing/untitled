@@ -6,7 +6,8 @@ import { getSupabaseServerClient } from "@/lib/supabase";
 import { SealCheckIcon } from "@phosphor-icons/react";
 import VisibilityToggle from "@/components/visibility-toggle";
 import { OwnerGate } from "@/components/owner-gate";
-import LogoutButton from "@/components/logout-button";
+import UserAuthButton from "@/components/user-auth-button";
+import ProfileHeaderEditor from "@/components/profile-header-editor";
 
 export async function loader(args: Route.LoaderArgs) {
   const { userId } = await getAuth(args);
@@ -50,17 +51,13 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
         <SealCheckIcon className="fill-blue-500 size-5" weight="fill" />
         {handle}
       </p>
-      <div className="relative aspect-square rounded-full overflow-hidden size-40 ring-2 ring-accent">
-        {page.image_url ? (
-          <img src={page.image_url} alt={handle} className="w-full h-full" />
-        ) : (
-          <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
-            {handle}
-          </div>
-        )}
-      </div>
-      <p className="text-3xl tracking-wider font-bold">{page.title}</p>
-      <p className="text-lg">{page.description}</p>
+      <ProfileHeaderEditor
+        imageUrl={page.image_url}
+        title={page.title}
+        description={page.description}
+        handle={handle}
+        isOwner={isOwner}
+      />
 
       <OwnerGate isOwner={isOwner}>
         <BottomActionBar />
@@ -70,7 +67,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
       <OwnerGate isOwner={isOwner}>
         <VisibilityToggle pageId={page.id} isPublic={page.is_public} />
       </OwnerGate>
-      <LogoutButton />
+      <UserAuthButton />
     </div>
   );
 }
