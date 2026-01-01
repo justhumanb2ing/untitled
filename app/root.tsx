@@ -22,6 +22,21 @@ import { ClerkProvider } from "@clerk/react-router";
 import { locales } from "intlayer";
 import { Spinner } from "./components/ui/spinner";
 
+const themeInitScript = `
+(() => {
+  try {
+    const storedTheme = localStorage.getItem("theme");
+    if (storedTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else if (storedTheme === "light") {
+      document.documentElement.classList.remove("dark");
+    }
+  } catch {
+    // Ignore storage access errors (privacy modes, disabled storage).
+  }
+})();
+`;
+
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
@@ -101,6 +116,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <Meta />
         <Links />
       </head>
