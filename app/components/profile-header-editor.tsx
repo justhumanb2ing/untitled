@@ -1,8 +1,4 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -52,7 +48,7 @@ export default function ProfileHeaderEditor({
       title: title ?? null,
       description: description ?? null,
     },
-    mode: "onBlur",
+    mode: "onChange",
   });
 
   const imageValue = form.watch("image_url");
@@ -83,14 +79,14 @@ export default function ProfileHeaderEditor({
   return (
     <Form {...form}>
       <form
-        className="flex w-full flex-col items-center gap-4"
+        className="flex w-full flex-col justify-center gap-4 px-4"
         onSubmit={handleSubmit}
       >
         <FormField
           control={form.control}
           name="image_url"
           render={({ field }) => (
-            <FormItem className="grid justify-items-center gap-2">
+            <FormItem className="gap-2 mb-8">
               <Button
                 type="button"
                 variant={"secondary"}
@@ -105,7 +101,7 @@ export default function ProfileHeaderEditor({
                     className="w-full h-full object-cover"
                   />
                 )}
-                <span className={cn(hasImage && "sr-only")}>{handle}</span>
+                <span className={cn("sr-only")}>{handle}</span>
               </Button>
               <FormControl>
                 <input
@@ -141,10 +137,10 @@ export default function ProfileHeaderEditor({
                   readOnly={isReadOnly}
                   placeholder={titlePlaceholder}
                   ariaLabel="Profile title"
-                  className="text-3xl font-bold tracking-wider"
+                  className="text-3xl font-bold tracking-wider line-clamp-3 truncate"
                 />
               </FormControl>
-              <FormMessage className="text-center" />
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -163,10 +159,10 @@ export default function ProfileHeaderEditor({
                   placeholder={descriptionPlaceholder}
                   ariaLabel="Profile description"
                   multiline
-                  className="text-lg leading-relaxed"
+                  className="text-lg leading-relaxed line-clamp-5 truncate"
                 />
               </FormControl>
-              <FormMessage className="text-center" />
+              <FormMessage />
             </FormItem>
           )}
         />

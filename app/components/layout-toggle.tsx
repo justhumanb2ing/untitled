@@ -31,7 +31,9 @@ export default function LayoutToggle({
       aria-label="Layout width"
       size={"lg"}
       spacing={2}
-      className={"rounded-xl fixed bottom-4 right-4 bg-muted/40 p-1 shadow-sm backdrop-blur-sm"}
+      className={
+        "rounded-xl fixed bottom-4 right-4 bg-background/40 p-1 shadow-sm backdrop-blur-sm z-50"
+      }
     >
       <ToggleGroupItem
         value={DESKTOP_VALUE}

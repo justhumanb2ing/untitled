@@ -1,4 +1,8 @@
-import { ChartBarIcon, GearSixIcon, HouseSimpleIcon } from "@phosphor-icons/react";
+import {
+  ChartBarIcon,
+  GearSixIcon,
+  HouseSimpleIcon,
+} from "@phosphor-icons/react";
 import { useLocale } from "react-intlayer";
 import { NavLink, useParams } from "react-router";
 import ChangeHandleFormPopover from "./change-handle-form-popover";
@@ -15,7 +19,7 @@ export default function BottomActionBar() {
   const settingTo = locacalizeTo(settingPath, locale);
 
   return (
-    <div className="bg-muted/80 backdrop-blur-sm rounded-3xl p-1 flex items-center justify-between px-2 gap-1">
+    <div className="bg-muted/50 backdrop-blur-sm rounded-3xl p-1 flex items-center justify-between px-2 gap-1 fixed bottom-28 left-1/2 -translate-x-1/2 z-50">
       {/* Home Link Button */}
       <Tooltip>
         <TooltipTrigger

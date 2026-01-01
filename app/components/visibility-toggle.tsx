@@ -52,8 +52,7 @@ export default function VisibilityToggle({
   return (
     <Button
       type="button"
-      variant="secondary"
-      className="h-9 min-w-36 overflow-hidden group"
+      className="h-8 w-20 overflow-hidden group"
       onClick={handleToggle}
       disabled={isSaving}
       aria-pressed={isPublic}
@@ -74,7 +73,7 @@ export default function VisibilityToggle({
               transition={{ duration: 0.25, ease: "easeOut" }}
             >
               <LockOpenIcon className="size-4" />
-              <span className="text-xs font-medium">Public handle</span>
+              <span className="text-xs font-medium">Public</span>
             </motion.span>
           ) : (
             <motion.span
@@ -86,7 +85,7 @@ export default function VisibilityToggle({
               transition={{ duration: 0.25, ease: "easeOut" }}
             >
               <LockIcon className="size-4" />
-              <span className="text-xs font-medium">Private handle</span>
+              <span className="text-xs font-medium">Private</span>
             </motion.span>
           )}
         </AnimatePresence>
