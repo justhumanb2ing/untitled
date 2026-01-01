@@ -24,6 +24,7 @@
     "@react-router/serve": "7.10.1",
     "@supabase/supabase-js": "^2.89.0",
     "@vercel/react-router": "^1.2.4",
+    "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "es-toolkit": "^1.43.0",
@@ -46,6 +47,7 @@
   "devDependencies": {
     "@react-router/dev": "7.10.1",
     "@tailwindcss/vite": "^4.1.13",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^22",
     "@types/pg": "^8.16.0",
     "@types/react": "^19.2.7",

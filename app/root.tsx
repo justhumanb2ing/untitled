@@ -83,12 +83,19 @@ export const loader = (args: Route.LoaderArgs) =>
     const { auth } = loaderArgs.request;
 
     if (auth.userId) {
-      if (isOnboardingPath(pathname) || isPublicAuthPath(pathname)) {
+      const onboardingComplete =
+        auth.sessionClaims?.metadata?.onboardingComplete === true;
+
+      if (isOnboardingPath(pathname)) {
+        if (onboardingComplete) {
+          throw redirect(getLocalizedPathFromPathname(pathname, "/"));
+        }
         return null;
       }
 
-      const onboardingComplete =
-        auth.sessionClaims?.metadata?.onboardingComplete === true;
+      if (isPublicAuthPath(pathname)) {
+        return null;
+      }
 
       if (!onboardingComplete) {
         const clerk = clerkClient(loaderArgs);

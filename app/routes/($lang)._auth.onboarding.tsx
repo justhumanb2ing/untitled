@@ -1,10 +1,12 @@
 import { clerkClient, getAuth } from "@clerk/react-router/server";
-import { Activity, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Form as RouterForm,
   redirect,
   useActionData,
   useNavigation,
+  useNavigate,
+  useParams,
   useSubmit,
 } from "react-router";
 import { CaretLeftIcon, CheckIcon } from "@phosphor-icons/react";
@@ -36,26 +38,17 @@ import { FieldSet } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 import { metadataConfig } from "@/config/metadata";
 import { getSupabaseClient, getSupabaseServerClient } from "@/lib/supabase";
-
-function getLocalizedPath(lang: string | undefined, pathname: string) {
-  if (!pathname.startsWith("/")) {
-    throw new Error("pathname must start with '/'");
-  }
-  return lang ? `/${lang}${pathname}` : pathname;
-}
+import { getLocalizedPath } from "@/lib/localized-path";
+import { Activity } from "@/components/activity";
 
 const onboardingSchema = z.object({
   handle: z
     .string()
-    .transform((value) =>
-      value
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, "")
-    )
-    .refine((value) => value.length > 0, "Handle is required."),
+    .trim()
+    .toLowerCase()
+    .regex(/^[a-z0-9]+$/, "Only lowercase letters and numbers are allowed."),
   title: z.string().trim().min(1, "Title is required."),
-  description: z.string().trim().min(1, "Description is required."),
+  description: z.string().trim().nullable(),
 });
 
 type OnboardingFormValues = z.infer<typeof onboardingSchema>;
@@ -63,6 +56,8 @@ type OnboardingFormValues = z.infer<typeof onboardingSchema>;
 type ActionData = {
   formError?: string;
   fieldErrors?: Partial<Record<keyof OnboardingFormValues, string>>;
+  success?: boolean;
+  handle?: string;
 };
 
 export async function action(args: Route.ActionArgs) {
@@ -95,7 +90,7 @@ export async function action(args: Route.ActionArgs) {
   const { error } = await supabase.rpc("create_page", {
     p_handle: `@${handle}`,
     p_title: title,
-    p_description: description,
+    p_description: description ?? undefined,
   });
 
   if (error) {
@@ -110,16 +105,21 @@ export async function action(args: Route.ActionArgs) {
     },
   });
 
-  throw redirect(getLocalizedPath(args.params.lang, `/user/@${handle}`));
+  return {
+    success: true,
+    handle: `@${handle}`,
+  } satisfies ActionData;
 }
 
 export default function OnboardingRoute() {
   const navigation = useNavigation();
+  const navigate = useNavigate();
+  const { lang } = useParams();
   const submit = useSubmit();
   const formRef = useRef<HTMLFormElement>(null);
   const isSubmitting = navigation.state !== "idle";
   const actionData = useActionData<ActionData>();
-  type Step = "handle" | "details";
+  type Step = "handle" | "details" | "complete";
   const steps: Array<{ id: Step; label: string; value: number }> = [
     {
       id: "handle",
@@ -131,13 +131,17 @@ export default function OnboardingRoute() {
   const [step, setStep] = useState<Step>("handle");
   const activeStep = step === "handle" ? 1 : 2;
   const activeStepItem = steps.find((item) => item.id === step);
+  const isCompleteStep = step === "complete";
+  const [completedHandle, setCompletedHandle] = useState<string | null>(null);
   const [isCheckingHandle, setIsCheckingHandle] = useState(false);
+  const [direction, setDirection] = useState<1 | -1>(1);
+
   const supabase = getSupabaseClient();
 
   const form = useForm<OnboardingFormValues>({
     resolver: zodResolver(onboardingSchema),
     defaultValues: { handle: "", title: "", description: "" },
-    mode: "onSubmit",
+    mode: "onChange",
     reValidateMode: "onChange",
   });
 
@@ -150,6 +154,13 @@ export default function OnboardingRoute() {
 
   useEffect(() => {
     if (!actionData) {
+      return;
+    }
+
+    if (actionData.success && actionData.handle) {
+      setCompletedHandle(actionData.handle);
+      setDirection(1);
+      setStep("complete");
       return;
     }
 
@@ -246,6 +257,7 @@ export default function OnboardingRoute() {
       return;
     }
 
+    setDirection(1);
     setStep("details");
   };
 
@@ -259,50 +271,60 @@ export default function OnboardingRoute() {
   return (
     <main className="w-md">
       <section className="h-80 space-y-4">
-        <Stepper
-          value={activeStep}
-          onValueChange={(value) => {
-            if (value === 1) {
-              setStep("handle");
-              return;
-            }
-            if (value === 2 && handleValue) {
-              setStep("details");
-            }
-          }}
-        >
-          {steps.map((stepItem) => (
-            <StepperItem
-              className="flex-1"
-              key={stepItem.id}
-              step={stepItem.value}
-            >
-              <StepperTrigger
-                aria-current={stepItem.id === step ? "step" : undefined}
-                asChild
-                className="w-full flex-col items-start gap-2"
-              >
-                <StepperIndicator
-                  asChild
-                  className="h-1 w-full rounded-none bg-border"
-                >
-                  <span className="sr-only">{step}</span>
-                </StepperIndicator>
-              </StepperTrigger>
-            </StepperItem>
-          ))}
-        </Stepper>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            size={"icon-lg"}
-            variant={"ghost"}
-            onClick={() => setStep("handle")}
-            disabled={activeStep === 1}
-            className={"mt-2"}
+        {isCompleteStep ? null : (
+          <Stepper
+            value={activeStep}
+            onValueChange={(value) => {
+              if (value === 1) {
+                setDirection(-1);
+                setStep("handle");
+                return;
+              }
+
+              if (value === 2 && handleValue) {
+                setDirection(1);
+                setStep("details");
+              }
+            }}
           >
-            <CaretLeftIcon weight="bold" className="size-8" />
-          </Button>
+            {steps.map((stepItem) => (
+              <StepperItem
+                className="flex-1"
+                key={stepItem.id}
+                step={stepItem.value}
+              >
+                <StepperTrigger
+                  aria-current={stepItem.id === step ? "step" : undefined}
+                  asChild
+                  className="w-full flex-col items-start gap-2"
+                >
+                  <StepperIndicator
+                    asChild
+                    className="h-1 w-full rounded-none bg-border"
+                  >
+                    <span className="sr-only">{step}</span>
+                  </StepperIndicator>
+                </StepperTrigger>
+              </StepperItem>
+            ))}
+          </Stepper>
+        )}
+        <div className="flex gap-2">
+          {isCompleteStep ? null : (
+            <Button
+              type="button"
+              size={"icon-lg"}
+              variant={"ghost"}
+              onClick={() => {
+                setDirection(-1);
+                setStep("handle");
+              }}
+              disabled={activeStep === 1}
+              className={"mt-2 size-10"}
+            >
+              <CaretLeftIcon weight="bold" className="size-7" />
+            </Button>
+          )}
           <RhfForm {...form}>
             <RouterForm
               ref={formRef}
@@ -317,149 +339,185 @@ export default function OnboardingRoute() {
                 void submitForm(event);
               }}
             >
-              <aside className="mb-4">
-                <div className="font-medium text-muted-foreground tabular-nums">
-                  Step {activeStep} of {steps.length}
-                </div>
-                <div className="text-foreground font-medium">
-                  {activeStepItem?.label}
-                </div>
-              </aside>
+              <input type="hidden" name="handle" value={handleValue} />
+              {isCompleteStep ? null : (
+                <aside className="mb-4">
+                  <div className="font-medium text-muted-foreground tabular-nums">
+                    Step {activeStep} of {steps.length}
+                  </div>
+                  <div className="text-foreground font-medium">
+                    {activeStepItem?.label}
+                  </div>
+                </aside>
+              )}
               <FieldSet>
-                <Activity mode={step === "handle" ? "visible" : "hidden"}>
-                  <>
-                    <FormField
-                      control={form.control}
-                      name="handle"
-                      render={({ field }) => (
-                        <FormItem className="mt-4 space-y-2">
-                          <FormLabel className="sr-only">Handle</FormLabel>
-                          <div className="relative">
+                <Activity activeKey={step} direction={direction}>
+                  {step === "handle" ? (
+                    <div className="flex flex-col gap-4">
+                      <FormField
+                        control={form.control}
+                        name="handle"
+                        render={({ field }) => (
+                          <FormItem className="mt-4 space-y-2">
+                            <FormLabel className="sr-only">Handle</FormLabel>
+                            <div className="relative">
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  autoCapitalize="none"
+                                  autoComplete="off"
+                                  autoFocus={step === "handle"}
+                                  placeholder="Your handle"
+                                  value={field.value ?? ""}
+                                  onChange={(event) => {
+                                    field.onChange(event.target.value);
+                                    form.clearErrors("handle");
+                                    form.clearErrors("root");
+                                  }}
+                                  className={cn(
+                                    "peer ps-28.5 border-none h-12 text-base! rounded-xl"
+                                  )}
+                                />
+                              </FormControl>
+                              <span className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground text-base! peer-disabled:opacity-50">
+                                {metadataConfig.handle}/@
+                              </span>
+                            </div>
+
+                            <FormDescription className="flex items-center gap-1">
+                              <CheckIcon />
+                              <span>
+                                Only lowercase letters and numbers are allowed.
+                              </span>
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button
+                        type="button"
+                        size="lg"
+                        variant={"brand"}
+                        className={"h-11 text-base rounded-xl"}
+                        onClick={() => void handleAdvanceToDetails()}
+                        disabled={
+                          !handleValue ||
+                          isCheckingHandle ||
+                          !!form.formState.errors.handle
+                        }
+                        aria-busy={isCheckingHandle}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  ) : step === "details" ? (
+                    <div className="flex flex-col gap-4">
+                      <FormField
+                        control={form.control}
+                        name="title"
+                        render={({ field }) => (
+                          <FormItem className="mt-4 relative rounded-xl border border-input bg-input/20 outline-none transition-[color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 has-disabled:pointer-events-none has-disabled:cursor-not-allowed has-aria-invalid:border-destructive has-disabled:opacity-50 has-aria-invalid:ring-destructive/20 has-[input:is(:disabled)]:*:pointer-events-none dark:has-aria-invalid:ring-destructive/40">
+                            <FormLabel className="block px-3 pt-2 text-sm text-foreground font-medium">
+                              Title
+                            </FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
-                                autoCapitalize="none"
-                                autoCorrect="off"
-                                autoFocus={step === "handle"}
+                                autoCapitalize="sentences"
+                                autoFocus={step === "details"}
                                 autoComplete="off"
-                                spellCheck={false}
-                                inputMode="text"
-                                pattern="[a-z0-9]+"
-                                placeholder="Your handle"
+                                placeholder="Your page title"
                                 value={field.value ?? ""}
                                 onChange={(event) => {
-                                  const nextValue = event.currentTarget.value
-                                    .toLowerCase()
-                                    .replace(/[^a-z0-9]/g, "");
-                                  field.onChange(nextValue);
-                                  form.clearErrors("handle");
+                                  field.onChange(event);
                                   form.clearErrors("root");
                                 }}
-                                className={cn("peer ps-25 border-none")}
+                                className="px-3 pb-2 ps-4 h-12 text-base! rounded-xl bg-transparent border-none focus-visible:ring-0 aria-invalid:ring-0 dark:aria-invalid:ring-0"
                               />
                             </FormControl>
-                            <span className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground text-sm peer-disabled:opacity-50">
-                              {metadataConfig.handle}/@
-                            </span>
-                          </div>
-
-                          <FormDescription className="flex items-center gap-1">
-                            <CheckIcon />
-                            <span>
-                              Only lowercase letters and numbers are allowed.
-                            </span>
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button
-                      type="button"
-                      size="lg"
-                      variant={"brand"}
-                      onClick={() => void handleAdvanceToDetails()}
-                      disabled={!handleValue || isCheckingHandle}
-                      aria-busy={isCheckingHandle}
-                    >
-                      Next
-                    </Button>
-                  </>
-                </Activity>
-                <Activity mode={step === "details" ? "visible" : "hidden"}>
-                  <>
-                    <FormField
-                      control={form.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem className="mt-4 space-y-2">
-                          <FormLabel>Page title</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              autoCapitalize="sentences"
-                              autoFocus={step === "details"}
-                              autoComplete="off"
-                              placeholder="Your page title"
-                              value={field.value ?? ""}
-                              onChange={(event) => {
-                                field.onChange(event);
-                                form.clearErrors("root");
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem className="space-y-2">
-                          <FormLabel>Description</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              {...field}
-                              autoComplete="off"
-                              placeholder="Tell people about your page"
-                              value={field.value ?? ""}
-                              onChange={(event) => {
-                                field.onChange(event);
-                                form.clearErrors("root");
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    {rootError ? (
-                      <p className="text-destructive text-sm" role="alert">
-                        {rootError}
-                      </p>
-                    ) : null}
-                    <div className="flex items-center gap-2">
-                      <Button
-                        className={"w-full"}
-                        size={"lg"}
-                        type="submit"
-                        variant={"brand"}
-                        disabled={
-                          isSubmitting || !handleValue || !isDetailsComplete
-                        }
-                        aria-busy={isSubmitting}
-                        data-icon={isSubmitting ? "inline-start" : undefined}
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <Spinner />
-                          </>
-                        ) : (
-                          "Complete"
+                            <FormMessage className="ml-4 mb-2"/>
+                          </FormItem>
                         )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem className="mt-4 relative rounded-xl border border-input bg-input/20 outline-none transition-[color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 has-disabled:pointer-events-none has-disabled:cursor-not-allowed has-aria-invalid:border-destructive has-disabled:opacity-50 has-aria-invalid:ring-destructive/20 has-[input:is(:disabled)]:*:pointer-events-none dark:has-aria-invalid:ring-destructive/40">
+                            <FormLabel className="block px-3 pt-2 text-sm text-foreground font-medium">
+                              Bio
+                            </FormLabel>
+                            <FormControl>
+                              <Textarea
+                                {...field}
+                                autoComplete="off"
+                                placeholder="Tell people about your page"
+                                value={field.value ?? ""}
+                                onChange={(event) => {
+                                  field.onChange(event);
+                                  form.clearErrors("root");
+                                }}
+                                className="h-24 text-base! rounded-xl ps-4 bg-transparent border-none focus-visible:ring-0"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {rootError ? (
+                        <p className="text-destructive text-sm" role="alert">
+                          {rootError}
+                        </p>
+                      ) : null}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          className={"w-full h-11 text-base rounded-xl"}
+                          size={"lg"}
+                          type="submit"
+                          variant={"brand"}
+                          disabled={
+                            isSubmitting || !handleValue || !isDetailsComplete
+                          }
+                          aria-busy={isSubmitting}
+                          data-icon={isSubmitting ? "inline-start" : undefined}
+                        >
+                          {isSubmitting ? (
+                            <>
+                              <Spinner />
+                            </>
+                          ) : (
+                            "Complete"
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      <div className="text-3xl font-semibold">
+                        You&apos;re all set.
+                      </div>
+                      <p className="ml-1 text-base text-muted-foreground mb-4">
+                        Your page is ready. You can visit it now.
+                      </p>
+                      <Button
+                        type="button"
+                        size="lg"
+                        variant="brand"
+                        className="h-11 text-base rounded-xl"
+                        onClick={() => {
+                          if (!completedHandle) {
+                            return;
+                          }
+                          navigate(
+                            getLocalizedPath(lang, `/user/${completedHandle}`)
+                          );
+                        }}
+                        disabled={!completedHandle}
+                      >
+                        Go to Page
                       </Button>
                     </div>
-                  </>
+                  )}
                 </Activity>
               </FieldSet>
             </RouterForm>

@@ -2,13 +2,7 @@ import { getAuth } from "@clerk/react-router/server";
 import { Outlet, redirect } from "react-router";
 
 import type { Route } from "./+types/($lang)._auth";
-
-function getLocalizedPath(lang: string | undefined, pathname: string) {
-  if (!pathname.startsWith("/")) {
-    throw new Error("pathname must start with '/'");
-  }
-  return lang ? `/${lang}${pathname}` : pathname;
-}
+import { getLocalizedPath } from "@/lib/localized-path";
 
 function isPublicAuthPath(pathname: string) {
   const normalizedPathname = pathname.replace(/\/+$/, "");
