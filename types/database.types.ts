@@ -24,7 +24,7 @@ export type Database = {
           is_primary: boolean
           is_public: boolean
           owner_id: string
-          title: string | null
+          title: string
           updated_at: string
         }
         Insert: {
@@ -36,7 +36,7 @@ export type Database = {
           is_primary?: boolean
           is_public?: boolean
           owner_id?: string
-          title?: string | null
+          title: string
           updated_at?: string
         }
         Update: {
@@ -48,7 +48,7 @@ export type Database = {
           is_primary?: boolean
           is_public?: boolean
           owner_id?: string
-          title?: string | null
+          title?: string
           updated_at?: string
         }
         Relationships: [
@@ -125,7 +125,7 @@ export type Database = {
           is_primary: boolean
           is_public: boolean
           owner_id: string
-          title: string | null
+          title: string
           updated_at: string
         }
         SetofOptions: {

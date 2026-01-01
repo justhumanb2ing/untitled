@@ -29,9 +29,6 @@ export default defineConfig((config) => {
         },
       },
     },
-    optimizeDeps: {
-      exclude: ["@base-ui/react"],
-    },
     plugins: [
       tailwindcss(),
       reactRouter(),
