@@ -264,7 +264,7 @@ export default function ProfileHeaderEditor({
                   readOnly={isReadOnly}
                   placeholder={titlePlaceholder}
                   ariaLabel="Profile title"
-                  className="text-3xl font-bold tracking-wider line-clamp-3 truncate"
+                  className="text-4xl font-bold tracking-wider truncate py-1"
                 />
               </FormControl>
               <FormMessage />
@@ -286,7 +286,7 @@ export default function ProfileHeaderEditor({
                   placeholder={descriptionPlaceholder}
                   ariaLabel="Profile description"
                   multiline
-                  className="text-lg leading-relaxed line-clamp-5 truncate font-light"
+                  className="text-lg leading-relaxed truncate font-light text-neutral-700 tracking-widest"
                 />
               </FormControl>
               <FormMessage />

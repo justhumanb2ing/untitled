@@ -103,7 +103,12 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
           </div>
         </header>
 
-        <div className="flex flex-col grow">
+        <div
+          className={cn(
+            "flex flex-col grow lg:flex-row",
+            !isDesktop && "flex-col!"
+          )}
+        >
           {/* Page Information Section */}
           <section className="max-w-2xl p-6">
             <ProfileHeaderEditor
@@ -126,7 +131,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
           className={cn(
             "text-sm text-muted-foreground relative flex items-center gap-1 h-40 px-8",
             "flex-col gap-3 lg:flex-row",
-            !isDesktop && "flex-col! justify-center! gap-3",
+            !isDesktop && "flex-col! justify-center! gap-3"
           )}
         >
           <BottomActionBar isOwner={isOwner} />
