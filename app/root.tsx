@@ -24,6 +24,8 @@ import { Spinner } from "./components/ui/spinner";
 import { Button } from "./components/ui/button";
 import { HouseSimpleIcon } from "@phosphor-icons/react";
 
+import { shadcn } from "@clerk/themes";
+
 const themeInitScript = `
 (() => {
   try {
@@ -158,6 +160,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       loaderData={loaderData}
       localization={clerkLocalization}
       appearance={{
+        theme: shadcn,
         variables: {
           colorBackground: "#ffffff",
           colorForeground: "#111827",
@@ -184,6 +187,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
           formButtonPrimary:
             "font-semibold !h-12 !rounded-xl !bg-brand !shadow-none text-white text-base font-medium transition-colors hover:!bg-brand focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
           formButtonReset: "!shadow-none",
+          buttonArrowIcon: "hidden",
           dividerRow: "gap-4",
           dividerLine: "hidden",
           dividerText:
