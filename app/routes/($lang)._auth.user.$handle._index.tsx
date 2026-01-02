@@ -70,9 +70,9 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
     >
       <div
         className={cn(
-          `flex flex-col gap-4 transition-all ease-in-out duration-500 pt-4 bg-background relative`,
+          `flex flex-col gap-4 transition-all ease-in-out duration-700 pt-4 bg-background relative`,
           isDesktop
-            ? "max-w-full w-full h-full"
+            ? "max-w-full w-full h-full my-0 min-h-dvh"
             : "self-start max-w-lg border rounded-4xl shadow-lg mx-auto container my-6 min-h-[calc(100dvh-3rem)]"
         )}
       >
