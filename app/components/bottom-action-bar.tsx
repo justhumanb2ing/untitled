@@ -1,5 +1,5 @@
 import { ChartBarIcon, GearSixIcon } from "@phosphor-icons/react";
-import { useLocale } from "react-intlayer";
+import { useIntlayer, useLocale } from "react-intlayer";
 import { NavLink, useParams } from "react-router";
 import ChangeHandleFormPopover from "./change-handle-form-popover";
 import { locacalizeTo } from "./localized-link";
@@ -18,6 +18,8 @@ interface BottomActionBarProps {
 export default function BottomActionBar({ isOwner }: BottomActionBarProps) {
   const { handle } = useParams();
   const { locale } = useLocale();
+  const { analyticsComingSoon, settingsLabel } =
+    useIntlayer("bottomActionBar");
   const settingPath = handle ? `/user/${handle}/setting` : "/";
   const settingTo = locacalizeTo(settingPath, locale);
 
@@ -34,7 +36,7 @@ export default function BottomActionBar({ isOwner }: BottomActionBarProps) {
             }
           />
           <TooltipContent side="bottom" sideOffset={8}>
-            <p>Analytics (Comming Soon!)</p>
+            <p>{analyticsComingSoon.value}</p>
           </TooltipContent>
         </Tooltip>
       </OwnerGate>
@@ -66,7 +68,7 @@ export default function BottomActionBar({ isOwner }: BottomActionBarProps) {
             }
           />
           <TooltipContent side="bottom" sideOffset={8}>
-            <p>Setting</p>
+            <p>{settingsLabel.value}</p>
           </TooltipContent>
         </Tooltip>
       </OwnerGate>

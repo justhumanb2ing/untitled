@@ -67,8 +67,8 @@ export default function LocaleSwitcher() {
           </Button>
         )}
       />
-      <TooltipContent side="bottom" sideOffset={12}>
-        Language
+      <TooltipContent side="bottom" sideOffset={8}>
+        {localeLabel.value}
       </TooltipContent>
     </Tooltip>
   );

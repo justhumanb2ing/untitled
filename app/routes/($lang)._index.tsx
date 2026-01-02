@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { getAuth } from "@clerk/react-router/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import UserButton from "@/components/user-button";
+import { useIntlayer } from "react-intlayer";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -38,13 +39,14 @@ export async function loader(args: Route.LoaderArgs) {
 
 export default function Home({ loaderData }: Route.ComponentProps) {
   const { primaryHandle } = loaderData;
+  const { startForFree } = useIntlayer("home");
 
   return (
     <main>
       <header className="flex items-center justify-end mx-auto max-w-7xl py-4 gap-2 px-2">
         <SignedOut>
           <SignInButton>
-            <Button>Start for free</Button>
+            <Button>{startForFree.value}</Button>
           </SignInButton>
         </SignedOut>
         <SignedIn>

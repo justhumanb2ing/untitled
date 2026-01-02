@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useIntlayer } from "react-intlayer";
 import BottomActionBar from "@/components/bottom-action-bar";
 import type { Route } from "./+types/($lang)._auth.user.$handle._index";
 import { getAuth } from "@clerk/react-router/server";
@@ -102,20 +103,21 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
           </div>
         </header>
 
-        {/* Page Information Section */}
-        <section className="max-w-2xl p-6">
-          <ProfileHeaderEditor
-            pageId={id}
-            imageUrl={image_url}
-            title={title}
-            description={description}
-            handle={handle}
-            isOwner={isOwner}
-          />
-        </section>
-
-        {/* Page Layout Section */}
-        <section className="p-10 py-6 grow">Page Layout Section</section>
+        <div className="flex flex-col grow">
+          {/* Page Information Section */}
+          <section className="max-w-2xl p-6">
+            <ProfileHeaderEditor
+              pageId={id}
+              imageUrl={image_url}
+              title={title}
+              description={description}
+              handle={handle}
+              isOwner={isOwner}
+            />
+          </section>
+          {/* Page Layout Section */}
+          <section className="p-10 py-6 grow">page layout section</section>
+        </div>
 
         <LayoutToggle isDesktop={isDesktop} onToggle={setIsDesktop} />
 
@@ -123,7 +125,8 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
         <footer
           className={cn(
             "text-sm text-muted-foreground relative flex items-center gap-1 h-40 px-8",
-            !isDesktop && "flex-col justify-center gap-3"
+            "flex-col gap-3 lg:flex-row",
+            !isDesktop && "flex-col! justify-center! gap-3",
           )}
         >
           <BottomActionBar isOwner={isOwner} />
@@ -131,7 +134,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
             className={cn(
               "flex items-center gap-1",
               isDesktop
-                ? "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+                ? "relative lg:absolute lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2"
                 : "relative"
             )}
           >

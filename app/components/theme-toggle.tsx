@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
+import { useIntlayer } from "react-intlayer";
 
 import { cn } from "@/lib/utils";
 import { MoonStarsIcon, SunDimIcon } from "@phosphor-icons/react";
@@ -18,6 +19,7 @@ export const ThemeToggle = ({
 }: ThemeTogglerProps) => {
   const [isDark, setIsDark] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const { themeTooltip } = useIntlayer("themeToggle");
 
   useEffect(() => {
     const updateTheme = () => {
@@ -105,7 +107,7 @@ export const ThemeToggle = ({
         }
       />
       <TooltipContent side="bottom" sideOffset={12}>
-        <p>Theme</p>
+        <p>{themeTooltip.value}</p>
       </TooltipContent>
     </Tooltip>
   );

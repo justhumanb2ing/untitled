@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowsLeftRightIcon, CheckIcon } from "@phosphor-icons/react";
 import { useForm } from "react-hook-form";
+import { useIntlayer } from "react-intlayer";
 import { z } from "zod";
 
 import { Button } from "./ui/button";
@@ -50,6 +51,7 @@ interface ChangeHandleFormPopoverProps {
 export default function ChangeHandleFormPopover({
   handle,
 }: ChangeHandleFormPopoverProps) {
+  const { changeHandleTooltip } = useIntlayer("changeHandle");
   const localizedNavigate = useLocalizedNavigate();
   const [isHandlePopoverOpen, setIsHandlePopoverOpen] = useState(false);
   const [isCheckingHandle, setIsCheckingHandle] = useState(false);
@@ -207,7 +209,7 @@ export default function ChangeHandleFormPopover({
           }
         />
         <TooltipContent side="bottom" sideOffset={8}>
-          <p>Change Handle</p>
+          <p>{changeHandleTooltip.value}</p>
         </TooltipContent>
       </Tooltip>
       <PopoverPanel
