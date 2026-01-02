@@ -21,8 +21,8 @@ export default function SignInRoute() {
           <XIcon className="size-6" weight="bold" />
         </Button>
       </header>
-      <section className="w-full flex items-center h-full">
-        <div className="flex-5 flex justify-center">
+      <section className="w-full flex items-center h-full justify-center">
+        <div className="lg:flex-5 flex justify-center">
           <SignIn path={signInPath} signUpUrl={signUpUrl} withSignUp />
         </div>
 
