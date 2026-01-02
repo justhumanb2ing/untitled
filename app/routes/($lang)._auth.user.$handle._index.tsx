@@ -132,23 +132,22 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
         {/* Footer + Action bar */}
         <footer
           className={cn(
-            "text-sm text-muted-foreground relative flex items-center gap-1 h-40 px-8",
-            "flex-col gap-3 lg:flex-row",
+            "text-sm text-muted-foreground relative flex items-center justify-center gap-1 h-32 px-8",
+            "flex-col gap-3 lg:flex-row lg:justify-start",
             !isDesktop && "flex-col! justify-center! gap-3"
           )}
         >
-          <BottomActionBar isOwner={isOwner} />
-          <p
-            className={cn(
-              "flex items-center gap-1",
-              isDesktop
-                ? "relative lg:absolute lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2"
-                : "relative"
-            )}
-          >
+          <div className={cn("flex items-center", isDesktop && "lg:flex-1")}>
+            <BottomActionBar isOwner={isOwner} />
+          </div>
+          <p className="flex items-center gap-1 text-center">
             <LightningIcon weight="fill" />
             Powered by Untitled
           </p>
+          <div
+            aria-hidden="true"
+            className={cn("hidden", isDesktop && "lg:block lg:flex-1")}
+          />
         </footer>
       </div>
     </PageAutoSaveController>
