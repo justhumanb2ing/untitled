@@ -21,7 +21,7 @@ export default function UserAuthButton() {
               <Button
                 variant={"ghost"}
                 size={"lg"}
-                className={"text-sm text-muted-foreground"}
+                className={"text-xs text-muted-foreground"}
               >
                 Sign out
               </Button>
@@ -33,7 +33,7 @@ export default function UserAuthButton() {
               <Button
                 variant={"ghost"}
                 size={"lg"}
-                className={"text-sm text-muted-foreground"}
+                className={"text-xs text-muted-foreground"}
               >
                 Sign in
               </Button>

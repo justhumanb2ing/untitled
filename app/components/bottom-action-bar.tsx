@@ -1,7 +1,4 @@
-import {
-  ChartBarIcon,
-  GearSixIcon,
-} from "@phosphor-icons/react";
+import { ChartBarIcon, GearSixIcon } from "@phosphor-icons/react";
 import { useLocale } from "react-intlayer";
 import { NavLink, useParams } from "react-router";
 import ChangeHandleFormPopover from "./change-handle-form-popover";
@@ -12,6 +9,7 @@ import { ThemeToggle } from "./theme-toggle";
 import UserAuthButton from "./user-auth-button";
 import { OwnerGate } from "./owner-gate";
 import { Separator } from "./ui/separator";
+import LocaleSwitcher from "./locale-switcher";
 
 interface BottomActionBarProps {
   isOwner: boolean;
@@ -74,7 +72,9 @@ export default function BottomActionBar({ isOwner }: BottomActionBarProps) {
       </OwnerGate>
 
       <ThemeToggle iconSize="size-4" />
+
       <Separator orientation="vertical" className={"my-1.5"} />
+      <LocaleSwitcher />
       <UserAuthButton />
     </div>
   );
