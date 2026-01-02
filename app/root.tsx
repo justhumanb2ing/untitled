@@ -7,6 +7,7 @@ import {
   ScrollRestoration,
   redirect,
   useNavigation,
+  Link,
 } from "react-router";
 
 import type { Route } from "./+types/root";
@@ -21,6 +22,8 @@ import {
 import { ClerkProvider } from "@clerk/react-router";
 import { locales } from "intlayer";
 import { Spinner } from "./components/ui/spinner";
+import { Button } from "./components/ui/button";
+import { HouseSimpleIcon } from "@phosphor-icons/react";
 
 const themeInitScript = `
 (() => {
@@ -173,8 +176,10 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   let message = "Oops!";
   let details = "An unexpected error occurred.";
   let stack: string | undefined;
+  let is404: boolean | undefined;
 
   if (isRouteErrorResponse(error)) {
+    is404 = error.status === 404;
     message = error.status === 404 ? "404" : "Error";
     details =
       error.status === 404
@@ -186,13 +191,44 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
+    <main className="pt-16 p-4 container mx-auto h-dvh">
+      {is404 ? (
+        <>
+          <section className="h-full flex flex-col items-center justify-center">
+            <div>
+              <img
+                src="/404.png"
+                alt="404"
+                className="w-full h-full object-cover min-h-[600px]"
+              />
+            </div>
+            <div className="flex flex-col gap-8 items-center">
+              <div className="text-lg font-light">
+                It seems you got a little bit lost...
+              </div>
+              <Button
+                size={"lg"}
+                className={"h-10 px-4 text-sm rounded-xl"}
+                render={
+                  <Link to={"/"}>
+                    <HouseSimpleIcon weight="fill" className="size-6" />
+                    Go to home
+                  </Link>
+                }
+              />
+            </div>
+          </section>
+        </>
+      ) : (
+        <>
+          <h1>{message}</h1>
+          <p>{details}</p>
+          {stack && (
+            <pre className="w-full p-4 overflow-x-auto">
+              <code>{stack}</code>
+            </pre>
+          )}
+        </>
       )}
     </main>
   );
