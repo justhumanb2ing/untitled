@@ -18,8 +18,7 @@ interface BottomActionBarProps {
 export default function BottomActionBar({ isOwner }: BottomActionBarProps) {
   const { handle } = useParams();
   const { locale } = useLocale();
-  const { analyticsComingSoon, settingsLabel } =
-    useIntlayer("bottomActionBar");
+  const { analyticsComingSoon, settingsLabel } = useIntlayer("bottomActionBar");
   const settingPath = handle ? `/user/${handle}/setting` : "/";
   const settingTo = locacalizeTo(settingPath, locale);
 
@@ -55,7 +54,7 @@ export default function BottomActionBar({ isOwner }: BottomActionBarProps) {
                 variant={"ghost"}
                 size={"icon-lg"}
                 render={
-                  <NavLink to={settingTo} end>
+                  <NavLink prefetch="viewport" to={settingTo} end>
                     {({ isActive }) => (
                       <GearSixIcon
                         weight={isActive ? "fill" : "regular"}

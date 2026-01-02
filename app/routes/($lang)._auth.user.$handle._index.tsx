@@ -81,13 +81,13 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
       >
         {/* Page Header */}
         <header className="flex justify-between items-center gap-1 bg-muted/50 rounded-lg p-2 backdrop-blur-md sticky top-3 mx-4 px-4 z-10">
-          <aside className="font-semibold flex items-center gap-1">
-            <SealCheckIcon className="fill-blue-500 size-5" weight="fill" />
-            {handle}
+          <aside className="font-semibold flex items-center gap-1 truncate">
+            <SealCheckIcon className="fill-blue-500 size-5!" weight="fill" />
+            <span className="text-sm lg:text-base truncate">{handle}</span>
           </aside>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 shrink-0">
             <OwnerGate isOwner={isOwner}>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
                 <SavingStatusIndicator className="mr-2" />
                 <VisibilityToggle pageId={id} isPublic={is_public} />
               </div>

@@ -20,7 +20,7 @@ export default function UserButton({ primaryHandle }: UserButtonProps) {
       className="gap-0 rounded-full py-0 ps-0 pe-3 h-10 px-5"
       render={
         primaryHandle ? (
-          <LocalizedLink to={`/user/${primaryHandle}`} />
+          <LocalizedLink prefetch="viewport" to={`/user/${primaryHandle}`} />
         ) : undefined
       }
     >
