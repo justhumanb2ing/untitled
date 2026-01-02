@@ -38,7 +38,7 @@ export default function LayoutToggle({
       size={"lg"}
       spacing={2}
       className={
-        "rounded-xl fixed bottom-4 right-4 bg-background/40 p-1 shadow-sm backdrop-blur-sm z-50"
+        "rounded-xl fixed bottom-4 right-4 bg-background/40 p-1 shadow-sm backdrop-blur-sm z-50 hidden sm:block"
       }
     >
       <TooltipProvider>
