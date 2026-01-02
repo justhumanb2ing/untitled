@@ -113,6 +113,7 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
   --brand: oklch(0.6591 0.232 13.79);
+  --destructive-foreground: var(--color-red-700);
 }
 
 .dark {
@@ -148,4 +149,5 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
   --brand: oklch(0.61 0.2285 9.73);
+  --destructive-foreground: var(--color-red-400);
 }
