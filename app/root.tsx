@@ -149,7 +149,51 @@ export default function App({ loaderData }: Route.ComponentProps) {
       appearance={{
         theme: shadcn,
         variables: {
-          colorBackground: "white",
+          colorBackground: "#ffffff",
+          colorForeground: "#111827",
+          colorMutedForeground: "#6b7280",
+          colorPrimary: "#7b8bff",
+          colorPrimaryForeground: "#ffffff",
+          colorInputBackground: "#f5f5f5",
+          colorInputForeground: "#111827",
+          colorNeutral: "#d6d7dc",
+          fontFamily: "Pretendard, sans-serif",
+          fontFamilyButtons: "Pretendard, sans-serif",
+        },
+        elements: {
+          rootBox: "w-full min-w-sm max-w-sm",
+          cardBox: "w-full px-6 !bg-transparent !shadow-none !border-0",
+          card: "!bg-transparent !shadow-none !border-0 p-0 gap-6",
+          headerTitle: "text-2xl font-semibold text-neutral-900 tracking-tight",
+          headerSubtitle: "text-sm text-neutral-500",
+          form: "gap-4",
+          formFieldRow: "gap-2",
+          formFieldLabel: "sr-only",
+          formFieldInput:
+            "py-6 !h-12 !rounded-full !bg-muted px-5 text-base text-neutral-700 placeholder:text-neutral-400 focus:border-brand focus:ring-2 focus:ring-brand/40",
+          formButtonPrimary:
+            "!h-12 !rounded-full !bg-brand !shadow-none text-white text-base font-medium transition-colors hover:!bg-brand focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
+          formButtonReset: "!shadow-none",
+          dividerRow: "gap-4",
+          dividerLine: "bg-[#e5e7eb]",
+          dividerText:
+            "text-[11px] tracking-[0.35em] text-neutral-400 font-medium",
+          socialButtonsRoot: "gap-4",
+          socialButtons: "gap-4",
+          socialButtonsBlockButton:
+            "h-12 !rounded-full !border !border-[#e5e7eb] !bg-white !shadow-none text-neutral-800 transition-colors hover:!bg-[#f8fafc]",
+          socialButtonsBlockButtonText: "text-base font-medium",
+          socialButtonsIconButton: "!shadow-none",
+          socialButtonsProviderIcon: "size-5",
+          alternativeMethodsBlockButton: "!shadow-none",
+          footer:
+            "flex flex-col items-center gap-3 !bg-transparent !shadow-none mt-4",
+          footerPages:
+            "order-2 flex items-center gap-2 !bg-transparent !shadow-none",
+          footerAction: "order-1 justify-center !bg-transparent !shadow-none",
+          footerActionText: "text-sm text-neutral-600",
+          footerActionLink:
+            "text-sm font-medium text-neutral-900 underline-offset-4 hover:text-neutral-700 hover:underline",
         },
         layout: {
           privacyPageUrl: "https://clerk.com/privacy",
@@ -157,7 +201,6 @@ export default function App({ loaderData }: Route.ComponentProps) {
           unsafe_disableDevelopmentModeWarnings: true,
           socialButtonsPlacement: "bottom",
           socialButtonsVariant: "iconButton",
-          logoPlacement: "outside",
         },
       }}
     >
