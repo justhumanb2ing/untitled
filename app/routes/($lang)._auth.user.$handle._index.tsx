@@ -82,7 +82,10 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
         {/* Page Header */}
         <header className="flex justify-between items-center gap-1 bg-muted/50 rounded-lg p-2 backdrop-blur-md sticky top-3 mx-4 px-4 z-10">
           <aside className="font-semibold flex items-center gap-1 truncate">
-            <SealCheckIcon className="fill-blue-500 size-5!" weight="fill" />
+            <SealCheckIcon
+              className="fill-blue-500 size-4 lg:size-5"
+              weight="fill"
+            />
             <span className="text-sm lg:text-base truncate">{handle}</span>
           </aside>
           <div className="flex items-center gap-2 shrink-0">
