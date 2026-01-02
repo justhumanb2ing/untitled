@@ -204,7 +204,7 @@ export default function ProfileHeaderEditor({
                 <Button
                   type="button"
                   variant={"secondary"}
-                  className="relative aspect-square size-40 overflow-hidden rounded-full p-0"
+                  className="relative aspect-square size-40 overflow-hidden rounded-full p-0 disabled:opacity-100"
                   onClick={() => imageInputRef.current?.click()}
                   disabled={isReadOnly}
                 >
