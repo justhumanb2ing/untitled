@@ -215,7 +215,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
           termsPageUrl: "https://clerk.com/legal/privacy",
           unsafe_disableDevelopmentModeWarnings: true,
           socialButtonsPlacement: "bottom",
-          socialButtonsVariant: "iconButton",
+          socialButtonsVariant: "blockButton",
         },
       }}
     >
