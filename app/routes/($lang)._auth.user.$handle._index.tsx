@@ -1,13 +1,11 @@
 import { useMemo, useState } from "react";
 import BottomActionBar from "@/components/bottom-action-bar";
-import { ThemeToggle } from "@/components/theme-toggle";
 import type { Route } from "./+types/($lang)._auth.user.$handle._index";
 import { getAuth } from "@clerk/react-router/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import { LightningIcon, SealCheckIcon } from "@phosphor-icons/react";
 import VisibilityToggle from "@/components/visibility-toggle";
 import { OwnerGate } from "@/components/owner-gate";
-import UserAuthButton from "@/components/user-auth-button";
 import ProfileHeaderEditor from "@/components/profile-header-editor";
 import { cn } from "@/lib/utils";
 import LayoutToggle from "@/components/layout-toggle";
@@ -50,21 +48,25 @@ export async function loader(args: Route.LoaderArgs) {
 }
 
 export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
-  const { page, handle, isOwner } = loaderData;
+  const {
+    page: { id, title, description, image_url, is_public },
+    handle,
+    isOwner,
+  } = loaderData;
   const [isDesktop, setIsDesktop] = useState(true);
   const initialSnapshot = useMemo(
     () => ({
-      title: page.title,
-      description: page.description,
-      image_url: page.image_url,
+      title,
+      description,
+      image_url,
       layout: null,
     }),
-    [page.description, page.image_url, page.title]
+    [title, description, image_url]
   );
 
   return (
     <PageAutoSaveController
-      pageId={page.id}
+      pageId={id}
       initialSnapshot={initialSnapshot}
       enabled={isOwner}
     >
@@ -76,6 +78,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
             : "self-start max-w-lg border rounded-4xl shadow-lg mx-auto container my-6 min-h-[calc(100dvh-3rem)]"
         )}
       >
+        {/* Page Header */}
         <header className="flex justify-between items-center gap-1 bg-muted/50 rounded-lg p-2 backdrop-blur-md sticky top-3 mx-4 px-4 z-10">
           <aside className="font-semibold flex items-center gap-1">
             <SealCheckIcon className="fill-blue-500 size-5" weight="fill" />
@@ -85,7 +88,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
             <OwnerGate isOwner={isOwner}>
               <div className="flex items-center gap-3">
                 <SavingStatusIndicator className="mr-2" />
-                <VisibilityToggle pageId={page.id} isPublic={page.is_public} />
+                <VisibilityToggle pageId={id} isPublic={is_public} />
               </div>
             </OwnerGate>
             <Separator orientation="vertical" className={"my-1"} />
@@ -99,35 +102,31 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
           </div>
         </header>
 
-        <div className="max-w-2xl p-6">
+        {/* Page Information Section */}
+        <section className="max-w-2xl p-6">
           <ProfileHeaderEditor
-            pageId={page.id}
-            imageUrl={page.image_url}
-            title={page.title}
-            description={page.description}
+            pageId={id}
+            imageUrl={image_url}
+            title={title}
+            description={description}
             handle={handle}
             isOwner={isOwner}
           />
-        </div>
+        </section>
 
+        {/* Page Layout Section */}
         <section className="p-10 py-6 grow">Page Layout Section</section>
-
-        <OwnerGate isOwner={isOwner}>
-          <BottomActionBar />
-        </OwnerGate>
 
         <LayoutToggle isDesktop={isDesktop} onToggle={setIsDesktop} />
 
+        {/* Footer + Action bar */}
         <footer
           className={cn(
             "text-sm text-muted-foreground relative flex items-center gap-1 h-40 px-8",
-            !isDesktop && "flex-col justify-center"
+            !isDesktop && "flex-col justify-center gap-3"
           )}
         >
-          <div className="flex items-center gap-1">
-            <ThemeToggle />
-            <UserAuthButton />
-          </div>
+          <BottomActionBar isOwner={isOwner} />
           <p
             className={cn(
               "flex items-center gap-1",

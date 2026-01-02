@@ -1,7 +1,6 @@
 import {
   ChartBarIcon,
   GearSixIcon,
-  HouseSimpleIcon,
 } from "@phosphor-icons/react";
 import { useLocale } from "react-intlayer";
 import { NavLink, useParams } from "react-router";
@@ -9,87 +8,74 @@ import ChangeHandleFormPopover from "./change-handle-form-popover";
 import { locacalizeTo } from "./localized-link";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { ThemeToggle } from "./theme-toggle";
+import UserAuthButton from "./user-auth-button";
+import { OwnerGate } from "./owner-gate";
+import { Separator } from "./ui/separator";
 
-export default function BottomActionBar() {
+interface BottomActionBarProps {
+  isOwner: boolean;
+}
+
+export default function BottomActionBar({ isOwner }: BottomActionBarProps) {
   const { handle } = useParams();
   const { locale } = useLocale();
   const settingPath = handle ? `/user/${handle}/setting` : "/";
-  const homePath = handle ? `/user/${handle}` : "/";
-  const homeTo = locacalizeTo(homePath, locale);
   const settingTo = locacalizeTo(settingPath, locale);
 
   return (
-    <div className="bg-muted/50 backdrop-blur-sm rounded-3xl p-1 flex items-center justify-between px-2 gap-1 fixed bottom-28 left-1/2 -translate-x-1/2 z-50">
-      {/* Home Link Button */}
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              variant={"ghost"}
-              size={"icon-lg"}
-              className={"p-6 rounded-2xl"}
-              render={
-                <NavLink to={homeTo} end>
-                  {({ isActive }) => (
-                    <HouseSimpleIcon
-                      weight={isActive ? "fill" : "regular"}
-                      className="size-6"
-                    />
-                  )}
-                </NavLink>
-              }
-            />
-          }
-        />
-        <TooltipContent side="bottom" sideOffset={8}>
-          <p>Home</p>
-        </TooltipContent>
-      </Tooltip>
-
+    <div className="flex items-center gap-1">
       {/* Analytics Link Button */}
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              variant={"ghost"}
-              size={"icon-lg"}
-              className={"p-6 rounded-2xl"}
-            >
-              <ChartBarIcon weight="regular" className="size-6" />
-            </Button>
-          }
-        />
-        <TooltipContent side="bottom" sideOffset={8}>
-          <p>Analytics (Comming Soon!)</p>
-        </TooltipContent>
-      </Tooltip>
-      <ChangeHandleFormPopover handle={handle} />
+      <OwnerGate isOwner={isOwner}>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button variant={"ghost"} size={"icon-lg"}>
+                <ChartBarIcon weight="regular" className="size-4" />
+              </Button>
+            }
+          />
+          <TooltipContent side="bottom" sideOffset={8}>
+            <p>Analytics (Comming Soon!)</p>
+          </TooltipContent>
+        </Tooltip>
+      </OwnerGate>
+
+      {/* Change Handle Button */}
+      <OwnerGate isOwner={isOwner}>
+        <ChangeHandleFormPopover handle={handle} />
+      </OwnerGate>
 
       {/* Setting Link Button */}
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              variant={"ghost"}
-              size={"icon-lg"}
-              className={"p-6 rounded-2xl"}
-              render={
-                <NavLink to={settingTo} end>
-                  {({ isActive }) => (
-                    <GearSixIcon
-                      weight={isActive ? "fill" : "regular"}
-                      className="size-6"
-                    />
-                  )}
-                </NavLink>
-              }
-            />
-          }
-        />
-        <TooltipContent side="bottom" sideOffset={8}>
-          <p>Setting</p>
-        </TooltipContent>
-      </Tooltip>
+      <OwnerGate isOwner={isOwner}>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant={"ghost"}
+                size={"icon-lg"}
+                render={
+                  <NavLink to={settingTo} end>
+                    {({ isActive }) => (
+                      <GearSixIcon
+                        weight={isActive ? "fill" : "regular"}
+                        className="size-4"
+                      />
+                    )}
+                  </NavLink>
+                }
+              />
+            }
+          />
+          <TooltipContent side="bottom" sideOffset={8}>
+            <p>Setting</p>
+          </TooltipContent>
+        </Tooltip>
+      </OwnerGate>
+
+      <ThemeToggle iconSize="size-4" />
+      <Separator orientation="vertical" className={"my-1.5"} />
+      <UserAuthButton />
     </div>
   );
 }

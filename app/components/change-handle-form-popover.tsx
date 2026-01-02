@@ -197,11 +197,10 @@ export default function ChangeHandleFormPopover({
                 <Button
                   variant={"ghost"}
                   size={"icon-lg"}
-                  className={"p-6 rounded-2xl"}
                   aria-label="Change Handle"
                   disabled={!canChangeHandle}
                 >
-                  <ArrowsLeftRightIcon weight="regular" className="size-6" />
+                  <ArrowsLeftRightIcon weight="regular" className="size-4" />
                 </Button>
               }
             />
@@ -221,8 +220,8 @@ export default function ChangeHandleFormPopover({
         }}
         className="w-84 rounded-3xl p-6 gap-0 ring-secondary"
       >
-        <PopoverTitle className={'font-medium'}>Change handle</PopoverTitle>
-        <PopoverDescription className={'text-muted-foreground text-sm'}>
+        <PopoverTitle className={"font-medium"}>Change handle</PopoverTitle>
+        <PopoverDescription className={"text-muted-foreground text-sm"}>
           Choose a unique handle for your page.
         </PopoverDescription>
         <RhfForm {...form}>
