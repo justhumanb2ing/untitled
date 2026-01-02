@@ -66,7 +66,7 @@ export default function EditableParagraph({
       onInput={handleInput}
       onBlur={handleBlur}
       className={cn(
-        "relative w-full whitespace-pre-wrap outline-none focus-visible:ring-0 ",
+        "relative w-full whitespace-pre-wrap wrap-break-word outline-none focus-visible:ring-0",
         "data-[empty=true]:before:absolute data-[empty=true]:before:inset-0 data-[empty=true]:before:flex data-[empty=true]:before:text-muted-foreground data-[empty=true]:before:content-[attr(data-placeholder)]",
         readOnly ? "cursor-default" : "cursor-text",
         className

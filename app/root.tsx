@@ -13,7 +13,6 @@ import {
 import type { Route } from "./+types/root";
 import "./app.css";
 import Providers from "./providers";
-import { shadcn } from "@clerk/themes";
 import {
   clerkClient,
   clerkMiddleware,
@@ -39,6 +38,17 @@ const themeInitScript = `
   }
 })();
 `;
+
+const clerkLocalization = {
+  signIn: {
+    start: {
+      title: "Welcome back",
+      titleCombined: "Welcome back",
+      subtitle: "Log in to your {{applicationName}}",
+      subtitleCombined: "Log in to your {{applicationName}}",
+    },
+  },
+};
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -146,8 +156,8 @@ export default function App({ loaderData }: Route.ComponentProps) {
   return (
     <ClerkProvider
       loaderData={loaderData}
+      localization={clerkLocalization}
       appearance={{
-        theme: shadcn,
         variables: {
           colorBackground: "#ffffff",
           colorForeground: "#111827",
@@ -161,27 +171,27 @@ export default function App({ loaderData }: Route.ComponentProps) {
           fontFamilyButtons: "Pretendard, sans-serif",
         },
         elements: {
-          rootBox: "w-full min-w-sm max-w-sm",
+          rootBox: "w-full min-w-sm max-w-md",
           cardBox: "w-full px-6 !bg-transparent !shadow-none !border-0",
           card: "!bg-transparent !shadow-none !border-0 p-0 gap-6",
-          headerTitle: "text-2xl font-semibold text-neutral-900 tracking-tight",
-          headerSubtitle: "text-sm text-neutral-500",
-          form: "gap-4",
+          headerTitle: "text-3xl font-bold text-foreground tracking-tight mb-2",
+          headerSubtitle: "text-base text-primary mb-6",
+          form: "gap-8",
           formFieldRow: "gap-2",
           formFieldLabel: "sr-only",
           formFieldInput:
-            "py-6 !h-12 !rounded-full !bg-muted px-5 text-base text-neutral-700 placeholder:text-neutral-400 focus:border-brand focus:ring-2 focus:ring-brand/40",
+            "py-6 !h-12 !rounded-xl !bg-muted px-5 text-base text-neutral-700 placeholder:text-neutral-500 focus:border-brand focus:ring-2 focus:ring-brand/40",
           formButtonPrimary:
-            "!h-12 !rounded-full !bg-brand !shadow-none text-white text-base font-medium transition-colors hover:!bg-brand focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
+            "font-semibold !h-12 !rounded-xl !bg-brand !shadow-none text-white text-base font-medium transition-colors hover:!bg-brand focus-visible:ring-2 focus-visible:ring-brand/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
           formButtonReset: "!shadow-none",
           dividerRow: "gap-4",
-          dividerLine: "bg-[#e5e7eb]",
+          dividerLine: "hidden",
           dividerText:
-            "text-[11px] tracking-[0.35em] text-neutral-400 font-medium",
+            "text-base tracking-wide text-primary font-medium uppercase text-neutral-500",
           socialButtonsRoot: "gap-4",
           socialButtons: "gap-4",
           socialButtonsBlockButton:
-            "h-12 !rounded-full !border !border-[#e5e7eb] !bg-white !shadow-none text-neutral-800 transition-colors hover:!bg-[#f8fafc]",
+            "!h-12 !rounded-xl !bg-background hover:!bg-muted/50 !border !border-input !shadow-none text-primary transition-colors dark:!bg-muted dark:hover:!bg-muted/50 dark:!border-muted",
           socialButtonsBlockButtonText: "text-base font-medium",
           socialButtonsIconButton: "!shadow-none",
           socialButtonsProviderIcon: "size-5",
@@ -189,11 +199,12 @@ export default function App({ loaderData }: Route.ComponentProps) {
           footer:
             "flex flex-col items-center gap-3 !bg-transparent !shadow-none mt-4",
           footerPages:
-            "order-2 flex items-center gap-2 !bg-transparent !shadow-none",
+            "order-2 flex items-center gap-4 !bg-transparent !shadow-none",
+          footerPagesLink: "text-primary",
           footerAction: "order-1 justify-center !bg-transparent !shadow-none",
-          footerActionText: "text-sm text-neutral-600",
+          footerActionText: "text-sm",
           footerActionLink:
-            "text-sm font-medium text-neutral-900 underline-offset-4 hover:text-neutral-700 hover:underline",
+            "text-sm font-medium underline-offset-4 hover:underline",
         },
         layout: {
           privacyPageUrl: "https://clerk.com/privacy",
