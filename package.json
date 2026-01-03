@@ -30,6 +30,7 @@
     "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "es-toolkit": "^1.43.0",
     "intlayer": "^7.5.7",
     "isbot": "^5.1.31",

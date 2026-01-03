@@ -13,141 +13,15 @@ import { NumberTicker } from "@/components/effects/number-ticker";
 import { Separator } from "@/components/ui/separator";
 import { PageAutoSaveController } from "@/components/page-auto-save-controller";
 import SavingStatusIndicator from "@/components/saving-status-indicator";
-
-type UmamiResponse = {
-  ok: boolean;
-  status?: number;
-  data?: {
-    visits: number;
-  };
-  error?: unknown;
-};
-
-type UmamiConfig = {
-  apiEndpoint: string;
-  apiKey: string;
-};
-
-const UMAMI_WEBSITE_ID = "913b402f-ffb7-4247-8407-98b91b9ec264";
-const UMAMI_TIMEZONE = "Asia/Seoul";
-const UMAMI_UNIT = "day";
-const UMAMI_ENDPOINT_PATH = "websites";
-
-function getDateParts(value: Date, timeZone: string) {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-  const parts = formatter.formatToParts(value);
-  const year = Number(parts.find((part) => part.type === "year")?.value);
-  const month = Number(parts.find((part) => part.type === "month")?.value);
-  const day = Number(parts.find((part) => part.type === "day")?.value);
-
-  if (!year || !month || !day) {
-    throw new Error("Failed to resolve date parts.");
-  }
-
-  return { year, month, day };
-}
-
-function getTimeZoneOffsetMs(timeZone: string, value: Date) {
-  const tzDate = new Date(value.toLocaleString("en-US", { timeZone }));
-  const utcDate = new Date(value.toLocaleString("en-US", { timeZone: "UTC" }));
-
-  return tzDate.getTime() - utcDate.getTime();
-}
-
-function getTodayRange(timeZone: string) {
-  const today = new Date();
-  const { year, month, day } = getDateParts(today, timeZone);
-  const utcMidnight = new Date(Date.UTC(year, month - 1, day));
-  const offsetMs = getTimeZoneOffsetMs(timeZone, utcMidnight);
-  const startAt = utcMidnight.getTime() - offsetMs;
-  const endAt = startAt + 24 * 60 * 60 * 1000;
-
-  return { startAt, endAt };
-}
-
-function resolveUmamiConfig(): UmamiConfig | null {
-  const apiKey = process.env.UMAMI_API_KEY;
-  const apiEndpoint = process.env.UMAMI_API_CLIENT_ENDPOINT;
-
-  if (!apiKey || !apiEndpoint) {
-    return null;
-  }
-
-  return { apiEndpoint, apiKey };
-}
-
-function getVisitsFromPayload(payload: unknown) {
-  if (!payload || typeof payload !== "object") {
-    return null;
-  }
-
-  if (!("visits" in payload)) {
-    return null;
-  }
-
-  const visits = (payload as { visits?: unknown }).visits;
-  return typeof visits === "number" ? visits : null;
-}
-
-/**
- * Fetches Umami visit stats for the given website and time range.
- */
-async function fetchUmamiVisits(params: {
-  apiEndpoint: string;
-  apiKey: string;
-  websiteId: string;
-  startAt: number;
-  endAt: number;
-  unit: string;
-  timezone: string;
-}): Promise<UmamiResponse> {
-  const baseUrl = params.apiEndpoint.endsWith("/")
-    ? params.apiEndpoint
-    : `${params.apiEndpoint}/`;
-  const statsUrl = new URL(
-    `${UMAMI_ENDPOINT_PATH}/${params.websiteId}/stats`,
-    baseUrl
-  );
-  const searchParams = new URLSearchParams({
-    startAt: String(params.startAt),
-    endAt: String(params.endAt),
-    unit: params.unit,
-    timezone: params.timezone,
-  });
-
-  statsUrl.search = searchParams.toString();
-  const response = await fetch(statsUrl.toString(), {
-    headers: {
-      Accept: "application/json",
-      "x-umami-api-key": params.apiKey,
-    },
-  });
-
-  const payload = await response.json().catch(() => null);
-  const visits = getVisitsFromPayload(payload);
-
-  if (!response.ok || visits === null) {
-    return {
-      ok: false,
-      status: response.status,
-      error:
-        payload ?? "Failed to fetch Umami stats or missing visits in response.",
-    };
-  }
-
-  return {
-    ok: true,
-    status: response.status,
-    data: {
-      visits,
-    },
-  };
-}
+import {
+  fetchUmamiVisits,
+  getTodayRange,
+  resolveUmamiConfig,
+  UMAMI_TIMEZONE,
+  UMAMI_UNIT,
+  UMAMI_WEBSITE_ID,
+  type UmamiResponse,
+} from "../../service/umami/umami";
 
 export async function loader(args: Route.LoaderArgs) {
   const { userId } = await getAuth(args);
@@ -200,7 +74,10 @@ export async function loader(args: Route.LoaderArgs) {
           endAt,
           unit: UMAMI_UNIT,
           timezone: UMAMI_TIMEZONE,
+          pageId: page.id,
         });
+
+        console.log(umamiResult);
       } catch (error) {
         umamiResult = {
           ok: false,
@@ -234,9 +111,8 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
 
   useEffect(() => {
     if (!id) return;
-    if (!(window as any)?.umami) return;
 
-    (window as any).umami.track((props: any) => ({
+    umami.track((props) => ({
       ...props,
       website: UMAMI_WEBSITE_ID,
       url: `/user/${id}`,
@@ -276,29 +152,19 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
               </div>
             </OwnerGate>
             <Separator orientation="vertical" className={"my-1"} />
-            <p className="text-xs ">
-              <NumberTicker
-                value={187}
-                className="text-foreground dark:text-foreground"
-              />{" "}
-              View
-            </p>
+            {umamiResult && umamiResult.ok ? (
+              <p className="text-xs">
+                <NumberTicker
+                  value={umamiResult.data!.visits || 0}
+                  className="text-foreground dark:text-foreground"
+                />{" "}
+                View
+              </p>
+            ) : (
+              <p>View error</p>
+            )}
           </div>
         </header>
-
-        <OwnerGate isOwner={isOwner}>
-          {umamiResult && (
-            <section className="mx-4 rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground">
-              <p className="font-medium text-foreground">
-                Umami response {umamiResult.ok ? "OK" : "Error"} (
-                {umamiResult.status ?? "unknown"})
-              </p>
-              <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap wrap-break-word">
-                {JSON.stringify(umamiResult, null, 2)}
-              </pre>
-            </section>
-          )}
-        </OwnerGate>
 
         <div
           className={cn(
