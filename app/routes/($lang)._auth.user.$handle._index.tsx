@@ -23,6 +23,11 @@ type UmamiResponse = {
   error?: unknown;
 };
 
+type UmamiConfig = {
+  apiEndpoint: string;
+  apiKey: string;
+};
+
 const UMAMI_WEBSITE_ID = "913b402f-ffb7-4247-8407-98b91b9ec264";
 const UMAMI_TIMEZONE = "Asia/Seoul";
 const UMAMI_UNIT = "day";
@@ -65,6 +70,33 @@ function getTodayRange(timeZone: string) {
   return { startAt, endAt };
 }
 
+function resolveUmamiConfig(): UmamiConfig | null {
+  const apiKey = process.env.UMAMI_API_KEY;
+  const apiEndpoint = process.env.UMAMI_API_CLIENT_ENDPOINT;
+
+  if (!apiKey || !apiEndpoint) {
+    return null;
+  }
+
+  return { apiEndpoint, apiKey };
+}
+
+function getVisitsFromPayload(payload: unknown) {
+  if (!payload || typeof payload !== "object") {
+    return null;
+  }
+
+  if (!("visits" in payload)) {
+    return null;
+  }
+
+  const visits = (payload as { visits?: unknown }).visits;
+  return typeof visits === "number" ? visits : null;
+}
+
+/**
+ * Fetches Umami visit stats for the given website and time range.
+ */
 async function fetchUmamiVisits(params: {
   apiEndpoint: string;
   apiKey: string;
@@ -73,7 +105,7 @@ async function fetchUmamiVisits(params: {
   endAt: number;
   unit: string;
   timezone: string;
-}) {
+}): Promise<UmamiResponse> {
   const baseUrl = params.apiEndpoint.endsWith("/")
     ? params.apiEndpoint
     : `${params.apiEndpoint}/`;
@@ -89,7 +121,6 @@ async function fetchUmamiVisits(params: {
   });
 
   statsUrl.search = searchParams.toString();
-
   const response = await fetch(statsUrl.toString(), {
     headers: {
       Accept: "application/json",
@@ -98,8 +129,7 @@ async function fetchUmamiVisits(params: {
   });
 
   const payload = await response.json().catch(() => null);
-  const visits =
-    payload && typeof payload.visits === "number" ? payload.visits : null;
+  const visits = getVisitsFromPayload(payload);
 
   if (!response.ok || visits === null) {
     return {
@@ -152,10 +182,9 @@ export async function loader(args: Route.LoaderArgs) {
   let umamiResult: UmamiResponse | null = null;
 
   if (isOwner) {
-    const apiKey = process.env.UMAMI_API_KEY;
-    const apiEndpoint = process.env.UMAMI_API_CLIENT_ENDPOINT;
+    const umamiConfig = resolveUmamiConfig();
 
-    if (!apiKey || !apiEndpoint) {
+    if (!umamiConfig) {
       umamiResult = {
         ok: false,
         status: 500,
@@ -165,8 +194,7 @@ export async function loader(args: Route.LoaderArgs) {
       try {
         const { startAt, endAt } = getTodayRange(UMAMI_TIMEZONE);
         umamiResult = await fetchUmamiVisits({
-          apiEndpoint,
-          apiKey,
+          ...umamiConfig,
           websiteId: UMAMI_WEBSITE_ID,
           startAt,
           endAt,
@@ -205,16 +233,17 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
   );
 
   useEffect(() => {
-    if (id) return;
+    if (!id) return;
+    if (!(window as any)?.umami) return;
 
-    umami.track((props) => ({
+    (window as any).umami.track((props: any) => ({
       ...props,
       website: UMAMI_WEBSITE_ID,
       url: `/user/${id}`,
       title: `${handle} Page`,
       page_id: id,
     }));
-  }, [id]);
+  }, [id, handle]);
 
   return (
     <PageAutoSaveController
