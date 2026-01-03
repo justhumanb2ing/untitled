@@ -2,6 +2,7 @@ import { LocalizedLink } from "@/components/localized-link";
 import { Button } from "./ui/button";
 import { useUser } from "@clerk/react-router";
 import { Spinner } from "./ui/spinner";
+import * as amplitude from "@amplitude/analytics-browser";
 
 interface UserButtonProps {
   primaryHandle: string | null;
@@ -18,6 +19,9 @@ export default function UserButton({ primaryHandle }: UserButtonProps) {
       variant={"secondary"}
       size={"lg"}
       className="gap-0 rounded-full py-0 ps-0 pe-3 h-10 px-5"
+      onClick={() => {
+        amplitude.track("User Button");
+      }}
       render={
         primaryHandle ? (
           <LocalizedLink prefetch="viewport" to={`/user/${primaryHandle}`} />

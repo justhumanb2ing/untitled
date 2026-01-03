@@ -12,6 +12,7 @@
     "gentype": "supabase gen types typescript --project-id mkkwldxodlabuyerxslb > types/database.types.ts"
   },
   "dependencies": {
+    "@amplitude/analytics-browser": "^2.33.1",
     "@base-ui/react": "^1.0.0",
     "@clerk/react-router": "^2.3.7",
     "@clerk/themes": "^2.4.46",
