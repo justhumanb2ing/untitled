@@ -19,6 +19,7 @@ export default function UserButton({ primaryHandle }: UserButtonProps) {
       variant={"secondary"}
       size={"lg"}
       className="gap-0 rounded-full py-0 ps-0 pe-3 h-10 px-5"
+      data-umami-event="User button"
       onClick={() => {
         amplitude.track("User Button");
       }}

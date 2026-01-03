@@ -139,6 +139,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="913b402f-ffb7-4247-8407-98b91b9ec264"
+        ></script>
         <Meta />
         <Links />
       </head>
