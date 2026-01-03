@@ -13,20 +13,20 @@ import { NumberTicker } from "@/components/effects/number-ticker";
 import { Separator } from "@/components/ui/separator";
 import { PageAutoSaveController } from "@/components/page-auto-save-controller";
 import SavingStatusIndicator from "@/components/saving-status-indicator";
-import { Button } from "@/components/ui/button";
-import { useRevalidator } from "react-router";
-import { getClient } from "@umami/api-client";
 
 type UmamiResponse = {
   ok: boolean;
   status?: number;
-  data?: unknown;
+  data?: {
+    visits: number;
+  };
   error?: unknown;
 };
 
 const UMAMI_WEBSITE_ID = "913b402f-ffb7-4247-8407-98b91b9ec264";
 const UMAMI_TIMEZONE = "Asia/Seoul";
-const UMAMI_UNIT = "hour";
+const UMAMI_UNIT = "day";
+const UMAMI_ENDPOINT_PATH = "websites";
 
 function getDateParts(value: Date, timeZone: string) {
   const formatter = new Intl.DateTimeFormat("en-US", {
@@ -63,6 +63,60 @@ function getTodayRange(timeZone: string) {
   const endAt = startAt + 24 * 60 * 60 * 1000;
 
   return { startAt, endAt };
+}
+
+async function fetchUmamiVisits(params: {
+  apiEndpoint: string;
+  apiKey: string;
+  websiteId: string;
+  startAt: number;
+  endAt: number;
+  unit: string;
+  timezone: string;
+}) {
+  const baseUrl = params.apiEndpoint.endsWith("/")
+    ? params.apiEndpoint
+    : `${params.apiEndpoint}/`;
+  const statsUrl = new URL(
+    `${UMAMI_ENDPOINT_PATH}/${params.websiteId}/stats`,
+    baseUrl
+  );
+  const searchParams = new URLSearchParams({
+    startAt: String(params.startAt),
+    endAt: String(params.endAt),
+    unit: params.unit,
+    timezone: params.timezone,
+  });
+
+  statsUrl.search = searchParams.toString();
+
+  const response = await fetch(statsUrl.toString(), {
+    headers: {
+      Accept: "application/json",
+      "x-umami-api-key": params.apiKey,
+    },
+  });
+
+  const payload = await response.json().catch(() => null);
+  const visits =
+    payload && typeof payload.visits === "number" ? payload.visits : null;
+
+  if (!response.ok || visits === null) {
+    return {
+      ok: false,
+      status: response.status,
+      error:
+        payload ?? "Failed to fetch Umami stats or missing visits in response.",
+    };
+  }
+
+  return {
+    ok: true,
+    status: response.status,
+    data: {
+      visits,
+    },
+  };
 }
 
 export async function loader(args: Route.LoaderArgs) {
@@ -109,19 +163,16 @@ export async function loader(args: Route.LoaderArgs) {
       };
     } else {
       try {
-        const client = getClient({ apiEndpoint, apiKey });
         const { startAt, endAt } = getTodayRange(UMAMI_TIMEZONE);
-        const { ok, data, status, error } = await client.getWebsitePageviews(
-          UMAMI_WEBSITE_ID,
-          {
-            startAt,
-            endAt,
-            unit: UMAMI_UNIT,
-            timezone: UMAMI_TIMEZONE,
-            url: `/user/${page.id}`,
-          }
-        );
-        umamiResult = { ok, data, status, error };
+        umamiResult = await fetchUmamiVisits({
+          apiEndpoint,
+          apiKey,
+          websiteId: UMAMI_WEBSITE_ID,
+          startAt,
+          endAt,
+          unit: UMAMI_UNIT,
+          timezone: UMAMI_TIMEZONE,
+        });
       } catch (error) {
         umamiResult = {
           ok: false,
@@ -143,8 +194,6 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
     umamiResult,
   } = loaderData;
   const [isDesktop, setIsDesktop] = useState(true);
-  const revalidator = useRevalidator();
-  const isRefreshing = revalidator.state !== "idle";
   const initialSnapshot = useMemo(
     () => ({
       title,
@@ -160,6 +209,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
 
     umami.track((props) => ({
       ...props,
+      website: UMAMI_WEBSITE_ID,
       url: `/user/${id}`,
       title: `${handle} Page`,
       page_id: id,
@@ -194,16 +244,6 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
               <div className="flex items-center gap-1">
                 <SavingStatusIndicator className="mr-2" />
                 <VisibilityToggle pageId={id} isPublic={is_public} />
-                <Button
-                  size={"sm"}
-                  variant={"outline"}
-                  disabled={isRefreshing}
-                  onClick={() => {
-                    revalidator.revalidate();
-                  }}
-                >
-                  {isRefreshing ? "Refreshing..." : "Refresh Umami"}
-                </Button>
               </div>
             </OwnerGate>
             <Separator orientation="vertical" className={"my-1"} />

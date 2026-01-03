@@ -143,7 +143,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           defer
           src="https://cloud.umami.is/script.js"
           data-website-id="913b402f-ffb7-4247-8407-98b91b9ec264"
-        ></script>
+          data-auto-track="false"
+        />
         <Meta />
         <Links />
       </head>
