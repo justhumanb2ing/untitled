@@ -1,5 +1,4 @@
-import { useMemo, useState } from "react";
-import { useIntlayer } from "react-intlayer";
+import { useEffect, useMemo, useState } from "react";
 import BottomActionBar from "@/components/bottom-action-bar";
 import type { Route } from "./+types/($lang)._auth.user.$handle._index";
 import { getAuth } from "@clerk/react-router/server";
@@ -14,6 +13,57 @@ import { NumberTicker } from "@/components/effects/number-ticker";
 import { Separator } from "@/components/ui/separator";
 import { PageAutoSaveController } from "@/components/page-auto-save-controller";
 import SavingStatusIndicator from "@/components/saving-status-indicator";
+import { Button } from "@/components/ui/button";
+import { useRevalidator } from "react-router";
+import { getClient } from "@umami/api-client";
+
+type UmamiResponse = {
+  ok: boolean;
+  status?: number;
+  data?: unknown;
+  error?: unknown;
+};
+
+const UMAMI_WEBSITE_ID = "913b402f-ffb7-4247-8407-98b91b9ec264";
+const UMAMI_TIMEZONE = "Asia/Seoul";
+const UMAMI_UNIT = "hour";
+
+function getDateParts(value: Date, timeZone: string) {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const parts = formatter.formatToParts(value);
+  const year = Number(parts.find((part) => part.type === "year")?.value);
+  const month = Number(parts.find((part) => part.type === "month")?.value);
+  const day = Number(parts.find((part) => part.type === "day")?.value);
+
+  if (!year || !month || !day) {
+    throw new Error("Failed to resolve date parts.");
+  }
+
+  return { year, month, day };
+}
+
+function getTimeZoneOffsetMs(timeZone: string, value: Date) {
+  const tzDate = new Date(value.toLocaleString("en-US", { timeZone }));
+  const utcDate = new Date(value.toLocaleString("en-US", { timeZone: "UTC" }));
+
+  return tzDate.getTime() - utcDate.getTime();
+}
+
+function getTodayRange(timeZone: string) {
+  const today = new Date();
+  const { year, month, day } = getDateParts(today, timeZone);
+  const utcMidnight = new Date(Date.UTC(year, month - 1, day));
+  const offsetMs = getTimeZoneOffsetMs(timeZone, utcMidnight);
+  const startAt = utcMidnight.getTime() - offsetMs;
+  const endAt = startAt + 24 * 60 * 60 * 1000;
+
+  return { startAt, endAt };
+}
 
 export async function loader(args: Route.LoaderArgs) {
   const { userId } = await getAuth(args);
@@ -45,7 +95,44 @@ export async function loader(args: Route.LoaderArgs) {
   if (!page.is_public && !isOwner)
     throw new Response("Not Found", { status: 404 });
 
-  return { page, handle, isOwner };
+  let umamiResult: UmamiResponse | null = null;
+
+  if (isOwner) {
+    const apiKey = process.env.UMAMI_API_KEY;
+    const apiEndpoint = process.env.UMAMI_API_CLIENT_ENDPOINT;
+
+    if (!apiKey || !apiEndpoint) {
+      umamiResult = {
+        ok: false,
+        status: 500,
+        error: "Missing Umami environment configuration.",
+      };
+    } else {
+      try {
+        const client = getClient({ apiEndpoint, apiKey });
+        const { startAt, endAt } = getTodayRange(UMAMI_TIMEZONE);
+        const { ok, data, status, error } = await client.getWebsitePageviews(
+          UMAMI_WEBSITE_ID,
+          {
+            startAt,
+            endAt,
+            unit: UMAMI_UNIT,
+            timezone: UMAMI_TIMEZONE,
+            url: `/user/${page.id}`,
+          }
+        );
+        umamiResult = { ok, data, status, error };
+      } catch (error) {
+        umamiResult = {
+          ok: false,
+          status: 500,
+          error: error instanceof Error ? error.message : error,
+        };
+      }
+    }
+  }
+
+  return { page, handle, isOwner, umamiResult };
 }
 
 export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
@@ -53,8 +140,11 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
     page: { id, title, description, image_url, is_public },
     handle,
     isOwner,
+    umamiResult,
   } = loaderData;
   const [isDesktop, setIsDesktop] = useState(true);
+  const revalidator = useRevalidator();
+  const isRefreshing = revalidator.state !== "idle";
   const initialSnapshot = useMemo(
     () => ({
       title,
@@ -64,6 +154,17 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
     }),
     [title, description, image_url]
   );
+
+  useEffect(() => {
+    if (id) return;
+
+    umami.track((props) => ({
+      ...props,
+      url: `/user/${id}`,
+      title: `${handle} Page`,
+      page_id: id,
+    }));
+  }, [id]);
 
   return (
     <PageAutoSaveController
@@ -93,6 +194,16 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
               <div className="flex items-center gap-1">
                 <SavingStatusIndicator className="mr-2" />
                 <VisibilityToggle pageId={id} isPublic={is_public} />
+                <Button
+                  size={"sm"}
+                  variant={"outline"}
+                  disabled={isRefreshing}
+                  onClick={() => {
+                    revalidator.revalidate();
+                  }}
+                >
+                  {isRefreshing ? "Refreshing..." : "Refresh Umami"}
+                </Button>
               </div>
             </OwnerGate>
             <Separator orientation="vertical" className={"my-1"} />
@@ -105,6 +216,20 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
             </p>
           </div>
         </header>
+
+        <OwnerGate isOwner={isOwner}>
+          {umamiResult && (
+            <section className="mx-4 rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground">
+              <p className="font-medium text-foreground">
+                Umami response {umamiResult.ok ? "OK" : "Error"} (
+                {umamiResult.status ?? "unknown"})
+              </p>
+              <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap wrap-break-word">
+                {JSON.stringify(umamiResult, null, 2)}
+              </pre>
+            </section>
+          )}
+        </OwnerGate>
 
         <div
           className={cn(
