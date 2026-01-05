@@ -75,6 +75,7 @@ export default function BottomActionBar({ isOwner }: BottomActionBarProps) {
       <ThemeToggle iconSize="size-4" />
 
       <Separator orientation="vertical" className={"my-1.5"} />
+      
       <LocaleSwitcher />
       <UserAuthButton />
     </div>

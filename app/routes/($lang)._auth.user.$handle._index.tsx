@@ -23,6 +23,7 @@ import {
   type UmamiResponse,
 } from "../../service/umami/umami";
 import PageBrickSection from "@/components/page-brick-section";
+import Toolbar from "@/components/toolbar";
 
 type PreviewLayout = "desktop" | "mobile";
 
@@ -133,7 +134,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
         className={cn(
           `flex flex-col gap-4 transition-all ease-in-out duration-700 bg-background relative`,
           isMobilePreview
-            ? "self-start max-w-lg border rounded-4xl shadow-lg mx-auto container my-6 h-[calc(100dvh-3rem)] overflow-hidden"
+            ? "self-start border rounded-4xl shadow-lg max-w-lg mx-auto container my-6 h-[calc(100dvh-3rem)] overflow-hidden"
             : "max-w-full w-full h-full my-0 min-h-dvh xl:h-dvh xl:overflow-hidden"
         )}
       >
@@ -200,6 +201,12 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
                 isMobilePreview={isMobilePreview}
                 isPublic={is_public}
               />
+              <div className="flex justify-center mb-4">
+                <p className="flex items-center gap-1 text-center text-primary/40 font-medium">
+                  <LightningIcon weight="fill" />
+                  Powered by Untitled
+                </p>
+              </div>
             </section>
 
             {/* Page Brick Section */}
@@ -215,37 +222,26 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
             </section>
           </div>
 
-          {/* Footer + Action bar */}
-          <footer
+          {/* Action bar */}
+          <aside
             className={cn(
-              "text-sm text-muted-foreground relative flex items-center justify-center gap-1 h-32 px-8",
-              "flex-col gap-3 lg:flex-row lg:justify-start",
-              isMobilePreview && "flex-col! justify-center! gap-3 mb-4 py-8"
+              "static h-28 py-12 border-t flex items-center justify-center",
+              !isMobilePreview &&
+                "xl:fixed xl:bottom-10 xl:left-10 xl:px-0 xl:mb-0 xl:py-0 xl:h-fit xl:border-none"
             )}
           >
-            <div
-              className={cn(
-                "flex items-center",
-                !isMobilePreview && "lg:flex-1"
-              )}
-            >
+            <div className={cn("flex")}>
               <BottomActionBar isOwner={isOwner} />
             </div>
-            <p className="flex items-center gap-1 text-center">
-              <LightningIcon weight="fill" />
-              Powered by Untitled
-            </p>
-            <div
-              aria-hidden="true"
-              className={cn("hidden", !isMobilePreview && "lg:block lg:flex-1")}
-            />
-          </footer>
+          </aside>
         </div>
 
         <LayoutToggle
           isDesktop={!isMobilePreview}
           onToggle={setPreviewLayout}
         />
+
+        {/* <Toolbar /> */}
       </div>
     </PageAutoSaveController>
   );
