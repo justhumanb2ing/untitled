@@ -28,8 +28,8 @@ type AutoSaveAction =
 
 const statusLabels: Record<AutoSaveStatus, string> = {
   idle: "Up to date",
-  dirty: "Saving...",
-  saving: "Saving...",
+  dirty: "Saving",
+  saving: "Saving",
   synced: "Up to date",
   error: "Save failed",
 };

@@ -52,7 +52,7 @@ export default function VisibilityToggle({
   return (
     <Button
       type="button"
-      className="h-8 w-20 overflow-hidden group"
+      className="group h-6 w-20 py-3.5"
       onClick={handleToggle}
       disabled={isSaving}
       aria-pressed={isPublic}
@@ -61,12 +61,12 @@ export default function VisibilityToggle({
       <span className="sr-only">
         {isPublic ? "Public page" : "Private page"}
       </span>
-      <span className="relative flex h-6 w-full items-center justify-center overflow-hidden">
+      <span className="relative flex h-4 w-full items-center justify-center overflow-hidden">
         <AnimatePresence initial={false} mode="sync">
           {isPublic ? (
             <motion.span
               key="public"
-              className="absolute inset-0 flex items-center justify-center gap-2"
+              className="absolute inset-0 flex items-center justify-center gap-1"
               initial={{ y: 24, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -24, opacity: 0 }}
@@ -78,7 +78,7 @@ export default function VisibilityToggle({
           ) : (
             <motion.span
               key="private"
-              className="absolute inset-0 flex items-center justify-center gap-2"
+              className="absolute inset-0 flex items-center justify-center gap-1"
               initial={{ y: 24, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -24, opacity: 0 }}

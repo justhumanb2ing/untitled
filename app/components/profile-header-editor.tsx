@@ -270,8 +270,9 @@ export default function ProfileHeaderEditor({
                   placeholder={titlePlaceholder}
                   ariaLabel="Profile title"
                   className={cn(
-                    "text-3xl font-bold tracking-tight py-1 truncate",
-                    isMobilePreview ? "text-3xl" : "xl:text-4xl "
+                    "text-3xl font-bold tracking-tight py-1",
+                    isMobilePreview ? "text-3xl" : "xl:text-4xl",
+                    isReadOnly && "truncate"
                   )}
                 />
               </FormControl>
@@ -295,8 +296,9 @@ export default function ProfileHeaderEditor({
                   ariaLabel="Profile description"
                   multiline
                   className={cn(
-                    "text-base leading-relaxed font-light text-primary tracking-widest truncate",
-                    isMobilePreview ? "text-base" : "xl:text-lg "
+                    "text-base leading-relaxed font-light text-primary tracking-widest",
+                    isMobilePreview ? "text-base" : "xl:text-lg",
+                    isReadOnly && "truncate"
                   )}
                 />
               </FormControl>

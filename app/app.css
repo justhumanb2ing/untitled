@@ -34,6 +34,32 @@
   mix-blend-mode: normal;
 }
 
+@layer utilities {
+  .scrollbar-hide {
+    &::-webkit-scrollbar {
+      display: none;
+    }
+    scrollbar-width: none;
+  }
+
+  .scrollbar::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  .scrollbar::-webkit-scrollbar-track {
+    /* border-radius: 100vh; */
+    @apply rounded-sm bg-background;
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb {
+    @apply rounded-sm bg-brand;
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-brand;
+  }
+}
+
 @theme inline {
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);

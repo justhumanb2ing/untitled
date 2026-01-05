@@ -131,107 +131,148 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
     >
       <div
         className={cn(
-          `flex flex-col gap-4 transition-all ease-in-out duration-700 pt-4 bg-background relative`,
+          `flex flex-col gap-4 transition-all ease-in-out duration-700 bg-background relative`,
           isMobilePreview
-            ? "self-start max-w-lg border rounded-4xl shadow-lg mx-auto container my-6 min-h-[calc(100dvh-3rem)]"
-            : "max-w-full w-full h-full my-0 min-h-dvh"
+            ? "self-start max-w-lg border rounded-4xl shadow-lg mx-auto container my-6 h-[calc(100dvh-3rem)] overflow-hidden"
+            : "max-w-full w-full h-full my-0 min-h-dvh xl:h-dvh xl:overflow-hidden"
         )}
       >
-        {/* Page Header */}
-        <header className="flex justify-between items-center gap-1 bg-muted/50 rounded-lg p-2 backdrop-blur-md sticky top-3 mx-4 px-4 z-10">
-          <aside className="font-semibold flex items-center gap-1 truncate">
-            <SealCheckIcon
-              className="fill-blue-500 size-4 lg:size-5"
-              weight="fill"
-            />
-            <span className="text-sm lg:text-base truncate">{handle}</span>
-          </aside>
-          <div className="flex items-center gap-2 shrink-0">
-            <OwnerGate isOwner={isOwner}>
-              <div className="flex items-center gap-1">
-                <SavingStatusIndicator className="mr-2" />
-                <VisibilityToggle pageId={id} isPublic={is_public} />
-              </div>
-            </OwnerGate>
-            <Separator orientation="vertical" className={"my-1"} />
-            {umamiResult && umamiResult.ok ? (
-              <p className="text-xs">
-                <NumberTicker
-                  value={umamiResult.data!.visits || 0}
-                  className="text-foreground dark:text-foreground"
-                />{" "}
-                View
-              </p>
-            ) : (
-              <p>View error</p>
-            )}
-          </div>
-        </header>
-
         <div
           className={cn(
-            "flex flex-col gap-8 grow max-w-lg",
-            isMobilePreview
-              ? "flex-col! mx-0"
-              : "xl:flex-row mx-auto xl:max-w-10/12 container"
+            "flex flex-col gap-4 grow min-h-0",
+            isMobilePreview &&
+              "overflow-y-auto overscroll-contain scrollbar-hide"
           )}
         >
-          {/* Page Information Section */}
-          <section
+          <header
             className={cn(
-              "max-w-2xl p-6 shrink",
-              isMobilePreview ? "" : "xl:flex-5"
+              "rounded-lg sticky z-10 overflow-hidden w-full shrink-0",
+              isMobilePreview ? "top-3" : "top-3"
             )}
           >
-            <ProfileHeaderEditor
-              pageId={id}
-              imageUrl={image_url}
-              title={title}
-              description={description}
-              handle={handle}
-              isOwner={isOwner}
-              isMobilePreview={isMobilePreview}
-            />
-          </section>
+            <div className={cn("w-full px-4", isMobilePreview ? "" : "px-4")}>
+              <div className="flex justify-between items-center gap-2 bg-muted/50 rounded-lg p-2 backdrop-blur-md overflow-hidden py-2.5">
+                <aside className="font-semibold flex items-center gap-1 min-w-0">
+                  <SealCheckIcon
+                    className="fill-blue-500 size-5"
+                    weight="fill"
+                  />
+                  <p className="text-sm truncate lg:w-full lg:text-base">
+                    {handle}
+                  </p>
+                </aside>
 
-          {/* Page Brick Section */}
-          <section
+                <div className="flex items-center gap-2 justify-end shrink-0">
+                  <OwnerGate isOwner={isOwner}>
+                    <div className="flex items-center gap-1">
+                      <SavingStatusIndicator className="mr-2" />
+                      <div
+                        className={cn(
+                          "hidden",
+                          isMobilePreview ? "hidden" : "xl:block"
+                        )}
+                      >
+                        <VisibilityToggle pageId={id} isPublic={is_public} />
+                      </div>
+                    </div>
+                  </OwnerGate>
+                  <Separator orientation="vertical" className={"my-1"} />
+                  {umamiResult && umamiResult.ok ? (
+                    <p className="text-xs">
+                      <NumberTicker
+                        value={umamiResult.data!.visits || 0}
+                        className="text-foreground dark:text-foreground"
+                      />{" "}
+                      View
+                    </p>
+                  ) : (
+                    <p>Error</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <div
             className={cn(
-              "p-10 py-6 grow shrink-0 border bg-muted min-w-0",
-              isMobilePreview ? "max-w-full" : "xl:flex-8 xl:w-[878px]"
+              "flex flex-col gap-4 grow max-w-lg",
+              isMobilePreview
+                ? "flex-col! mx-0 gap-4"
+                : "xl:flex-row mx-auto xl:max-w-11/12 container xl:gap-8 xl:flex-1 xl:min-h-0"
             )}
           >
-            <PageBrickSection />
-          </section>
+            {/* Page Information Section */}
+            <section
+              className={cn(
+                "max-w-2xl p-4 sm:p-6 shrink relative",
+                isMobilePreview ? "" : "xl:flex-5"
+              )}
+            >
+              <ProfileHeaderEditor
+                pageId={id}
+                imageUrl={image_url}
+                title={title}
+                description={description}
+                handle={handle}
+                isOwner={isOwner}
+                isMobilePreview={isMobilePreview}
+              />
+              <OwnerGate isOwner={isOwner}>
+                <div
+                  className={cn(
+                    "absolute top-6 right-10",
+                    isMobilePreview ? "block" : "xl:hidden"
+                  )}
+                >
+                  <VisibilityToggle pageId={id} isPublic={is_public} />
+                </div>
+              </OwnerGate>
+            </section>
+
+            {/* Page Brick Section */}
+            <section
+              className={cn(
+                "px-4 sm:px-10 grow shrink-0 scrollbar-hide",
+                isMobilePreview
+                  ? "max-w-full py-0"
+                  : "xl:px-0 xl:py-6 xl:flex-8 xl:w-full xl:max-w-[878px] xl:min-h-0 xl:overflow-y-auto"
+              )}
+            >
+              <PageBrickSection />
+            </section>
+          </div>
+
+          {/* Footer + Action bar */}
+          <footer
+            className={cn(
+              "text-sm text-muted-foreground relative flex items-center justify-center gap-1 h-32 px-8",
+              "flex-col gap-3 lg:flex-row lg:justify-start",
+              isMobilePreview && "flex-col! justify-center! gap-3 mb-4 py-8"
+            )}
+          >
+            <div
+              className={cn(
+                "flex items-center",
+                !isMobilePreview && "lg:flex-1"
+              )}
+            >
+              <BottomActionBar isOwner={isOwner} />
+            </div>
+            <p className="flex items-center gap-1 text-center">
+              <LightningIcon weight="fill" />
+              Powered by Untitled
+            </p>
+            <div
+              aria-hidden="true"
+              className={cn("hidden", !isMobilePreview && "lg:block lg:flex-1")}
+            />
+          </footer>
         </div>
 
         <LayoutToggle
           isDesktop={!isMobilePreview}
           onToggle={setPreviewLayout}
         />
-
-        {/* Footer + Action bar */}
-        <footer
-          className={cn(
-            "text-sm text-muted-foreground relative flex items-center justify-center gap-1 h-32 px-8",
-            "flex-col gap-3 lg:flex-row lg:justify-start",
-            isMobilePreview && "flex-col! justify-center! gap-3"
-          )}
-        >
-          <div
-            className={cn("flex items-center", !isMobilePreview && "lg:flex-1")}
-          >
-            <BottomActionBar isOwner={isOwner} />
-          </div>
-          <p className="flex items-center gap-1 text-center">
-            <LightningIcon weight="fill" />
-            Powered by Untitled
-          </p>
-          <div
-            aria-hidden="true"
-            className={cn("hidden", !isMobilePreview && "lg:block lg:flex-1")}
-          />
-        </footer>
       </div>
     </PageAutoSaveController>
   );
