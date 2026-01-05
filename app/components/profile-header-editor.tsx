@@ -1,7 +1,13 @@
-import { useEffect, useRef, useState } from "react";
-import { XIcon } from "@phosphor-icons/react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type BaseSyntheticEvent,
+  type RefObject,
+} from "react";
+import { ImageSquareIcon, XIcon } from "@phosphor-icons/react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, type UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 
 import { cn } from "@/lib/utils";
@@ -16,6 +22,7 @@ import { Button } from "./ui/button";
 import EditableParagraph from "./editable-paragraph";
 import { usePageAutoSaveActions } from "@/components/page-auto-save-controller";
 import { usePageImageUploader } from "@/hooks/use-page-image-uploader";
+import VisibilityToggle from "./visibility-toggle";
 
 const profileHeaderSchema = z.object({
   image_url: z
@@ -23,11 +30,26 @@ const profileHeaderSchema = z.object({
     .mime(["image/jpeg", "image/png", "image/gif", "image/webp"])
     .max(2_000_000)
     .nullable(),
-  title: z.string().trim().min(1, "Title is required.").nullable(),
-  description: z.string().trim().nullable(),
+  title: z
+    .string()
+    .trim()
+    .min(1, "Title is required.")
+    .max(15, "Title must be 15 characters or fewer.")
+    .nullable(),
+  description: z
+    .string()
+    .trim()
+    .max(50, "Description must be 50 characters or fewer.")
+    .nullable(),
 });
 
+const TITLE_MAX_LENGTH = 15;
+const DESCRIPTION_MAX_LENGTH = 50;
+const TITLE_LIMIT_MESSAGE = `Title must be ${TITLE_MAX_LENGTH} characters or fewer.`;
+const DESCRIPTION_LIMIT_MESSAGE = `Description must be ${DESCRIPTION_MAX_LENGTH} characters or fewer.`;
+
 type ProfileHeaderFormValues = z.infer<typeof profileHeaderSchema>;
+type LimitedFieldName = "title" | "description";
 
 interface ProfileHeaderEditorProps {
   pageId: string;
@@ -37,6 +59,30 @@ interface ProfileHeaderEditorProps {
   handle: string;
   isOwner: boolean;
   isMobilePreview: boolean;
+  isPublic: boolean;
+}
+
+interface ProfileHeaderFormProps {
+  form: UseFormReturn<ProfileHeaderFormValues>;
+  pageId: string;
+  isPublic: boolean;
+  isReadOnly: boolean;
+  isMobilePreview: boolean;
+  handle: string;
+  title: string | null;
+  resolvedImageUrl: string;
+  hasImage: boolean;
+  titlePlaceholder: string;
+  descriptionPlaceholder: string;
+  imageInputRef: RefObject<HTMLInputElement | null>;
+  handleRemoveImage: () => void;
+  onSubmit: (event?: BaseSyntheticEvent) => void | Promise<void>;
+  onLimitedChange: (
+    value: string,
+    fieldName: LimitedFieldName,
+    onChange: (value: string) => void
+  ) => void;
+  onLimitReached: (fieldName: LimitedFieldName) => void;
 }
 
 export default function ProfileHeaderEditor({
@@ -47,6 +93,7 @@ export default function ProfileHeaderEditor({
   handle,
   isOwner,
   isMobilePreview,
+  isPublic,
 }: ProfileHeaderEditorProps) {
   const { updateDraft, markDirty, markError } = usePageAutoSaveActions();
   const uploadPageImage = usePageImageUploader();
@@ -92,6 +139,49 @@ export default function ProfileHeaderEditor({
     }
     markDirty();
     updateDraft({ image_url: null });
+  };
+
+  const limitConfig = {
+    title: { max: TITLE_MAX_LENGTH, message: TITLE_LIMIT_MESSAGE },
+    description: {
+      max: DESCRIPTION_MAX_LENGTH,
+      message: DESCRIPTION_LIMIT_MESSAGE,
+    },
+  } as const;
+
+  const setLimitError = (fieldName: LimitedFieldName) => {
+    const { message } = limitConfig[fieldName];
+    const currentError = form.getFieldState(fieldName, form.formState).error;
+    if (currentError?.type === "maxLengthLimit") {
+      return;
+    }
+    form.setError(fieldName, { type: "maxLengthLimit", message });
+  };
+
+  const clearLimitError = (fieldName: LimitedFieldName) => {
+    const currentError = form.getFieldState(fieldName, form.formState).error;
+    if (currentError?.type === "maxLengthLimit") {
+      form.clearErrors(fieldName);
+    }
+  };
+
+  const handleLimitedChange = (
+    value: string,
+    fieldName: LimitedFieldName,
+    onChange: (value: string) => void
+  ) => {
+    const { max } = limitConfig[fieldName];
+    const nextValue = value.length > max ? value.slice(0, max) : value;
+    onChange(nextValue);
+    if (nextValue.length >= max) {
+      setLimitError(fieldName);
+      return;
+    }
+    clearLimitError(fieldName);
+  };
+
+  const handleLimitReached = (fieldName: LimitedFieldName) => {
+    setLimitError(fieldName);
   };
 
   useEffect(() => {
@@ -192,10 +282,70 @@ export default function ProfileHeaderEditor({
   }, [form, isReadOnly, updateDraft]);
 
   return (
+    <>
+      {/* <LegacyProfileHeaderForm
+        form={form}
+        pageId={pageId}
+        isPublic={isPublic}
+        isReadOnly={isReadOnly}
+        isMobilePreview={isMobilePreview}
+        handle={handle}
+        title={title}
+        resolvedImageUrl={resolvedImageUrl}
+        hasImage={hasImage}
+        titlePlaceholder={titlePlaceholder}
+        descriptionPlaceholder={descriptionPlaceholder}
+        imageInputRef={imageInputRef}
+        handleRemoveImage={handleRemoveImage}
+        onSubmit={handleSubmit}
+        onLimitedChange={handleLimitedChange}
+        onLimitReached={handleLimitReached}
+      /> */}
+      <ProfileHeaderCardForm
+        form={form}
+        pageId={pageId}
+        isPublic={isPublic}
+        isReadOnly={isReadOnly}
+        isMobilePreview={isMobilePreview}
+        handle={handle}
+        title={title}
+        resolvedImageUrl={resolvedImageUrl}
+        hasImage={hasImage}
+        titlePlaceholder={titlePlaceholder}
+        descriptionPlaceholder={descriptionPlaceholder}
+        imageInputRef={imageInputRef}
+        handleRemoveImage={handleRemoveImage}
+        onSubmit={handleSubmit}
+        onLimitedChange={handleLimitedChange}
+        onLimitReached={handleLimitReached}
+      />
+    </>
+  );
+}
+
+function LegacyProfileHeaderForm({
+  form,
+  isReadOnly,
+  isMobilePreview,
+  handle,
+  title,
+  resolvedImageUrl,
+  hasImage,
+  titlePlaceholder,
+  descriptionPlaceholder,
+  imageInputRef,
+  handleRemoveImage,
+  onSubmit,
+  onLimitedChange,
+  onLimitReached,
+}: ProfileHeaderFormProps) {
+  const handleSelectImage = () => imageInputRef.current?.click();
+
+  return (
     <Form {...form}>
       <form
         className="flex w-full flex-col justify-center gap-2 px-4 xl:gap-4"
-        onSubmit={handleSubmit}
+        onSubmit={onSubmit}
       >
         <FormField
           control={form.control}
@@ -210,7 +360,7 @@ export default function ProfileHeaderEditor({
                     "relative aspect-square size-30 overflow-hidden rounded-full p-0 disabled:opacity-100",
                     isMobilePreview ? "size-30" : "xl:size-46"
                   )}
-                  onClick={() => imageInputRef.current?.click()}
+                  onClick={handleSelectImage}
                   disabled={isReadOnly}
                 >
                   {hasImage && (
@@ -264,11 +414,15 @@ export default function ProfileHeaderEditor({
               <FormControl>
                 <EditableParagraph
                   value={field.value}
-                  onValueChange={field.onChange}
+                  onValueChange={(value) =>
+                    onLimitedChange(value, "title", field.onChange)
+                  }
                   onValueBlur={field.onBlur}
                   readOnly={isReadOnly}
                   placeholder={titlePlaceholder}
                   ariaLabel="Profile title"
+                  maxLength={TITLE_MAX_LENGTH}
+                  onLimitReached={() => onLimitReached("title")}
                   className={cn(
                     "text-3xl font-bold tracking-tight py-1",
                     isMobilePreview ? "text-3xl" : "xl:text-4xl",
@@ -289,12 +443,16 @@ export default function ProfileHeaderEditor({
               <FormControl>
                 <EditableParagraph
                   value={field.value}
-                  onValueChange={field.onChange}
+                  onValueChange={(value) =>
+                    onLimitedChange(value, "description", field.onChange)
+                  }
                   onValueBlur={field.onBlur}
                   readOnly={isReadOnly}
                   placeholder={descriptionPlaceholder}
                   ariaLabel="Profile description"
                   multiline
+                  maxLength={DESCRIPTION_MAX_LENGTH}
+                  onLimitReached={() => onLimitReached("description")}
                   className={cn(
                     "text-base leading-relaxed font-light text-primary tracking-widest",
                     isMobilePreview ? "text-base" : "xl:text-lg",
@@ -303,6 +461,189 @@ export default function ProfileHeaderEditor({
                 />
               </FormControl>
               <FormMessage />
+            </FormItem>
+          )}
+        />
+      </form>
+    </Form>
+  );
+}
+
+function ProfileHeaderCardForm({
+  form,
+  pageId,
+  isPublic,
+  isReadOnly,
+  isMobilePreview,
+  handle,
+  title,
+  resolvedImageUrl,
+  hasImage,
+  titlePlaceholder,
+  descriptionPlaceholder,
+  imageInputRef,
+  handleRemoveImage,
+  onSubmit,
+  onLimitedChange,
+  onLimitReached,
+}: ProfileHeaderFormProps) {
+  const handleSelectImage = () => imageInputRef.current?.click();
+
+  return (
+    <Form {...form}>
+      <form
+        className={cn(
+          "flex w-full flex-col items-center gap-6",
+          isMobilePreview ? "gap-6" : "xl:items-start xl:gap-8"
+        )}
+        onSubmit={onSubmit}
+      >
+        <FormField
+          control={form.control}
+          name="image_url"
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <div className={cn("relative w-full mx-auto max-w-md")}>
+                <div
+                  className={cn(
+                    "relative overflow-hidden rounded-t-[28px] bg-neutral-900/10",
+                    isMobilePreview ? "aspect-4/5" : "aspect-5/6"
+                  )}
+                >
+                  {!hasImage && (
+                    <div className="absolute inset-0 bg-linear-to-br from-neutral-900 via-neutral-700/70 to-neutral-950" />
+                  )}
+                  {hasImage && (
+                    <img
+                      src={resolvedImageUrl}
+                      alt={title ?? handle ?? "Profile image"}
+                      className="absolute inset-0 h-full w-full object-cover grayscale-12 contrast-110"
+                    />
+                  )}
+                  {/* bottom fade */}
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-background via-60% to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 px-6 pb-8 text-center text-white">
+                    <FormField
+                      control={form.control}
+                      name="title"
+                      render={({ field: titleField }) => (
+                        <FormItem className="w-full">
+                          <FormControl>
+                            <EditableParagraph
+                              value={titleField.value}
+                              onValueChange={(value) =>
+                                onLimitedChange(
+                                  value,
+                                  "title",
+                                  titleField.onChange
+                                )
+                              }
+                              onValueBlur={titleField.onBlur}
+                              readOnly={isReadOnly}
+                              placeholder={titlePlaceholder}
+                              ariaLabel="Profile title"
+                              maxLength={TITLE_MAX_LENGTH}
+                              onLimitReached={() => onLimitReached("title")}
+                              className={cn(
+                                "text-foreground text-2xl font-semibold tracking-tight data-[empty=true]:before:text-background/50 data-[empty=true]:before:justify-center",
+                                isMobilePreview ? "text-2xl" : "xl:text-3xl",
+                                isReadOnly && "truncate"
+                              )}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field: descriptionField }) => (
+                        <FormItem className="w-full">
+                          <FormControl>
+                            <EditableParagraph
+                              value={descriptionField.value}
+                              onValueChange={(value) =>
+                                onLimitedChange(
+                                  value,
+                                  "description",
+                                  descriptionField.onChange
+                                )
+                              }
+                              onValueBlur={descriptionField.onBlur}
+                              readOnly={isReadOnly}
+                              placeholder={descriptionPlaceholder}
+                              ariaLabel="Profile description"
+                              multiline
+                              maxLength={DESCRIPTION_MAX_LENGTH}
+                              onLimitReached={() =>
+                                onLimitReached("description")
+                              }
+                              className={cn(
+                                "text-base font-light leading-relaxed text-foreground/80 line-clamp-3 data-[empty=true]:before:text-background/50 data-[empty=true]:before:justify-center",
+                                isMobilePreview ? "text-base" : "xl:text-lg",
+                                isReadOnly && "truncate"
+                              )}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+                {!isReadOnly && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon-lg"
+                    className="absolute left-4 top-4 rounded-full shadow-[0_10px_25px_-15px_rgba(0,0,0,0.7)]"
+                    onClick={handleSelectImage}
+                    aria-label="Edit profile image"
+                  >
+                    <ImageSquareIcon />
+                  </Button>
+                )}
+                {!isReadOnly && (
+                  <div
+                    className={cn(
+                      "absolute top-4.5 right-16",
+                      isMobilePreview ? "block" : "xl:hidden"
+                    )}
+                  >
+                    <VisibilityToggle pageId={pageId} isPublic={isPublic} />
+                  </div>
+                )}
+                {!isReadOnly && hasImage && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon-lg"
+                    className="absolute right-4 top-4 rounded-full shadow-[0_10px_25px_-15px_rgba(0,0,0,0.7)]"
+                    onClick={handleRemoveImage}
+                    aria-label="Remove profile image"
+                  >
+                    <XIcon className="size-5" weight="bold" />
+                  </Button>
+                )}
+              </div>
+              <FormControl>
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  name={field.name}
+                  onBlur={field.onBlur}
+                  className="sr-only"
+                  onChange={(event) => {
+                    const file = event.currentTarget.files?.[0] ?? null;
+                    field.onChange(file);
+                  }}
+                  disabled={isReadOnly}
+                  aria-disabled={isReadOnly}
+                />
+              </FormControl>
+              <FormMessage className="text-center" />
             </FormItem>
           )}
         />

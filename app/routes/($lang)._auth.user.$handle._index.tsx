@@ -216,17 +216,8 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
                 handle={handle}
                 isOwner={isOwner}
                 isMobilePreview={isMobilePreview}
+                isPublic={is_public}
               />
-              <OwnerGate isOwner={isOwner}>
-                <div
-                  className={cn(
-                    "absolute top-6 right-10",
-                    isMobilePreview ? "block" : "xl:hidden"
-                  )}
-                >
-                  <VisibilityToggle pageId={id} isPublic={is_public} />
-                </div>
-              </OwnerGate>
             </section>
 
             {/* Page Brick Section */}
