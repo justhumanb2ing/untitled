@@ -10,7 +10,7 @@ import {
 
 interface LayoutToggleProps {
   isDesktop: boolean;
-  onToggle: (isDesktop: boolean) => void;
+  onToggle: (layout: "desktop" | "mobile") => void;
 }
 
 const DESKTOP_VALUE = "desktop";
@@ -28,12 +28,12 @@ export default function LayoutToggle({
       defaultValue={[currentValue]}
       onValueChange={(nextValue) => {
         if (nextValue.includes(DESKTOP_VALUE)) {
-          onToggle(true);
+          onToggle('desktop');
           return;
         }
 
         if (nextValue.includes(MOBILE_VALUE)) {
-          onToggle(false);
+          onToggle('mobile');
         }
       }}
       aria-label="Layout width"

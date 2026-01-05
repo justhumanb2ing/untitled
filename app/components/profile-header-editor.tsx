@@ -36,6 +36,7 @@ interface ProfileHeaderEditorProps {
   description: string | null;
   handle: string;
   isOwner: boolean;
+  isMobilePreview: boolean;
 }
 
 export default function ProfileHeaderEditor({
@@ -45,6 +46,7 @@ export default function ProfileHeaderEditor({
   description,
   handle,
   isOwner,
+  isMobilePreview,
 }: ProfileHeaderEditorProps) {
   const { updateDraft, markDirty, markError } = usePageAutoSaveActions();
   const uploadPageImage = usePageImageUploader();
@@ -192,19 +194,22 @@ export default function ProfileHeaderEditor({
   return (
     <Form {...form}>
       <form
-        className="flex w-full flex-col justify-center gap-4 px-4"
+        className="flex w-full flex-col justify-center gap-2 px-4 xl:gap-4"
         onSubmit={handleSubmit}
       >
         <FormField
           control={form.control}
           name="image_url"
           render={({ field }) => (
-            <FormItem className="gap-2 mb-8">
+            <FormItem className="gap-2 mb-4">
               <div className="relative inline-flex group w-fit">
                 <Button
                   type="button"
                   variant={"secondary"}
-                  className="relative aspect-square size-40 overflow-hidden rounded-full p-0 disabled:opacity-100"
+                  className={cn(
+                    "relative aspect-square size-30 overflow-hidden rounded-full p-0 disabled:opacity-100",
+                    isMobilePreview ? "size-30" : "xl:size-46"
+                  )}
                   onClick={() => imageInputRef.current?.click()}
                   disabled={isReadOnly}
                 >
@@ -255,7 +260,7 @@ export default function ProfileHeaderEditor({
           control={form.control}
           name="title"
           render={({ field }) => (
-            <FormItem className="w-full max-w-xl">
+            <FormItem className="w-full max-w-xl xl:mb-2">
               <FormControl>
                 <EditableParagraph
                   value={field.value}
@@ -264,7 +269,10 @@ export default function ProfileHeaderEditor({
                   readOnly={isReadOnly}
                   placeholder={titlePlaceholder}
                   ariaLabel="Profile title"
-                  className="text-4xl font-bold tracking-wider py-1 truncate"
+                  className={cn(
+                    "text-3xl font-bold tracking-tight py-1 truncate",
+                    isMobilePreview ? "text-3xl" : "xl:text-4xl "
+                  )}
                 />
               </FormControl>
               <FormMessage />
@@ -286,7 +294,10 @@ export default function ProfileHeaderEditor({
                   placeholder={descriptionPlaceholder}
                   ariaLabel="Profile description"
                   multiline
-                  className="text-lg leading-relaxed font-light text-primary tracking-widest truncate"
+                  className={cn(
+                    "text-base leading-relaxed font-light text-primary tracking-widest truncate",
+                    isMobilePreview ? "text-base" : "xl:text-lg "
+                  )}
                 />
               </FormControl>
               <FormMessage />

@@ -22,6 +22,9 @@ import {
   UMAMI_WEBSITE_ID,
   type UmamiResponse,
 } from "../../service/umami/umami";
+import PageBrickSection from "@/components/page-brick-section";
+
+type PreviewLayout = "desktop" | "mobile";
 
 export async function loader(args: Route.LoaderArgs) {
   const { userId } = await getAuth(args);
@@ -76,8 +79,6 @@ export async function loader(args: Route.LoaderArgs) {
           timezone: UMAMI_TIMEZONE,
           pageId: page.id,
         });
-
-        console.log(umamiResult);
       } catch (error) {
         umamiResult = {
           ok: false,
@@ -98,7 +99,8 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
     isOwner,
     umamiResult,
   } = loaderData;
-  const [isDesktop, setIsDesktop] = useState(true);
+  const [previewLayout, setPreviewLayout] = useState<PreviewLayout>("desktop");
+  const isMobilePreview = previewLayout === "mobile";
   const initialSnapshot = useMemo(
     () => ({
       title,
@@ -130,9 +132,9 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
       <div
         className={cn(
           `flex flex-col gap-4 transition-all ease-in-out duration-700 pt-4 bg-background relative`,
-          isDesktop
-            ? "max-w-full w-full h-full my-0 min-h-dvh"
-            : "self-start max-w-lg border rounded-4xl shadow-lg mx-auto container my-6 min-h-[calc(100dvh-3rem)]"
+          isMobilePreview
+            ? "self-start max-w-lg border rounded-4xl shadow-lg mx-auto container my-6 min-h-[calc(100dvh-3rem)]"
+            : "max-w-full w-full h-full my-0 min-h-dvh"
         )}
       >
         {/* Page Header */}
@@ -168,12 +170,19 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
 
         <div
           className={cn(
-            "flex flex-col grow lg:flex-row",
-            !isDesktop && "flex-col!"
+            "flex flex-col gap-8 grow max-w-lg",
+            isMobilePreview
+              ? "flex-col! mx-0"
+              : "xl:flex-row mx-auto xl:max-w-10/12 container"
           )}
         >
           {/* Page Information Section */}
-          <section className="max-w-2xl p-6">
+          <section
+            className={cn(
+              "max-w-2xl p-6 shrink",
+              isMobilePreview ? "" : "xl:flex-5"
+            )}
+          >
             <ProfileHeaderEditor
               pageId={id}
               imageUrl={image_url}
@@ -181,23 +190,37 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
               description={description}
               handle={handle}
               isOwner={isOwner}
+              isMobilePreview={isMobilePreview}
             />
           </section>
-          {/* Page Layout Section */}
-          <section className="p-10 py-6 grow">page layout section</section>
+
+          {/* Page Brick Section */}
+          <section
+            className={cn(
+              "p-10 py-6 grow shrink-0 border bg-muted min-w-0",
+              isMobilePreview ? "max-w-full" : "xl:flex-8 xl:w-[878px]"
+            )}
+          >
+            <PageBrickSection />
+          </section>
         </div>
 
-        <LayoutToggle isDesktop={isDesktop} onToggle={setIsDesktop} />
+        <LayoutToggle
+          isDesktop={!isMobilePreview}
+          onToggle={setPreviewLayout}
+        />
 
         {/* Footer + Action bar */}
         <footer
           className={cn(
             "text-sm text-muted-foreground relative flex items-center justify-center gap-1 h-32 px-8",
             "flex-col gap-3 lg:flex-row lg:justify-start",
-            !isDesktop && "flex-col! justify-center! gap-3"
+            isMobilePreview && "flex-col! justify-center! gap-3"
           )}
         >
-          <div className={cn("flex items-center", isDesktop && "lg:flex-1")}>
+          <div
+            className={cn("flex items-center", !isMobilePreview && "lg:flex-1")}
+          >
             <BottomActionBar isOwner={isOwner} />
           </div>
           <p className="flex items-center gap-1 text-center">
@@ -206,7 +229,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
           </p>
           <div
             aria-hidden="true"
-            className={cn("hidden", isDesktop && "lg:block lg:flex-1")}
+            className={cn("hidden", !isMobilePreview && "lg:block lg:flex-1")}
           />
         </footer>
       </div>
