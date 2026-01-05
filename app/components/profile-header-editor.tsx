@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type BaseSyntheticEvent,
-  type RefObject,
-} from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { ImageSquareIcon, XIcon } from "@phosphor-icons/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, type UseFormReturn } from "react-hook-form";
@@ -34,22 +28,11 @@ const profileHeaderSchema = z.object({
     .string()
     .trim()
     .min(1, "Title is required.")
-    .max(15, "Title must be 15 characters or fewer.")
     .nullable(),
-  description: z
-    .string()
-    .trim()
-    .max(50, "Description must be 50 characters or fewer.")
-    .nullable(),
+  description: z.string().trim().nullable(),
 });
 
-const TITLE_MAX_LENGTH = 15;
-const DESCRIPTION_MAX_LENGTH = 50;
-const TITLE_LIMIT_MESSAGE = `Title must be ${TITLE_MAX_LENGTH} characters or fewer.`;
-const DESCRIPTION_LIMIT_MESSAGE = `Description must be ${DESCRIPTION_MAX_LENGTH} characters or fewer.`;
-
 type ProfileHeaderFormValues = z.infer<typeof profileHeaderSchema>;
-type LimitedFieldName = "title" | "description";
 
 interface ProfileHeaderEditorProps {
   pageId: string;
@@ -76,13 +59,7 @@ interface ProfileHeaderFormProps {
   descriptionPlaceholder: string;
   imageInputRef: RefObject<HTMLInputElement | null>;
   handleRemoveImage: () => void;
-  onSubmit: (event?: BaseSyntheticEvent) => void | Promise<void>;
-  onLimitedChange: (
-    value: string,
-    fieldName: LimitedFieldName,
-    onChange: (value: string) => void
-  ) => void;
-  onLimitReached: (fieldName: LimitedFieldName) => void;
+  onSubmit: () => void;
 }
 
 export default function ProfileHeaderEditor({
@@ -139,49 +116,6 @@ export default function ProfileHeaderEditor({
     }
     markDirty();
     updateDraft({ image_url: null });
-  };
-
-  const limitConfig = {
-    title: { max: TITLE_MAX_LENGTH, message: TITLE_LIMIT_MESSAGE },
-    description: {
-      max: DESCRIPTION_MAX_LENGTH,
-      message: DESCRIPTION_LIMIT_MESSAGE,
-    },
-  } as const;
-
-  const setLimitError = (fieldName: LimitedFieldName) => {
-    const { message } = limitConfig[fieldName];
-    const currentError = form.getFieldState(fieldName, form.formState).error;
-    if (currentError?.type === "maxLengthLimit") {
-      return;
-    }
-    form.setError(fieldName, { type: "maxLengthLimit", message });
-  };
-
-  const clearLimitError = (fieldName: LimitedFieldName) => {
-    const currentError = form.getFieldState(fieldName, form.formState).error;
-    if (currentError?.type === "maxLengthLimit") {
-      form.clearErrors(fieldName);
-    }
-  };
-
-  const handleLimitedChange = (
-    value: string,
-    fieldName: LimitedFieldName,
-    onChange: (value: string) => void
-  ) => {
-    const { max } = limitConfig[fieldName];
-    const nextValue = value.length > max ? value.slice(0, max) : value;
-    onChange(nextValue);
-    if (nextValue.length >= max) {
-      setLimitError(fieldName);
-      return;
-    }
-    clearLimitError(fieldName);
-  };
-
-  const handleLimitReached = (fieldName: LimitedFieldName) => {
-    setLimitError(fieldName);
   };
 
   useEffect(() => {
@@ -298,8 +232,6 @@ export default function ProfileHeaderEditor({
         imageInputRef={imageInputRef}
         handleRemoveImage={handleRemoveImage}
         onSubmit={handleSubmit}
-        onLimitedChange={handleLimitedChange}
-        onLimitReached={handleLimitReached}
       /> */}
       <ProfileHeaderCardForm
         form={form}
@@ -316,8 +248,6 @@ export default function ProfileHeaderEditor({
         imageInputRef={imageInputRef}
         handleRemoveImage={handleRemoveImage}
         onSubmit={handleSubmit}
-        onLimitedChange={handleLimitedChange}
-        onLimitReached={handleLimitReached}
       />
     </>
   );
@@ -336,8 +266,6 @@ function LegacyProfileHeaderForm({
   imageInputRef,
   handleRemoveImage,
   onSubmit,
-  onLimitedChange,
-  onLimitReached,
 }: ProfileHeaderFormProps) {
   const handleSelectImage = () => imageInputRef.current?.click();
 
@@ -414,15 +342,11 @@ function LegacyProfileHeaderForm({
               <FormControl>
                 <EditableParagraph
                   value={field.value}
-                  onValueChange={(value) =>
-                    onLimitedChange(value, "title", field.onChange)
-                  }
+                  onValueChange={field.onChange}
                   onValueBlur={field.onBlur}
                   readOnly={isReadOnly}
                   placeholder={titlePlaceholder}
                   ariaLabel="Profile title"
-                  maxLength={TITLE_MAX_LENGTH}
-                  onLimitReached={() => onLimitReached("title")}
                   className={cn(
                     "text-3xl font-bold tracking-tight py-1",
                     isMobilePreview ? "text-3xl" : "xl:text-4xl",
@@ -443,16 +367,12 @@ function LegacyProfileHeaderForm({
               <FormControl>
                 <EditableParagraph
                   value={field.value}
-                  onValueChange={(value) =>
-                    onLimitedChange(value, "description", field.onChange)
-                  }
+                  onValueChange={field.onChange}
                   onValueBlur={field.onBlur}
                   readOnly={isReadOnly}
                   placeholder={descriptionPlaceholder}
                   ariaLabel="Profile description"
                   multiline
-                  maxLength={DESCRIPTION_MAX_LENGTH}
-                  onLimitReached={() => onLimitReached("description")}
                   className={cn(
                     "text-base leading-relaxed font-light text-primary tracking-widest",
                     isMobilePreview ? "text-base" : "xl:text-lg",
@@ -484,8 +404,6 @@ function ProfileHeaderCardForm({
   imageInputRef,
   handleRemoveImage,
   onSubmit,
-  onLimitedChange,
-  onLimitReached,
 }: ProfileHeaderFormProps) {
   const handleSelectImage = () => imageInputRef.current?.click();
 
@@ -531,19 +449,11 @@ function ProfileHeaderCardForm({
                           <FormControl>
                             <EditableParagraph
                               value={titleField.value}
-                              onValueChange={(value) =>
-                                onLimitedChange(
-                                  value,
-                                  "title",
-                                  titleField.onChange
-                                )
-                              }
+                              onValueChange={titleField.onChange}
                               onValueBlur={titleField.onBlur}
                               readOnly={isReadOnly}
                               placeholder={titlePlaceholder}
                               ariaLabel="Profile title"
-                              maxLength={TITLE_MAX_LENGTH}
-                              onLimitReached={() => onLimitReached("title")}
                               className={cn(
                                 "text-foreground text-2xl font-semibold tracking-tight data-[empty=true]:before:text-background/50 data-[empty=true]:before:justify-center",
                                 isMobilePreview ? "text-2xl" : "xl:text-3xl",
@@ -563,22 +473,12 @@ function ProfileHeaderCardForm({
                           <FormControl>
                             <EditableParagraph
                               value={descriptionField.value}
-                              onValueChange={(value) =>
-                                onLimitedChange(
-                                  value,
-                                  "description",
-                                  descriptionField.onChange
-                                )
-                              }
+                              onValueChange={descriptionField.onChange}
                               onValueBlur={descriptionField.onBlur}
                               readOnly={isReadOnly}
                               placeholder={descriptionPlaceholder}
                               ariaLabel="Profile description"
                               multiline
-                              maxLength={DESCRIPTION_MAX_LENGTH}
-                              onLimitReached={() =>
-                                onLimitReached("description")
-                              }
                               className={cn(
                                 "text-base font-light leading-relaxed text-foreground/80 line-clamp-3 data-[empty=true]:before:text-background/50 data-[empty=true]:before:justify-center",
                                 isMobilePreview ? "text-base" : "xl:text-lg",
