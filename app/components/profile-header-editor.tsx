@@ -573,7 +573,7 @@ function ProfileHeaderCardForm({
                           side="bottom"
                           align="end"
                           sideOffset={12}
-                          className="w-52 p-2"
+                          className="w-52 p-2 rounded-xl"
                         >
                           <div className="flex flex-col gap-1">
                             <Button
