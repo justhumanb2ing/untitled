@@ -51,7 +51,6 @@ function getStartOfDayMs(timeZone: string, value: Date) {
   const utcMidnight = new Date(Date.UTC(year, month - 1, day));
   const offsetMs = getTimeZoneOffsetMs(timeZone, utcMidnight);
 
-  console.log(utcMidnight);
   return utcMidnight.getTime() - offsetMs;
 }
 
