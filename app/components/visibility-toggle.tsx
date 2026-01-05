@@ -52,7 +52,7 @@ export default function VisibilityToggle({
   return (
     <Button
       type="button"
-      className="group h-6 w-20 py-3.5"
+      className="group h-6 w-20 py-3.5 bg-secondary text-secondary-foreground hover:bg-secondary/80"
       onClick={handleToggle}
       disabled={isSaving}
       aria-pressed={isPublic}
