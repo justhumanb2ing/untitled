@@ -33,13 +33,9 @@ import { cn } from "@/lib/utils";
 const handleSchema = z.object({
   handle: z
     .string()
-    .transform((value) =>
-      value
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, "")
-    )
-    .refine((value) => value.length > 0, "Handle is required."),
+    .trim()
+    .toLowerCase()
+    .regex(/^[a-z0-9]+$/, "Only lowercase letters and numbers are allowed."),
 });
 
 type HandleFormValues = z.infer<typeof handleSchema>;
@@ -63,7 +59,7 @@ export default function ChangeHandleFormPopover({
   const form = useForm<HandleFormValues>({
     resolver: zodResolver(handleSchema),
     defaultValues: { handle: currentHandleValue },
-    mode: "onSubmit",
+    mode: "onChange",
     reValidateMode: "onChange",
   });
 
@@ -239,19 +235,12 @@ export default function ChangeHandleFormPopover({
                       <Input
                         {...field}
                         autoCapitalize="none"
-                        autoCorrect="off"
                         autoComplete="off"
                         autoFocus
-                        spellCheck={false}
-                        inputMode="text"
-                        pattern="[a-z0-9]+"
                         placeholder="Your handle"
                         value={field.value ?? ""}
                         onChange={(event) => {
-                          const nextValue = event.currentTarget.value
-                            .toLowerCase()
-                            .replace(/[^a-z0-9]/g, "");
-                          field.onChange(nextValue);
+                          field.onChange(event.target.value);
                           form.clearErrors("handle");
                           form.clearErrors("root");
                         }}
@@ -262,13 +251,7 @@ export default function ChangeHandleFormPopover({
                       {metadataConfig.handle}/@
                     </span>
                   </div>
-                  <FormDescription className="flex items-center gap-1">
-                    <CheckIcon />
-                    <span className="text-xs">
-                      Only lowercase letters and numbers are allowed.
-                    </span>
-                  </FormDescription>
-                  <FormMessage />
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />

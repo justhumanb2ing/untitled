@@ -16,7 +16,7 @@ export default function SavingStatusIndicator({
   return (
     <div
       className={cn(
-        "flex items-center gap-1 text-neutral-500 text-xs lg:text-sm font-medium",
+        "flex items-center gap-1 text-primary text-xs lg:text-sm font-medium",
         status === "error" && "text-destructive",
         className
       )}

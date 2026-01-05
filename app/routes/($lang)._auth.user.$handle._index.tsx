@@ -139,41 +139,23 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
       >
         <div
           className={cn(
-            "flex flex-col gap-4 grow min-h-0",
+            "relative flex flex-col gap-4 grow min-h-0",
             isMobilePreview &&
               "overflow-y-auto overscroll-contain scrollbar-hide"
           )}
         >
           <header
             className={cn(
-              "rounded-lg sticky z-10 overflow-hidden w-full shrink-0",
-              isMobilePreview ? "top-3" : "top-3"
+              "rounded-lg absolute z-10 overflow-hidden w-fit shrink-0",
+              isMobilePreview ? "top-3.5 left-0" : "left-2 top-4"
             )}
           >
             <div className={cn("w-full px-4", isMobilePreview ? "" : "px-4")}>
-              <div className="flex justify-between items-center gap-2 bg-muted/50 rounded-lg p-2 backdrop-blur-md overflow-hidden py-2.5">
-                <aside className="font-semibold flex items-center gap-1 min-w-0">
-                  <SealCheckIcon
-                    className="fill-blue-500 size-5"
-                    weight="fill"
-                  />
-                  <p className="text-sm truncate lg:w-full lg:text-base">
-                    {handle}
-                  </p>
-                </aside>
-
+              <div className="flex justify-between items-center gap-2 bg-secondary rounded-lg p-2 backdrop-blur-md overflow-hidden py-2 px-4">
                 <div className="flex items-center gap-2 justify-end shrink-0">
                   <OwnerGate isOwner={isOwner}>
                     <div className="flex items-center gap-1">
-                      <SavingStatusIndicator className="mr-2" />
-                      <div
-                        className={cn(
-                          "hidden",
-                          isMobilePreview ? "hidden" : "xl:block"
-                        )}
-                      >
-                        <VisibilityToggle pageId={id} isPublic={is_public} />
-                      </div>
+                      <SavingStatusIndicator />
                     </div>
                   </OwnerGate>
                   <Separator orientation="vertical" className={"my-1"} />
@@ -204,8 +186,8 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
             {/* Page Information Section */}
             <section
               className={cn(
-                "max-w-2xl p-4 sm:p-6 shrink relative",
-                isMobilePreview ? "" : "xl:flex-5"
+                "max-w-2xl shrink relative",
+                isMobilePreview ? "py-0" : "xl:py-24 xl:flex-5"
               )}
             >
               <ProfileHeaderEditor
@@ -223,10 +205,10 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
             {/* Page Brick Section */}
             <section
               className={cn(
-                "px-4 sm:px-10 grow shrink-0 scrollbar-hide",
+                "px-4 grow shrink-0 scrollbar-hide",
                 isMobilePreview
-                  ? "max-w-full py-0"
-                  : "xl:px-0 xl:py-6 xl:flex-8 xl:w-full xl:max-w-[878px] xl:min-h-0 xl:overflow-y-auto"
+                  ? "max-w-full py-0 px-8"
+                  : "xl:px-0 xl:py-24 xl:flex-8 xl:w-full xl:max-w-[878px] xl:min-h-0 xl:overflow-y-auto"
               )}
             >
               <PageBrickSection />
