@@ -147,8 +147,8 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
         >
           <header
             className={cn(
-              "rounded-lg absolute z-10 overflow-hidden w-fit shrink-0",
-              isMobilePreview ? "top-3.5 left-0" : "left-2 top-4"
+              "rounded-lg absolute z-10 overflow-hidden w-fit shrink-0 hidden",
+              isMobilePreview ? "block top-3.5 left-0" : "left-2 top-4 xl:block"
             )}
           >
             <div className={cn("w-full px-4", isMobilePreview ? "" : "px-4")}>
@@ -178,12 +178,45 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
 
           <div
             className={cn(
-              "flex flex-col gap-4 grow max-w-lg",
+              "flex flex-col gap-4 grow max-w-lg relative",
               isMobilePreview
                 ? "flex-col! mx-0 gap-4"
                 : "xl:flex-row mx-auto xl:max-w-11/12 container xl:gap-8 xl:flex-1 xl:min-h-0"
             )}
           >
+            <header
+              className={cn(
+                "rounded-lg absolute z-10 overflow-hidden w-fit shrink-0 block",
+                isMobilePreview
+                  ? "hidden top-3.5 left-0"
+                  : "left-2 top-4 xl:hidden"
+              )}
+            >
+              <div className={cn("w-full px-4", isMobilePreview ? "" : "px-4")}>
+                <div className="flex justify-between items-center gap-2 bg-secondary rounded-lg p-2 backdrop-blur-md overflow-hidden py-2 px-4">
+                  <div className="flex items-center gap-2 justify-end shrink-0">
+                    <OwnerGate isOwner={isOwner}>
+                      <div className="flex items-center gap-1">
+                        <SavingStatusIndicator />
+                      </div>
+                    </OwnerGate>
+                    <Separator orientation="vertical" className={"my-1"} />
+                    {umamiResult && umamiResult.ok ? (
+                      <p className="text-xs">
+                        <NumberTicker
+                          value={umamiResult.data!.visits || 0}
+                          className="text-foreground dark:text-foreground"
+                        />{" "}
+                        View
+                      </p>
+                    ) : (
+                      <p>Error</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </header>
+
             {/* Page Information Section */}
             <section
               className={cn(
