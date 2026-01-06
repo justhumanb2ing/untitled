@@ -36,5 +36,14 @@ export function createPageSaver(
     if (error) {
       throw new Error(error.message);
     }
+
+    const { error: layoutError } = await supabase.rpc("save_page_layout", {
+      p_layout: payload.layout ?? null,
+      p_page_id: payload.pageId,
+    });
+
+    if (layoutError) {
+      throw new Error(layoutError.message);
+    }
   };
 }

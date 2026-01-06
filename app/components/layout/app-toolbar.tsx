@@ -1,3 +1,4 @@
+import { useRef, type ChangeEvent } from "react";
 import { cn } from "@/lib/utils";
 import {
   ToolbarButton,
@@ -6,16 +7,50 @@ import {
 } from "../ui/toolbar";
 import { Button } from "../ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { toastManager } from "@/components/ui/toast";
+import { usePageGridActions } from "@/components/page/page-grid-context";
 import {
   ArticleNyTimesIcon,
   LinkIcon,
   MapPinAreaIcon,
   VideoIcon,
 } from "@phosphor-icons/react";
+import { getMediaValidationError } from "../../../service/pages/page-grid";
 
 type Props = {};
 
 export default function AppToolbar({}: Props) {
+  const { addMediaFile, isEditable } = usePageGridActions();
+  const mediaInputRef = useRef<HTMLInputElement>(null);
+
+  const handleMediaClick = () => {
+    if (!isEditable) {
+      return;
+    }
+    mediaInputRef.current?.click();
+  };
+
+  const handleMediaChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+
+    if (!file) {
+      return;
+    }
+
+    const errorMessage = getMediaValidationError(file);
+    if (errorMessage) {
+      toastManager.add({
+        type: "error",
+        title: "Upload blocked",
+        description: errorMessage,
+      });
+      return;
+    }
+
+    addMediaFile(file);
+  };
+
   return (
     <aside className={cn("fixed bottom-10 left-1/2 -translate-x-1/2")}>
       <ToolbarRoot className={"shadow-sm rounded-xl"}>
@@ -79,6 +114,10 @@ export default function AppToolbar({}: Props) {
                       size={"icon-lg"}
                       variant={"ghost"}
                       className={"size-10"}
+                      type="button"
+                      onClick={handleMediaClick}
+                      disabled={!isEditable}
+                      aria-disabled={!isEditable}
                     >
                       {/* <img
                         src="/image-video-icon.png"
@@ -122,6 +161,15 @@ export default function AppToolbar({}: Props) {
           </Tooltip>
         </ToolbarGroup>
       </ToolbarRoot>
+      <input
+        ref={mediaInputRef}
+        type="file"
+        accept="image/*,video/*"
+        className="sr-only"
+        onChange={handleMediaChange}
+        disabled={!isEditable}
+        aria-disabled={!isEditable}
+      />
     </aside>
   );
 }

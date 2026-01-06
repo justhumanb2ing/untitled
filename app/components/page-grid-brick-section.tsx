@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import type { Layout, LayoutItem, ResponsiveLayouts } from "react-grid-layout";
+import { useEffect, useMemo, useState } from "react";
+import type { Layout } from "react-grid-layout";
 import type { LayoutConstraint } from "react-grid-layout/core";
 import { Responsive, useContainerWidth } from "react-grid-layout";
-import { Item } from "./ui/item";
 import {
   BREAKPOINTS,
   CONTAINER_PADDING,
@@ -11,79 +10,21 @@ import {
   type GridBreakpoint,
 } from "@/config/grid-rule";
 import {
-  findColumnStackPosition,
   getBreakpoint,
   getColumnWidth,
   getRowHeightForSquare,
   resizeRatioConstraintHandler,
 } from "@/utils/grid-utils";
-import type { BrickRow, BrickType } from "types/brick";
-
-type GridItemType = Exclude<BrickType, "map" | "section">;
-
-type GridItemData = {
-  id: string;
-  type: GridItemType;
-  label: string;
-};
-
-const COLS: Record<GridBreakpoint, number> = { desktop: 4, mobile: 2 };
-const ITEM_LABELS: Record<GridItemType, string> = {
-  text: "Text",
-  link: "Link",
-  image: "Image",
-  video: "Video",
-};
-const INITIAL_ITEMS: GridItemData[] = [
-  { id: "item-1", type: "text", label: "Text Block" },
-  { id: "item-2", type: "link", label: "Primary Link" },
-  { id: "item-3", type: "image", label: "Image Card" },
-  { id: "item-4", type: "video", label: "Video Tile" },
-];
+import { usePageGridActions, usePageGridState } from "@/components/page/page-grid-context";
+import PageGridBrickItem from "@/components/page/page-grid-brick-item";
+import {
+  GRID_COLS,
+  buildLayoutsFromBricks,
+} from "../../service/pages/page-grid";
 
 const resizeRatioConstraint: LayoutConstraint = {
   name: "resizeRatioConstraint",
   constrainSize: resizeRatioConstraintHandler,
-};
-
-/** Build a layout item with type-aware defaults and resize constraints. */
-const createLayoutItem = (
-  item: GridItemData,
-  breakpoint: GridBreakpoint,
-  layout: ReadonlyArray<LayoutItem>
-): LayoutItem => {
-  const isText = item.type === "text";
-  const cols = COLS[breakpoint];
-  const w = isText ? cols : 1;
-  const h = isText ? 1 : 2;
-  const { x, y } = findColumnStackPosition(layout, cols, w);
-
-  return {
-    i: item.id,
-    x,
-    y,
-    w,
-    h,
-    minW: isText ? w : 1,
-    maxW: isText ? w : 2,
-    minH: isText ? h : 2,
-    maxH: isText ? h : 4,
-    isResizable: !isText,
-  };
-};
-
-const buildLayouts = (
-  items: GridItemData[]
-): ResponsiveLayouts<GridBreakpoint> => {
-  const desktop: LayoutItem[] = [];
-  const mobile: LayoutItem[] = [];
-
-  for (const item of items) {
-    desktop.push(createLayoutItem(item, "desktop", desktop));
-    mobile.push(createLayoutItem(item, "mobile", mobile));
-  }
-
-  return { desktop, mobile };
 };
 
 const useWindowBreakpoint = () => {
@@ -109,44 +50,6 @@ const useWindowBreakpoint = () => {
   return breakpoint;
 };
 
-function brickToLayoutItem(brick: BrickRow): LayoutItem {
-  const { x, y } = brick.position.desktop;
-  const { w, h } = brick.style.desktop.grid;
-
-  return {
-    i: brick.id,
-    x,
-    y,
-    w,
-    h,
-    isResizable: true,
-  };
-}
-
-function applyLayoutToBrick(
-  brick: BrickRow,
-  layout: LayoutItem,
-  breakpoint: "mobile" | "desktop"
-): BrickRow {
-  return {
-    ...brick,
-    position: {
-      ...brick.position,
-      [breakpoint]: {
-        x: layout.x,
-        y: layout.y,
-      },
-    },
-    style: {
-      ...brick.style,
-      [breakpoint]: {
-        grid: { w: layout.w, h: layout.h },
-      },
-    },
-    updated_at: new Date().toISOString(),
-  };
-}
-
 type GridTestProps = {
   isMobilePreview?: boolean;
 };
@@ -163,15 +66,13 @@ export default function PageGridBrickSection({ isMobilePreview = false }: GridTe
   } = useContainerWidth({
     measureBeforeMount: true,
   });
-  const [items, setItems] = useState<GridItemData[]>(INITIAL_ITEMS);
-  const [layouts, setLayouts] = useState<ResponsiveLayouts<GridBreakpoint>>(
-    () => buildLayouts(INITIAL_ITEMS)
-  );
-  const nextIdRef = useRef(INITIAL_ITEMS.length + 1);
+  const { bricks } = usePageGridState();
+  const { updateLayout } = usePageGridActions();
+  const layouts = useMemo(() => buildLayoutsFromBricks(bricks), [bricks]);
 
   const isDesktop = breakpoint === "desktop";
   const gridWidth = isDesktop ? DESKTOP_WIDTH : containerWidth;
-  const cols = COLS[breakpoint];
+  const cols = GRID_COLS[breakpoint];
   const columnWidth = getColumnWidth(
     gridWidth,
     cols,
@@ -182,26 +83,7 @@ export default function PageGridBrickSection({ isMobilePreview = false }: GridTe
   const canRenderGrid = isDesktop || mounted;
 
   const handleLayoutChange = (layout: Layout) => {
-    setLayouts((prev) => ({ ...prev, [breakpoint]: layout }));
-  };
-
-  const handleAddItem = (type: GridItemType) => {
-    const id = `item-${nextIdRef.current}`;
-    nextIdRef.current += 1;
-    const label = `${ITEM_LABELS[type]} ${nextIdRef.current - 1}`;
-    const nextItem: GridItemData = { id, type, label };
-
-    setItems((prev) => [...prev, nextItem]);
-    setLayouts((prev) => ({
-      desktop: [
-        ...(prev.desktop ?? []),
-        createLayoutItem(nextItem, "desktop", prev.desktop ?? []),
-      ],
-      mobile: [
-        ...(prev.mobile ?? []),
-        createLayoutItem(nextItem, "mobile", prev.mobile ?? []),
-      ],
-    }));
+    updateLayout(layout, breakpoint);
   };
 
   return (
@@ -224,7 +106,7 @@ export default function PageGridBrickSection({ isMobilePreview = false }: GridTe
             width={gridWidth}
             breakpoint={breakpoint}
             breakpoints={BREAKPOINTS}
-            cols={COLS}
+            cols={GRID_COLS}
             layouts={layouts}
             rowHeight={rowHeight}
             margin={GRID_MARGIN}
@@ -235,24 +117,12 @@ export default function PageGridBrickSection({ isMobilePreview = false }: GridTe
             constraints={[resizeRatioConstraint]}
             onLayoutChange={handleLayoutChange}
           >
-            {items.map((item) => (
+            {bricks.map((brick) => (
               <div
-                key={item.id}
+                key={brick.id}
                 className="grid h-full w-full place-items-center"
               >
-                <Item
-                  variant={"muted"}
-                  render={
-                    <>
-                      <div className="flex h-full w-full flex-col justify-between rounded-3xl border bg-muted p-3">
-                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          {item.type}
-                        </div>
-                        <div className="text-sm font-medium">{item.label}</div>
-                      </div>
-                    </>
-                  }
-                />
+                <PageGridBrickItem brick={brick} />
               </div>
             ))}
           </Responsive>

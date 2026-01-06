@@ -6,6 +6,7 @@ const PAGE_IMAGE_BUCKET = "untitled-bucket";
 
 export type PageImageUploadPayload = {
   pageId: string;
+  userId: string;
   file: File;
 };
 
@@ -22,10 +23,11 @@ export function createPageImageUploader(
 ) {
   return async function uploadPageImage({
     pageId,
+    userId,
     file,
   }: PageImageUploadPayload): Promise<PageImageUploadResult> {
     const supabase = await supabasePromise;
-    const path = resolvePageImagePath(pageId, file);
+    const path = resolvePageImagePath(userId, pageId, file);
 
     const { error } = await supabase.storage
       .from(PAGE_IMAGE_BUCKET)
@@ -57,12 +59,12 @@ export function createPageImageUploader(
 /**
  * Resolves a stable storage path so identical filenames overwrite the same object.
  */
-function resolvePageImagePath(pageId: string, file: File) {
+function resolvePageImagePath(userId: string, pageId: string, file: File) {
   const extension = resolveImageExtension(file);
   const baseName = resolveImageBaseName(file.name);
   const resolvedBaseName = baseName.length > 0 ? baseName : "profile";
 
-  return `pages/${pageId}/${resolvedBaseName}.${extension}`;
+  return `pages/${userId}/${pageId}/profile/${resolvedBaseName}.${extension}`;
 }
 
 function resolveImageBaseName(fileName: string) {

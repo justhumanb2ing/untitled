@@ -38,6 +38,7 @@ type ProfileHeaderFormValues = z.infer<typeof profileHeaderSchema>;
 
 interface ProfileHeaderEditorProps {
   pageId: string;
+  userId: string;
   imageUrl: string | null;
   title: string | null;
   description: string | null;
@@ -66,6 +67,7 @@ interface ProfileHeaderFormProps {
 
 export default function ProfileHeaderEditor({
   pageId,
+  userId,
   imageUrl,
   title,
   description,
@@ -157,6 +159,7 @@ export default function ProfileHeaderEditor({
       try {
         const { publicUrl } = await uploadPageImage({
           pageId,
+          userId,
           file: imageValue,
         });
 

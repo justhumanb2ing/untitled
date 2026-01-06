@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      page_layouts: {
+        Row: {
+          created_at: string
+          layout: Json
+          page_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          layout: Json
+          page_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          layout?: Json
+          page_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_layouts_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: true
+            referencedRelation: "pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pages: {
         Row: {
           created_at: string
@@ -60,21 +89,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      tasks: {
-        Row: {
-          id: number
-          name: string
-        }
-        Insert: {
-          id?: number
-          name: string
-        }
-        Update: {
-          id?: number
-          name?: string
-        }
-        Relationships: []
       }
       users: {
         Row: {
@@ -134,6 +148,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      save_page_layout: {
+        Args: { p_layout: Json; p_page_id: string }
+        Returns: undefined
       }
     }
     Enums: {

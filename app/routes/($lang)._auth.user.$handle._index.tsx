@@ -25,7 +25,8 @@ import PageBrickSection from "@/components/page/page-brick-section";
 import AppToolbar from "@/components/layout/app-toolbar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import PageGridBrickSection from "@/components/page-grid-brick-section";
-
+import { PageGridProvider } from "@/components/page/page-grid-context";
+import { parsePageLayoutSnapshot } from "../../service/pages/page-grid";
 
 type PreviewLayout = "desktop" | "mobile";
 
@@ -58,6 +59,16 @@ export async function loader(args: Route.LoaderArgs) {
   const isOwner = page.owner_id === userId;
   if (!page.is_public && !isOwner)
     throw new Response("Not Found", { status: 404 });
+
+  const { data: pageLayout, error: pageLayoutError } = await supabase
+    .from("page_layouts")
+    .select("layout")
+    .eq("page_id", page.id)
+    .maybeSingle();
+
+  if (pageLayoutError) {
+    throw new Response(pageLayoutError.message, { status: 500 });
+  }
 
   let umamiResult: UmamiResponse | null = null;
 
@@ -92,15 +103,22 @@ export async function loader(args: Route.LoaderArgs) {
     }
   }
 
-  return { page, handle, isOwner, umamiResult };
+  return {
+    page,
+    handle,
+    isOwner,
+    umamiResult,
+    pageLayout: pageLayout?.layout ?? null,
+  };
 }
 
 export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
   const {
-    page: { id, title, description, image_url, is_public },
+    page: { id, owner_id, title, description, image_url, is_public },
     handle,
     isOwner,
     umamiResult,
+    pageLayout,
   } = loaderData;
   const [previewLayout, setPreviewLayout] = useState<PreviewLayout>("desktop");
   const isMobilePreview = previewLayout === "mobile";
@@ -109,9 +127,13 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
       title,
       description,
       image_url,
-      layout: null,
+      layout: pageLayout ?? null,
     }),
-    [title, description, image_url]
+    [title, description, image_url, pageLayout]
+  );
+  const initialBricks = useMemo(
+    () => parsePageLayoutSnapshot(pageLayout),
+    [pageLayout]
   );
 
   useEffect(() => {
@@ -132,66 +154,33 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
       initialSnapshot={initialSnapshot}
       enabled={isOwner}
     >
-      <div
-        className={cn(
-          `flex flex-col gap-4 transition-all ease-in-out duration-700 bg-background relative`,
-          isMobilePreview
-            ? "self-start border rounded-4xl shadow-lg max-w-lg mx-auto container my-6 h-[calc(100dvh-3rem)] overflow-hidden"
-            : "max-w-full w-full h-full my-0 min-h-dvh xl:h-dvh xl:overflow-hidden"
-        )}
+      <PageGridProvider
+        pageId={id}
+        ownerId={owner_id}
+        isOwner={isOwner}
+        initialBricks={initialBricks}
       >
         <div
           className={cn(
-            "relative flex flex-col gap-4 grow min-h-0",
-            isMobilePreview &&
-              "overflow-y-auto overscroll-contain scrollbar-hide"
+            `flex flex-col gap-4 transition-all ease-in-out duration-700 bg-background relative`,
+            isMobilePreview
+              ? "self-start border rounded-4xl shadow-lg max-w-lg mx-auto container my-6 h-[calc(100dvh-3rem)] overflow-hidden"
+              : "max-w-full w-full h-full my-0 min-h-dvh xl:h-dvh xl:overflow-hidden"
           )}
         >
-          <header
-            className={cn(
-              "rounded-lg absolute z-10 overflow-hidden w-fit shrink-0 hidden",
-              isMobilePreview ? "block top-3.5 left-0" : "left-2 top-4 xl:block"
-            )}
-          >
-            <div className={cn("w-full px-4", isMobilePreview ? "" : "px-4")}>
-              <div className="flex justify-between items-center gap-2 bg-secondary rounded-lg p-2 backdrop-blur-md overflow-hidden py-2 px-4">
-                <div className="flex items-center gap-2 justify-end shrink-0">
-                  <OwnerGate isOwner={isOwner}>
-                    <div className="flex items-center gap-1">
-                      <SavingStatusIndicator />
-                    </div>
-                  </OwnerGate>
-                  <Separator orientation="vertical" className={"my-1"} />
-                  {umamiResult && umamiResult.ok ? (
-                    <p className="text-xs">
-                      <NumberTicker
-                        value={umamiResult.data!.visits || 0}
-                        className="text-foreground dark:text-foreground"
-                      />{" "}
-                      View
-                    </p>
-                  ) : (
-                    <p>Error</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </header>
-
           <div
             className={cn(
-              "flex flex-col gap-4 grow max-w-lg relative",
-              isMobilePreview
-                ? "flex-col! mx-0 gap-4"
-                : " mx-auto container xl:flex-row xl:justify-center xl:max-w-11/12 xl:gap-12 xl:flex-1 xl:min-h-0"
+              "relative flex flex-col gap-4 grow min-h-0",
+              isMobilePreview &&
+                "overflow-y-auto overscroll-contain scrollbar-hide"
             )}
           >
             <header
               className={cn(
-                "rounded-lg absolute z-10 overflow-hidden w-fit shrink-0 block",
+                "rounded-lg absolute z-10 overflow-hidden w-fit shrink-0 hidden",
                 isMobilePreview
-                  ? "hidden top-3.5 left-0"
-                  : "left-2 top-4 xl:hidden"
+                  ? "block top-3.5 left-0"
+                  : "left-2 top-4 xl:block"
               )}
             >
               <div className={cn("w-full px-4", isMobilePreview ? "" : "px-4")}>
@@ -219,80 +208,127 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
               </div>
             </header>
 
-            {/* Page Information Section */}
-            <section
+            <div
               className={cn(
-                "max-w-2xl shrink relative",
-                isMobilePreview ? "py-0" : "xl:py-24 xl:flex-5"
-              )}
-            >
-              <ProfileHeaderEditor
-                pageId={id}
-                imageUrl={image_url}
-                title={title}
-                description={description}
-                handle={handle}
-                isOwner={isOwner}
-                isMobilePreview={isMobilePreview}
-                isPublic={is_public}
-              />
-              <div className="flex justify-center mb-4">
-                <p className="flex items-center gap-1 text-center text-primary/40 font-medium">
-                  <LightningIcon weight="fill" />
-                  Powered by Untitled
-                </p>
-              </div>
-            </section>
-
-            {/* Page Brick Section */}
-            <section
-              className={cn(
-                "px-4 pb-8 grow shrink-0 scrollbar-hide",
+                "flex flex-col gap-4 grow max-w-lg relative",
                 isMobilePreview
-                  ? "max-w-full py-0 px-8 pb-8"
-                  : "xl:px-0 xl:pt-24 xl:flex-14 xl:w-full xl:max-w-[880px] xl:min-h-0 xl:overflow-y-auto"
+                  ? "flex-col! mx-0 gap-4"
+                  : " mx-auto container xl:flex-row xl:justify-center xl:max-w-11/12 xl:gap-12 xl:flex-1 xl:min-h-0"
               )}
             >
-              {/* <ScrollArea
-                className="h-full"
-                scrollFade
-                scrollbarGutter
-                scrollbarHidden
-              >
-                <PageBrickSection />
-              </ScrollArea> */}
-              <div
+              <header
                 className={cn(
-                  "w-full",
-                  isMobilePreview ? "" : "xl:w-[880px]"
+                  "rounded-lg absolute z-10 overflow-hidden w-fit shrink-0 block",
+                  isMobilePreview
+                    ? "hidden top-3.5 left-0"
+                    : "left-2 top-4 xl:hidden"
                 )}
               >
-                <PageGridBrickSection isMobilePreview={isMobilePreview} />
+                <div
+                  className={cn("w-full px-4", isMobilePreview ? "" : "px-4")}
+                >
+                  <div className="flex justify-between items-center gap-2 bg-secondary rounded-lg p-2 backdrop-blur-md overflow-hidden py-2 px-4">
+                    <div className="flex items-center gap-2 justify-end shrink-0">
+                      <OwnerGate isOwner={isOwner}>
+                        <div className="flex items-center gap-1">
+                          <SavingStatusIndicator />
+                        </div>
+                      </OwnerGate>
+                      <Separator orientation="vertical" className={"my-1"} />
+                      {umamiResult && umamiResult.ok ? (
+                        <p className="text-xs">
+                          <NumberTicker
+                            value={umamiResult.data!.visits || 0}
+                            className="text-foreground dark:text-foreground"
+                          />{" "}
+                          View
+                        </p>
+                      ) : (
+                        <p>Error</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </header>
+
+              {/* Page Information Section */}
+              <section
+                className={cn(
+                  "max-w-2xl shrink relative",
+                  isMobilePreview ? "py-0" : "xl:py-24 xl:flex-5"
+                )}
+              >
+                <ProfileHeaderEditor
+                  pageId={id}
+                  userId={owner_id}
+                  imageUrl={image_url}
+                  title={title}
+                  description={description}
+                  handle={handle}
+                  isOwner={isOwner}
+                  isMobilePreview={isMobilePreview}
+                  isPublic={is_public}
+                />
+                <div className="flex justify-center mb-4">
+                  <p className="flex items-center gap-1 text-center text-primary/40 font-medium">
+                    <LightningIcon weight="fill" />
+                    Powered by Untitled
+                  </p>
+                </div>
+              </section>
+
+              {/* Page Brick Section */}
+              <section
+                className={cn(
+                  "px-4 pb-8 grow shrink-0 scrollbar-hide",
+                  isMobilePreview
+                    ? "max-w-full py-0 px-8 pb-8"
+                    : "xl:px-0 xl:pt-24 xl:flex-14 xl:w-full xl:max-w-[880px] xl:min-h-0 xl:overflow-y-auto"
+                )}
+              >
+                <ScrollArea
+                  className={cn(
+                    "w-full h-full",
+                    isMobilePreview ? "" : "xl:w-[880px]"
+                  )}
+                  scrollFade
+                  scrollbarGutter
+                  scrollbarHidden
+                >
+                  <div
+                    className={cn(
+                      "w-full",
+                      isMobilePreview ? "pb-50" : "pb-16"
+                    )}
+                  >
+                    <PageGridBrickSection isMobilePreview={isMobilePreview} />
+                  </div>
+                </ScrollArea>
+              </section>
+            </div>
+
+            {/* Action bar */}
+            <aside
+              className={cn(
+                "static h-28 py-12 border-t flex items-center justify-center",
+                !isMobilePreview &&
+                  "xl:fixed xl:bottom-10 xl:left-10 xl:px-0 xl:mb-0 xl:py-0 xl:h-fit xl:border-none"
+              )}
+            >
+              <div className={cn("flex")}>
+                <BottomActionBar isOwner={isOwner} />
               </div>
-            </section>
+            </aside>
           </div>
 
-          {/* Action bar */}
-          <aside
-            className={cn(
-              "static h-28 py-12 border-t flex items-center justify-center",
-              !isMobilePreview &&
-                "xl:fixed xl:bottom-10 xl:left-10 xl:px-0 xl:mb-0 xl:py-0 xl:h-fit xl:border-none"
-            )}
-          >
-            <div className={cn("flex")}>
-              <BottomActionBar isOwner={isOwner} />
-            </div>
-          </aside>
+          <LayoutToggle
+            isDesktop={!isMobilePreview}
+            onToggle={setPreviewLayout}
+          />
+
+          <AppToolbar />
         </div>
-
-        <LayoutToggle
-          isDesktop={!isMobilePreview}
-          onToggle={setPreviewLayout}
-        />
-
-        {/* <AppToolbar /> */}
-      </div>
+      </PageGridProvider>
     </PageAutoSaveController>
   );
 }
