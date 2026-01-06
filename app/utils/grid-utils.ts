@@ -27,6 +27,18 @@ export const getRowHeightForSquare = (
   return height > 0 ? height : DEFAULT_ROW_HEIGHT;
 };
 
+export const getRowSpanForHeight = (
+  height: number,
+  rowHeight: number,
+  minRows = 1
+) => {
+  if (!Number.isFinite(height) || !Number.isFinite(rowHeight) || rowHeight <= 0) {
+    return minRows;
+  }
+
+  return Math.max(minRows, Math.ceil(height / rowHeight));
+};
+
 export const getColumnHeights = (
   layout: ReadonlyArray<LayoutItem>,
   cols: number

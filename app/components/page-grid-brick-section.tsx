@@ -122,7 +122,11 @@ export default function PageGridBrickSection({ isMobilePreview = false }: GridTe
                 key={brick.id}
                 className="grid h-full w-full place-items-center"
               >
-                <PageGridBrickItem brick={brick} />
+                <PageGridBrickItem
+                  brick={brick}
+                  rowHeight={rowHeight}
+                  breakpoint={breakpoint}
+                />
               </div>
             ))}
           </Responsive>

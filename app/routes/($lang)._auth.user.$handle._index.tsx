@@ -298,7 +298,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
                   <div
                     className={cn(
                       "w-full",
-                      isMobilePreview ? "pb-50" : "pb-16"
+                      isMobilePreview ? "pb-50" : "pb-32"
                     )}
                   >
                     <PageGridBrickSection isMobilePreview={isMobilePreview} />

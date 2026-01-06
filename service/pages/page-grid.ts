@@ -7,7 +7,12 @@ import type { Json } from "../../types/database.types";
 
 export type PageGridBrickType = Exclude<BrickType, "map" | "section">;
 export type PageGridMediaType = Extract<PageGridBrickType, "image" | "video">;
-export type PageGridBrickStatus = "ready" | "uploading" | "error";
+export type PageGridBrickStatus =
+  | "ready"
+  | "uploading"
+  | "error"
+  | "draft"
+  | "editing";
 
 export type PageGridBrick<T extends PageGridBrickType = PageGridBrickType> =
   BrickRow<T> & {
@@ -148,6 +153,14 @@ export function resolveMediaType(file: File): PageGridMediaType | null {
   return null;
 }
 
+export function resolveTextBrickStatus(text: string, isEditing: boolean) {
+  if (text.trim().length === 0) {
+    return "draft";
+  }
+
+  return isEditing ? "editing" : "ready";
+}
+
 /**
  * Returns a validation error message when the media file is invalid.
  */
@@ -221,6 +234,8 @@ export function updatePageGridBrick(
     text?: string;
     status?: PageGridBrickStatus;
     timestamp?: string;
+    grid?: GridSize;
+    breakpoint?: GridBreakpoint;
   }
 ): PageGridBrick {
   const nextStatus = payload.status ?? brick.status;
@@ -233,12 +248,31 @@ export function updatePageGridBrick(
       })
     : brick.data;
 
-  return {
+  const nextBrick: PageGridBrick = {
     ...brick,
     status: nextStatus,
     data: nextData,
     updated_at: payload.timestamp ?? new Date().toISOString(),
   };
+
+  if (payload.grid && payload.breakpoint) {
+    switch (brick.type) {
+      case "text":
+        return {
+          ...nextBrick,
+          style: {
+            ...nextBrick.style,
+            [payload.breakpoint]: {
+              grid: payload.grid,
+            },
+          },
+        };
+      default:
+        return nextBrick;
+    }
+  }
+
+  return nextBrick;
 }
 
 /**
@@ -286,7 +320,7 @@ export function serializePageLayout(
   bricks: PageGridBrick[]
 ): PageLayoutSnapshot | null {
   const persistedBricks = bricks
-    .filter((brick) => brick.status === "ready")
+    .filter(shouldPersistBrick)
     .map(({ status: _status, ...brick }) => brick);
 
   if (persistedBricks.length === 0) {
@@ -454,6 +488,22 @@ function isPageGridBrickRow(
   }
 
   return true;
+}
+
+function shouldPersistBrick(brick: PageGridBrick) {
+  if (brick.status !== "ready" && brick.status !== "editing") {
+    return false;
+  }
+
+  if (isTextBrick(brick)) {
+    return brick.data.text.trim().length > 0;
+  }
+
+  return true;
+}
+
+function isTextBrick(brick: PageGridBrick): brick is PageGridBrick<"text"> {
+  return brick.type === "text";
 }
 
 export type { LayoutItem, ResponsiveLayouts };

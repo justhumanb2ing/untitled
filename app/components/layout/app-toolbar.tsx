@@ -20,7 +20,7 @@ import { getMediaValidationError } from "../../../service/pages/page-grid";
 type Props = {};
 
 export default function AppToolbar({}: Props) {
-  const { addMediaFile, isEditable } = usePageGridActions();
+  const { addMediaFile, addTextBrick, isEditable } = usePageGridActions();
   const mediaInputRef = useRef<HTMLInputElement>(null);
 
   const handleMediaClick = () => {
@@ -51,6 +51,14 @@ export default function AppToolbar({}: Props) {
     addMediaFile(file);
   };
 
+  const handleTextClick = () => {
+    if (!isEditable) {
+      return;
+    }
+
+    addTextBrick();
+  };
+
   return (
     <aside className={cn("fixed bottom-10 left-1/2 -translate-x-1/2")}>
       <ToolbarRoot className={"shadow-sm rounded-xl"}>
@@ -64,6 +72,7 @@ export default function AppToolbar({}: Props) {
                       size={"icon-lg"}
                       variant={"ghost"}
                       className={"size-10"}
+                      type="button"
                     >
                       {/* <img
                         src="/link-icon.png"
@@ -86,9 +95,13 @@ export default function AppToolbar({}: Props) {
                 <ToolbarButton
                   render={
                     <Button
+                      type="button"
                       size={"icon-lg"}
                       variant={"ghost"}
                       className={"size-10"}
+                      onClick={handleTextClick}
+                      disabled={!isEditable}
+                      aria-disabled={!isEditable}
                     >
                       {/* <img
                         src="/text-icon.png"

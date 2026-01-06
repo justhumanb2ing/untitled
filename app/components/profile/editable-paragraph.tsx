@@ -4,6 +4,8 @@ import {
   type ComponentPropsWithoutRef,
   type FocusEvent,
   type FormEvent,
+  type RefObject,
+  type KeyboardEvent,
 } from "react";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +17,7 @@ interface EditableParagraphProps extends ComponentPropsWithoutRef<"p"> {
   placeholder: string;
   multiline?: boolean;
   ariaLabel: string;
+  elementRef?: RefObject<HTMLParagraphElement>;
 }
 
 export default function EditableParagraph({
@@ -26,9 +29,12 @@ export default function EditableParagraph({
   className,
   multiline = false,
   ariaLabel,
+  elementRef,
+  onKeyDown,
   ...props
 }: EditableParagraphProps) {
-  const ref = useRef<HTMLParagraphElement>(null);
+  const fallbackRef = useRef<HTMLParagraphElement>(null);
+  const ref = elementRef ?? fallbackRef;
   const normalizedValue = value ?? "";
   const isEmpty = normalizedValue.trim().length === 0;
 
@@ -51,6 +57,13 @@ export default function EditableParagraph({
     onValueBlur();
   };
 
+  const handleKeyDown = (event: KeyboardEvent<HTMLParagraphElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+    }
+    onKeyDown?.(event);
+  };
+
   return (
     <p
       {...props}
@@ -65,6 +78,7 @@ export default function EditableParagraph({
       suppressContentEditableWarning
       onInput={handleInput}
       onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
       className={cn(
         "relative w-full min-w-0 whitespace-pre-wrap wrap-break-word outline-none focus-visible:ring-0",
         "data-[empty=true]:before:absolute data-[empty=true]:before:inset-0 data-[empty=true]:before:flex data-[empty=true]:before:text-muted-foreground data-[empty=true]:before:content-[attr(data-placeholder)]",

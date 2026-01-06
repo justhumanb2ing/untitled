@@ -18,6 +18,7 @@ import {
   createPageGridBrickId,
   getMediaValidationError,
   resolveMediaType,
+  resolveTextBrickStatus,
   serializePageLayout,
   updatePageGridBrick,
   type PageGridBrick,
@@ -31,6 +32,14 @@ type PageGridState = {
 
 type PageGridActions = {
   addMediaFile: (file: File) => void;
+  addTextBrick: () => void;
+  updateTextBrick: (payload: {
+    id: string;
+    text: string;
+    rowSpan: number;
+    breakpoint: GridBreakpoint;
+    isEditing: boolean;
+  }) => void;
   updateLayout: (layout: Layout, breakpoint: GridBreakpoint) => void;
   isEditable: boolean;
 };
@@ -46,10 +55,19 @@ type PageGridAction =
       id: string;
       mediaType: PageGridMediaType;
     }
+  | { type: "ADD_TEXT_PLACEHOLDER"; id: string }
   | {
       type: "COMPLETE_MEDIA_UPLOAD";
       id: string;
       publicUrl: string;
+    }
+  | {
+      type: "UPDATE_TEXT_BRICK";
+      id: string;
+      text: string;
+      rowSpan: number;
+      breakpoint: GridBreakpoint;
+      isEditing: boolean;
     }
   | { type: "REMOVE_BRICK"; id: string }
   | {
@@ -90,13 +108,71 @@ function pageGridReducer(
         ),
       };
     }
+    case "ADD_TEXT_PLACEHOLDER": {
+      const brick = createPageGridBrick({
+        id: action.id,
+        type: "text",
+        status: "draft",
+        bricks: state.bricks,
+      });
+
+      return {
+        bricks: [...state.bricks, brick],
+      };
+    }
+    case "UPDATE_TEXT_BRICK": {
+      let didUpdate = false;
+      const nextBricks = state.bricks.map((brick) => {
+        if (brick.id !== action.id || brick.type !== "text") {
+          return brick;
+        }
+
+        const nextStatus = resolveTextBrickStatus(
+          action.text,
+          action.isEditing
+        );
+        const currentGrid = brick.style[action.breakpoint].grid;
+        const nextGrid = {
+          ...currentGrid,
+          h: action.rowSpan,
+        };
+        const shouldUpdate =
+          brick.data.text !== action.text ||
+          brick.status !== nextStatus ||
+          currentGrid.h !== action.rowSpan;
+
+        if (!shouldUpdate) {
+          return brick;
+        }
+
+        didUpdate = true;
+        return updatePageGridBrick(brick, {
+          text: action.text,
+          status: nextStatus,
+          grid: nextGrid,
+          breakpoint: action.breakpoint,
+        });
+      });
+
+      if (!didUpdate) {
+        return state;
+      }
+
+      return {
+        bricks: nextBricks,
+      };
+    }
     case "REMOVE_BRICK":
       return {
         bricks: state.bricks.filter((brick) => brick.id !== action.id),
       };
     case "APPLY_LAYOUT":
       return {
-        bricks: applyLayoutToBricks(state.bricks, action.layout, action.breakpoint),
+        bricks: applyLayoutToBricks(
+          state.bricks,
+          action.layout,
+          action.breakpoint
+        ),
       };
     default:
       return state;
@@ -179,6 +255,45 @@ export function PageGridProvider({
     [isOwner, ownerId, pageId, uploadPageMedia]
   );
 
+  const addTextBrick = useCallback(() => {
+    if (!isOwner) {
+      return;
+    }
+
+    const id = createPageGridBrickId();
+    dispatch({ type: "ADD_TEXT_PLACEHOLDER", id });
+  }, [isOwner]);
+
+  const updateTextBrick = useCallback(
+    ({
+      id,
+      text,
+      rowSpan,
+      breakpoint,
+      isEditing,
+    }: {
+      id: string;
+      text: string;
+      rowSpan: number;
+      breakpoint: GridBreakpoint;
+      isEditing: boolean;
+    }) => {
+      if (!isOwner) {
+        return;
+      }
+
+      dispatch({
+        type: "UPDATE_TEXT_BRICK",
+        id,
+        text,
+        rowSpan,
+        breakpoint,
+        isEditing,
+      });
+    },
+    [isOwner]
+  );
+
   const updateLayout = useCallback(
     (layout: Layout, breakpoint: GridBreakpoint) => {
       dispatch({ type: "APPLY_LAYOUT", layout, breakpoint });
@@ -196,16 +311,19 @@ export function PageGridProvider({
       return;
     }
 
-    updateDraft({ layout: (layoutSnapshot) as Json });
+    updateDraft({ layout: layoutSnapshot as Json });
   }, [isOwner, layoutSnapshot, updateDraft]);
 
-  const stateValue = useMemo(
-    () => ({ bricks: state.bricks }),
-    [state.bricks]
-  );
+  const stateValue = useMemo(() => ({ bricks: state.bricks }), [state.bricks]);
   const actionsValue = useMemo(
-    () => ({ addMediaFile, updateLayout, isEditable: isOwner }),
-    [addMediaFile, updateLayout, isOwner]
+    () => ({
+      addMediaFile,
+      addTextBrick,
+      updateTextBrick,
+      updateLayout,
+      isEditable: isOwner,
+    }),
+    [addMediaFile, addTextBrick, updateLayout, updateTextBrick, isOwner]
   );
 
   return (
