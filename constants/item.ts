@@ -1,78 +1,24 @@
-/**
- * 모든 brick_* 테이블이 공통으로 가지는 필드
- */
-export interface BrickBase {
-  block_id: string;
-}
+import type { BrickBase, BrickRow } from "types/brick";
 
-export interface BrickLinkRow extends BrickBase {
-  title: string | null;
-  description: string | null;
-  url: string;
-  site_name: string | null;
-  icon_url: string | null;
-  image_url: string | null;
-}
-
-export interface BrickMapRow extends BrickBase {
-  lat: number | null;
-  lng: number | null;
-  zoom: number | null;
-}
-
-export interface BrickSectionRow extends BrickBase {
-  text: string | null;
-}
-
-export interface BrickTextRow extends BrickBase {
-  text: string;
-}
-
-export interface BrickVideoRow extends BrickBase {
-  video_url: string;
-  link_url: string | null;
-}
-
-export interface BrickImageRow extends BrickBase {
-  image_url: string;
-  link_url: string | null;
-}
-
-/**
- * brick.type → 실제 Row 타입 매핑
- * 신규 brick 추가 시 여기만 수정
- */
-export interface BrickRowMap {
-  link: BrickLinkRow;
-  map: BrickMapRow;
-  section: BrickSectionRow;
-  text: BrickTextRow;
-  video: BrickVideoRow;
-  image: BrickImageRow;
-}
-
-export type BrickType = keyof BrickRowMap;
-
-/**
- * type-safe brick row
- */
-export type BrickRow<T extends BrickType = BrickType> = {
-  type: T;
-  data: BrickRowMap[T];
+const dummyBase: BrickBase = {
+  position: {
+    mobile: { x: 0, y: 0 },
+    desktop: { x: 0, y: 0 },
+  },
+  style: {
+    mobile: { grid: { w: 1, h: 2 } },
+    desktop: { grid: { w: 1, h: 2 } },
+  },
+  created_at: "2024-01-01T00:00:00.000Z",
+  updated_at: "2024-01-01T00:00:00.000Z",
 };
 
-export type DummyBrick<T extends BrickType = BrickType> = {
-  id: string;
-  type: T;
-  row: BrickRowMap[T];
-};
-
-export const dummyLinkBricks: DummyBrick<"link">[] = [
+export const dummyLinkBricks: BrickRow<"link">[] = [
   {
     id: "brick-1",
     type: "link",
-    row: {
-      block_id: "brick-1",
+    ...dummyBase,
+    data: {
       url: "https://www.threads.com/@just_human__b2ing",
       title: "Justhumanb2ing",
       description: "My profile",
@@ -86,8 +32,8 @@ export const dummyLinkBricks: DummyBrick<"link">[] = [
   {
     id: "brick-2",
     type: "link",
-    row: {
-      block_id: "brick-2",
+    ...dummyBase,
+    data: {
       url: "https://www.threads.com/@just_human__b2ing",
       title: "Justhumanb2ing",
       description: "My profile",
@@ -100,8 +46,8 @@ export const dummyLinkBricks: DummyBrick<"link">[] = [
   {
     id: "brick-3",
     type: "link",
-    row: {
-      block_id: "brick-3",
+    ...dummyBase,
+    data: {
       url: "https://www.threads.com/@just_human__b2ing",
       title: "Justhumanb2ing",
       description: "My profile",
@@ -112,23 +58,23 @@ export const dummyLinkBricks: DummyBrick<"link">[] = [
   },
 ];
 
-export const dummyTextBricks: DummyBrick<"text">[] = [
+export const dummyTextBricks: BrickRow<"text">[] = [
   {
     id: "brick-0",
     type: "text",
-    row: {
-      block_id: "brick-0",
+    ...dummyBase,
+    data: {
       text: "안녕하세요. 임시 페이지입니다. Welcome. aksdf mlaksdmflkasdf마ㅣㄴ으리ㅏㅁㄴ으라ㅣㅁ느이람ㄴㅇㄹ",
     },
   },
 ];
 
-export const dummyImageBricks: DummyBrick<"image">[] = [
+export const dummyImageBricks: BrickRow<"image">[] = [
   {
     id: "brick-4",
     type: "image",
-    row: {
-      block_id: "brick-4",
+    ...dummyBase,
+    data: {
       image_url:
         "https://images.unsplash.com/photo-1764649841485-82d7bd92760a?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       link_url: null,
@@ -137,8 +83,8 @@ export const dummyImageBricks: DummyBrick<"image">[] = [
   {
     id: "brick-5",
     type: "image",
-    row: {
-      block_id: "brick-5",
+    ...dummyBase,
+    data: {
       image_url:
         "https://images.unsplash.com/photo-1765834082477-5f9c1466a7c4?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       link_url: "https://unsplash.com/ko/@t_ahmetler",
@@ -146,31 +92,31 @@ export const dummyImageBricks: DummyBrick<"image">[] = [
   },
 ];
 
-export const dummySectionBricks: DummyBrick<"section">[] = [
+export const dummySectionBricks: BrickRow<"section">[] = [
   {
     id: "brick-6",
     type: "section",
-    row: {
-      block_id: "brick-6",
+    ...dummyBase,
+    data: {
       text: "section title asdfasdf asdflkamsdlkmaskldfaklsdmfklasdmflkasdmflkasdflk",
     },
   },
   {
     id: "brick-6",
     type: "section",
-    row: {
-      block_id: "brick-6",
+    ...dummyBase,
+    data: {
       text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
     },
   },
 ];
 
-export const dummyVideoBricks: DummyBrick<"video">[] = [
+export const dummyVideoBricks: BrickRow<"video">[] = [
   {
     id: "brick-7",
     type: "video",
-    row: {
-      block_id: "brick-7",
+    ...dummyBase,
+    data: {
       video_url: "https://www.pexels.com/download/video/35154911/",
       link_url: null,
     },
@@ -178,8 +124,8 @@ export const dummyVideoBricks: DummyBrick<"video">[] = [
   {
     id: "brick-7",
     type: "video",
-    row: {
-      block_id: "brick-7",
+    ...dummyBase,
+    data: {
       video_url: "https://www.pexels.com/download/video/35145106/",
       link_url: "https://www.pexels.com/@jessica-bonafede-390172932/",
     },

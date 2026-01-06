@@ -4,7 +4,6 @@ import type { Route } from "./+types/($lang)._auth.user.$handle._index";
 import { getAuth } from "@clerk/react-router/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import { LightningIcon, SealCheckIcon } from "@phosphor-icons/react";
-import VisibilityToggle from "@/components/profile/visibility-toggle";
 import { OwnerGate } from "@/components/account/owner-gate";
 import ProfileHeaderEditor from "@/components/profile/profile-header-editor";
 import { cn } from "@/lib/utils";
@@ -25,7 +24,8 @@ import {
 import PageBrickSection from "@/components/page/page-brick-section";
 import AppToolbar from "@/components/layout/app-toolbar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import GridTest from "@/components/grid-test";
+import PageGridBrickSection from "@/components/page-grid-brick-section";
+
 
 type PreviewLayout = "desktop" | "mobile";
 
@@ -247,9 +247,9 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
             {/* Page Brick Section */}
             <section
               className={cn(
-                "px-4 grow shrink-0 scrollbar-hide",
+                "px-4 pb-8 grow shrink-0 scrollbar-hide",
                 isMobilePreview
-                  ? "max-w-full py-0 px-8"
+                  ? "max-w-full py-0 px-8 pb-8"
                   : "xl:px-0 xl:pt-24 xl:flex-14 xl:w-full xl:max-w-[880px] xl:min-h-0 xl:overflow-y-auto"
               )}
             >
@@ -267,7 +267,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
                   isMobilePreview ? "" : "xl:w-[880px]"
                 )}
               >
-                <GridTest isMobilePreview={isMobilePreview} />
+                <PageGridBrickSection isMobilePreview={isMobilePreview} />
               </div>
             </section>
           </div>
