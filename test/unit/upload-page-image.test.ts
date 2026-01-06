@@ -53,19 +53,23 @@ describe("createPageImageUploader", () => {
       lastModified: 123,
     });
 
-    const result = await uploadPageImage({ pageId: "page-1", file });
+    const result = await uploadPageImage({
+      pageId: "page-1",
+      userId: "user-1",
+      file,
+    });
 
     expect(calls.bucket).toBe("untitled-bucket");
-    expect(calls.upload.path).toBe("pages/page-1/My-photo.png");
+    expect(calls.upload.path).toBe("pages/user-1/page-1/profile/My-photo.png");
     expect(calls.upload.file).toBe(file);
     expect(calls.upload.options).toEqual({
       upsert: true,
       contentType: "image/png",
       cacheControl: "3600",
     });
-    expect(calls.publicUrlPath).toBe("pages/page-1/My-photo.png");
+    expect(calls.publicUrlPath).toBe("pages/user-1/page-1/profile/My-photo.png");
     expect(result).toEqual({
-      path: "pages/page-1/My-photo.png",
+      path: "pages/user-1/page-1/profile/My-photo.png",
       publicUrl: "https://cdn.example.com/assets/image.png?v=3-123",
     });
   });
@@ -83,7 +87,7 @@ describe("createPageImageUploader", () => {
     });
 
     await expect(
-      uploadPageImage({ pageId: "page-1", file })
+      uploadPageImage({ pageId: "page-1", userId: "user-1", file })
     ).rejects.toThrow("upload failed");
   });
 
@@ -98,7 +102,7 @@ describe("createPageImageUploader", () => {
     });
 
     await expect(
-      uploadPageImage({ pageId: "page-1", file })
+      uploadPageImage({ pageId: "page-1", userId: "user-1", file })
     ).rejects.toThrow("Failed to resolve image URL.");
   });
 });
