@@ -1,12 +1,12 @@
-import LocaleSwitcher from "@/components/locale-switcher";
+import LocaleSwitcher from "@/components/i18n/locale-switcher";
 import type { Route } from "./+types/($lang)._index";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle } from "@/components/common/theme-toggle";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/react-router";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { getAuth } from "@clerk/react-router/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
-import UserButton from "@/components/user-button";
+import UserButton from "@/components/account/user-button";
 import { useIntlayer } from "react-intlayer";
 
 export function meta({}: Route.MetaArgs) {

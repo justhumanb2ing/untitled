@@ -6,7 +6,7 @@ import {
   PageAutoSaveController,
   usePageAutoSaveActions,
   usePageAutoSaveState,
-} from "@/components/page-auto-save-controller";
+} from "@/components/page/page-auto-save-controller";
 import type { PageSavePayload, PageSnapshot } from "../../service/pages/save-page";
 
 const { mockSavePage } = vi.hoisted(() => ({

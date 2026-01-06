@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { useIntlayer } from "react-intlayer";
 import { z } from "zod";
 
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import {
   Form as RhfForm,
   FormControl,
@@ -14,17 +14,17 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "./ui/form";
-import { Input } from "./ui/input";
+} from "../ui/form";
+import { Input } from "../ui/input";
 import {
   Popover,
   PopoverDescription,
   PopoverTitle,
   PopoverPanel,
   PopoverTrigger,
-} from "./ui/popover";
-import { Spinner } from "./ui/spinner";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+} from "../ui/popover";
+import { Spinner } from "../ui/spinner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { metadataConfig } from "@/config/metadata";
 import { useLocalizedNavigate } from "@/hooks/use-localized-navigate";
 import { getSupabaseClient } from "@/lib/supabase";

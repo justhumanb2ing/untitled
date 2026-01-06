@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { usePageAutoSaveState } from "@/components/page-auto-save-controller";
-import { Spinner } from "./ui/spinner";
+import { usePageAutoSaveState } from "@/components/page/page-auto-save-controller";
+import { Spinner } from "../ui/spinner";
 
 interface SavingStatusIndicatorProps {
   className?: string;

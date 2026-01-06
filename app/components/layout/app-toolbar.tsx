@@ -3,9 +3,9 @@ import {
   ToolbarButton,
   ToolbarGroup,
   Toolbar as ToolbarRoot,
-} from "./ui/toolbar";
-import { Button } from "./ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+} from "../ui/toolbar";
+import { Button } from "../ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import {
   ArticleNyTimesIcon,
   LinkIcon,
@@ -15,7 +15,7 @@ import {
 
 type Props = {};
 
-export default function Toolbar({}: Props) {
+export default function AppToolbar({}: Props) {
   return (
     <aside className={cn("fixed bottom-10 left-1/2 -translate-x-1/2")}>
       <ToolbarRoot className={"shadow-sm rounded-xl"}>

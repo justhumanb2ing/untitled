@@ -1,18 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
-import BottomActionBar from "@/components/bottom-action-bar";
+import BottomActionBar from "@/components/layout/bottom-action-bar";
 import type { Route } from "./+types/($lang)._auth.user.$handle._index";
 import { getAuth } from "@clerk/react-router/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import { LightningIcon, SealCheckIcon } from "@phosphor-icons/react";
-import VisibilityToggle from "@/components/visibility-toggle";
-import { OwnerGate } from "@/components/owner-gate";
-import ProfileHeaderEditor from "@/components/profile-header-editor";
+import VisibilityToggle from "@/components/profile/visibility-toggle";
+import { OwnerGate } from "@/components/account/owner-gate";
+import ProfileHeaderEditor from "@/components/profile/profile-header-editor";
 import { cn } from "@/lib/utils";
-import LayoutToggle from "@/components/layout-toggle";
+import LayoutToggle from "@/components/layout/layout-toggle";
 import { NumberTicker } from "@/components/effects/number-ticker";
 import { Separator } from "@/components/ui/separator";
-import { PageAutoSaveController } from "@/components/page-auto-save-controller";
-import SavingStatusIndicator from "@/components/saving-status-indicator";
+import { PageAutoSaveController } from "@/components/page/page-auto-save-controller";
+import SavingStatusIndicator from "@/components/page/saving-status-indicator";
 import {
   fetchUmamiVisits,
   getTodayRange,
@@ -22,8 +22,9 @@ import {
   UMAMI_WEBSITE_ID,
   type UmamiResponse,
 } from "../../service/umami/umami";
-import PageBrickSection from "@/components/page-brick-section";
-import Toolbar from "@/components/toolbar";
+import PageBrickSection from "@/components/page/page-brick-section";
+import AppToolbar from "@/components/layout/app-toolbar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type PreviewLayout = "desktop" | "mobile";
 
@@ -248,10 +249,17 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
                 "px-4 grow shrink-0 scrollbar-hide",
                 isMobilePreview
                   ? "max-w-full py-0 px-8"
-                  : "xl:px-0 xl:py-24 xl:flex-8 xl:w-full xl:max-w-[878px] xl:min-h-0 xl:overflow-y-auto"
+                  : "xl:px-0 xl:pt-24 xl:flex-8 xl:w-full xl:max-w-[878px] xl:min-h-0 xl:overflow-y-auto"
               )}
             >
-              <PageBrickSection />
+              <ScrollArea
+                className="h-full"
+                scrollFade
+                scrollbarGutter
+                scrollbarHidden
+              >
+                <PageBrickSection />
+              </ScrollArea>
             </section>
           </div>
 
@@ -274,7 +282,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
           onToggle={setPreviewLayout}
         />
 
-        {/* <Toolbar /> */}
+        {/* <AppToolbar /> */}
       </div>
     </PageAutoSaveController>
   );

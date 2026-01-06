@@ -39,7 +39,7 @@ import { cn } from "@/lib/utils";
 import { metadataConfig } from "@/config/metadata";
 import { getSupabaseClient, getSupabaseServerClient } from "@/lib/supabase";
 import { getLocalizedPath } from "@/lib/localized-path";
-import { Activity } from "@/components/activity";
+import { Activity } from "@/components/motion/activity";
 
 const onboardingSchema = z.object({
   handle: z

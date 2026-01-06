@@ -10,7 +10,7 @@ import { debounce, isEqual } from "es-toolkit";
 
 import { getStrictContext } from "@/lib/get-strict-context";
 import { usePageSaver } from "@/hooks/use-page-saver";
-import type { PageSnapshot } from "../../service/pages/save-page";
+import type { PageSnapshot } from "../../../service/pages/save-page";
 
 type AutoSaveStatus = "idle" | "dirty" | "saving" | "synced" | "error";
 

@@ -1,7 +1,7 @@
-import { LocalizedLink } from "@/components/localized-link";
-import { Button } from "./ui/button";
+import { LocalizedLink } from "@/components/i18n/localized-link";
+import { Button } from "../ui/button";
 import { useUser } from "@clerk/react-router";
-import { Spinner } from "./ui/spinner";
+import { Spinner } from "../ui/spinner";
 
 interface UserButtonProps {
   primaryHandle: string | null;

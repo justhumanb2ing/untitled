@@ -1,4 +1,4 @@
-import DeleteAccountButton from "@/components/delete-account-button";
+import DeleteAccountButton from "@/components/account/delete-account-button";
 import { Button } from "@/components/ui/button";
 import { CaretLeftIcon } from "@phosphor-icons/react";
 import { useNavigate } from "react-router";

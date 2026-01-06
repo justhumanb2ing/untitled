@@ -18,9 +18,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Popover, PopoverPanel, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import EditableParagraph from "./editable-paragraph";
-import { usePageAutoSaveActions } from "@/components/page-auto-save-controller";
+import { usePageAutoSaveActions } from "@/components/page/page-auto-save-controller";
 import { usePageImageUploader } from "@/hooks/use-page-image-uploader";
 import VisibilityToggle from "./visibility-toggle";
 

@@ -3,8 +3,8 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import { useLocation, useNavigate } from "react-router";
 import { TranslateIcon } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "motion/react";
-import { Button } from "./ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { Button } from "../ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 export default function LocaleSwitcher() {
   const { localeLabel } = useIntlayer("locale");
