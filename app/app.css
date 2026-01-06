@@ -5,6 +5,9 @@
 
 @import "@clerk/themes/shadcn.css";
 
+@import "react-grid-layout/css/styles.css";
+@import "react-resizable/css/styles.css";
+
 @custom-variant dark (&: is(.dark *));
 
 @theme {
@@ -58,6 +61,40 @@
   .scrollbar::-webkit-scrollbar-thumb:hover {
     @apply bg-brand;
   }
+}
+
+/* light / default */
+.react-grid-item.react-grid-placeholder {
+  background: color-mix(
+    in oklch,
+    var(--background) 75%,
+    oklch(0 0 0)
+  );
+
+  box-shadow:
+    inset 3px 3px 6px oklch(0 0 0 / 0.22),
+    inset -3px -3px 6px oklch(1 0 0 / 0.04);
+
+  border-radius: 32px;
+}
+
+/* dark theme */
+.dark .react-grid-item.react-grid-placeholder {
+  background: color-mix(
+    in oklch,
+    var(--background) 82%,
+    oklch(0.45 0.035 260) /* 살짝 푸른 회색 */
+  );
+
+  box-shadow:
+    inset 3px 3px 6px oklch(0.15 0.02 260 / 0.45),
+    inset -3px -3px 6px oklch(0.7 0.03 260 / 0.06);
+
+  border-radius: 32px;
+}
+
+.react-grid-item {
+  transition: visibility 500ms ease 0s;
 }
 
 @theme inline {

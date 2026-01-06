@@ -41,6 +41,7 @@
     "radix-ui": "^1.4.3",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
+    "react-grid-layout": "^2.2.2",
     "react-hook-form": "^7.69.0",
     "react-intlayer": "^7.5.7",
     "react-router": "7.10.1",

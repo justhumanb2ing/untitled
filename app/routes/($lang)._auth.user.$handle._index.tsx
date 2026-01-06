@@ -25,6 +25,7 @@ import {
 import PageBrickSection from "@/components/page/page-brick-section";
 import AppToolbar from "@/components/layout/app-toolbar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import GridTest from "@/components/grid-test";
 
 type PreviewLayout = "desktop" | "mobile";
 
@@ -182,7 +183,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
               "flex flex-col gap-4 grow max-w-lg relative",
               isMobilePreview
                 ? "flex-col! mx-0 gap-4"
-                : "xl:flex-row mx-auto xl:max-w-11/12 container xl:gap-8 xl:flex-1 xl:min-h-0"
+                : " mx-auto container xl:flex-row xl:justify-center xl:max-w-11/12 xl:gap-12 xl:flex-1 xl:min-h-0"
             )}
           >
             <header
@@ -249,17 +250,25 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
                 "px-4 grow shrink-0 scrollbar-hide",
                 isMobilePreview
                   ? "max-w-full py-0 px-8"
-                  : "xl:px-0 xl:pt-24 xl:flex-8 xl:w-full xl:max-w-[878px] xl:min-h-0 xl:overflow-y-auto"
+                  : "xl:px-0 xl:pt-24 xl:flex-14 xl:w-full xl:max-w-[880px] xl:min-h-0 xl:overflow-y-auto"
               )}
             >
-              <ScrollArea
+              {/* <ScrollArea
                 className="h-full"
                 scrollFade
                 scrollbarGutter
                 scrollbarHidden
               >
                 <PageBrickSection />
-              </ScrollArea>
+              </ScrollArea> */}
+              <div
+                className={cn(
+                  "w-full",
+                  isMobilePreview ? "" : "xl:w-[880px]"
+                )}
+              >
+                <GridTest isMobilePreview={isMobilePreview} />
+              </div>
             </section>
           </div>
 

@@ -321,7 +321,7 @@ function LegacyProfileHeaderForm({
                           type="button"
                           variant="secondary"
                           size="icon-lg"
-                          className="hover:bg-secondary absolute -bottom-4 left-1/2 -translate-x-1/2 rounded-full shadow-md"
+                          className="absolute -bottom-4 left-1/2 -translate-x-1/2 rounded-full shadow-md hover:bg-input"
                           aria-label="Profile image actions"
                         >
                           <DotsThreeIcon className="size-5" weight="bold" />
@@ -562,7 +562,7 @@ function ProfileHeaderCardForm({
                               type="button"
                               variant="secondary"
                               size="icon-lg"
-                              className="rounded-full shadow-[0_10px_25px_-15px_rgba(0,0,0,0.7)]"
+                              className="rounded-full shadow-[0_10px_25px_-15px_rgba(0,0,0,0.7)] hover:bg-background"
                               aria-label="Profile image actions"
                             >
                               <DotsThreeIcon className="size-5" weight="bold" />
