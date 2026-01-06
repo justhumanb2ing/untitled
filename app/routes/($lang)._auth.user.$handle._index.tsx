@@ -244,7 +244,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
                           View
                         </p>
                       ) : (
-                        <p>Error</p>
+                        <p className="text-xs">Error</p>
                       )}
                     </div>
                   </div>
