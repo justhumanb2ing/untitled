@@ -82,8 +82,8 @@
 .dark .react-grid-item.react-grid-placeholder {
   background: color-mix(
     in oklch,
-    var(--background) 82%,
-    oklch(0.45 0.035 260) /* 살짝 푸른 회색 */
+    var(--background) 62%,
+    oklch(0.7 0.035 260) /* 살짝 푸른 회색 */
   );
 
   box-shadow:

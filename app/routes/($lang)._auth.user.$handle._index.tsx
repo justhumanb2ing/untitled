@@ -283,7 +283,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
                   "px-4 pb-8 grow shrink-0 scrollbar-hide",
                   isMobilePreview
                     ? "max-w-full py-0 px-8 pb-8"
-                    : "xl:px-0 xl:pt-24 xl:flex-14 xl:w-full xl:max-w-[880px] xl:min-h-0 xl:overflow-y-auto"
+                    : "xl:px-0 xl:pt-24 xl:pb-0 xl:flex-14 xl:w-full xl:max-w-[880px] xl:min-h-0 xl:overflow-y-auto"
                 )}
               >
                 <ScrollArea
