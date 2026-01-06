@@ -28,6 +28,7 @@ import type { Json } from "types/database.types";
 
 type PageGridState = {
   bricks: PageGridBrick[];
+  shouldPersistDraft: boolean;
 };
 
 type PageGridActions = {
@@ -39,6 +40,7 @@ type PageGridActions = {
     rowSpan: number;
     breakpoint: GridBreakpoint;
     isEditing: boolean;
+    persist?: boolean;
   }) => void;
   updateLayout: (layout: Layout, breakpoint: GridBreakpoint) => void;
   isEditable: boolean;
@@ -68,6 +70,7 @@ type PageGridAction =
       rowSpan: number;
       breakpoint: GridBreakpoint;
       isEditing: boolean;
+      persist?: boolean;
     }
   | { type: "REMOVE_BRICK"; id: string }
   | {
@@ -91,6 +94,7 @@ function pageGridReducer(
 
       return {
         bricks: [...state.bricks, brick],
+        shouldPersistDraft: true,
       };
     }
     case "COMPLETE_MEDIA_UPLOAD": {
@@ -106,6 +110,7 @@ function pageGridReducer(
               })
             : brick
         ),
+        shouldPersistDraft: true,
       };
     }
     case "ADD_TEXT_PLACEHOLDER": {
@@ -118,6 +123,7 @@ function pageGridReducer(
 
       return {
         bricks: [...state.bricks, brick],
+        shouldPersistDraft: true,
       };
     }
     case "UPDATE_TEXT_BRICK": {
@@ -160,19 +166,28 @@ function pageGridReducer(
 
       return {
         bricks: nextBricks,
+        shouldPersistDraft: action.persist ?? true,
       };
     }
     case "REMOVE_BRICK":
       return {
         bricks: state.bricks.filter((brick) => brick.id !== action.id),
+        shouldPersistDraft: true,
       };
     case "APPLY_LAYOUT":
+      const nextBricks = applyLayoutToBricks(
+        state.bricks,
+        action.layout,
+        action.breakpoint
+      );
+
+      if (nextBricks === state.bricks) {
+        return state;
+      }
+
       return {
-        bricks: applyLayoutToBricks(
-          state.bricks,
-          action.layout,
-          action.breakpoint
-        ),
+        bricks: nextBricks,
+        shouldPersistDraft: true,
       };
     default:
       return state;
@@ -199,6 +214,7 @@ export function PageGridProvider({
 }: PageGridProviderProps) {
   const [state, dispatch] = useReducer(pageGridReducer, {
     bricks: initialBricks,
+    shouldPersistDraft: true,
   });
   const uploadPageMedia = usePageMediaUploader();
   const { updateDraft } = usePageAutoSaveActions();
@@ -271,12 +287,14 @@ export function PageGridProvider({
       rowSpan,
       breakpoint,
       isEditing,
+      persist,
     }: {
       id: string;
       text: string;
       rowSpan: number;
       breakpoint: GridBreakpoint;
       isEditing: boolean;
+      persist?: boolean;
     }) => {
       if (!isOwner) {
         return;
@@ -289,6 +307,7 @@ export function PageGridProvider({
         rowSpan,
         breakpoint,
         isEditing,
+        persist,
       });
     },
     [isOwner]
@@ -311,10 +330,20 @@ export function PageGridProvider({
       return;
     }
 
-    updateDraft({ layout: layoutSnapshot as Json });
-  }, [isOwner, layoutSnapshot, updateDraft]);
+    if (!state.shouldPersistDraft) {
+      return;
+    }
 
-  const stateValue = useMemo(() => ({ bricks: state.bricks }), [state.bricks]);
+    updateDraft({ layout: layoutSnapshot as Json });
+  }, [isOwner, layoutSnapshot, updateDraft, state.shouldPersistDraft]);
+
+  const stateValue = useMemo(
+    () => ({
+      bricks: state.bricks,
+      shouldPersistDraft: state.shouldPersistDraft,
+    }),
+    [state.bricks, state.shouldPersistDraft]
+  );
   const actionsValue = useMemo(
     () => ({
       addMediaFile,

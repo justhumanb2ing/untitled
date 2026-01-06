@@ -50,13 +50,14 @@ export default function PageGridTextBrick({
   }, [rowHeight]);
 
   const pushUpdate = useCallback(
-    (text: string, isEditing: boolean) => {
+    (text: string, isEditing: boolean, persist = true) => {
       updateTextBrick({
         id: brick.id,
         text,
         rowSpan: resolveRowSpan(),
         breakpoint,
         isEditing,
+        persist,
       });
     },
     [brick.id, breakpoint, resolveRowSpan, updateTextBrick]
@@ -81,7 +82,8 @@ export default function PageGridTextBrick({
     }
 
     const handleResize = () => {
-      pushUpdate(latestTextRef.current, brick.status === "editing");
+      const isEditing = brick.status === "editing";
+      pushUpdate(latestTextRef.current, isEditing, isEditing);
     };
 
     handleResize();

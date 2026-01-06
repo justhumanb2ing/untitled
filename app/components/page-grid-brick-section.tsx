@@ -82,7 +82,7 @@ export default function PageGridBrickSection({ isMobilePreview = false }: GridTe
   const rowHeight = getRowHeightForSquare(columnWidth, 2, GRID_MARGIN[1]);
   const canRenderGrid = isDesktop || mounted;
 
-  const handleLayoutChange = (layout: Layout) => {
+  const handleLayoutCommit = (layout: Layout) => {
     updateLayout(layout, breakpoint);
   };
 
@@ -115,7 +115,8 @@ export default function PageGridBrickSection({ isMobilePreview = false }: GridTe
               enabled: true,
             }}
             constraints={[resizeRatioConstraint]}
-            onLayoutChange={handleLayoutChange}
+            onDragStop={handleLayoutCommit}
+            onResizeStop={handleLayoutCommit}
           >
             {bricks.map((brick) => (
               <div
