@@ -15,12 +15,16 @@ import {
   getRowHeightForSquare,
   resizeRatioConstraintHandler,
 } from "@/utils/grid-utils";
-import { usePageGridActions, usePageGridState } from "@/components/page/page-grid-context";
+import {
+  usePageGridActions,
+  usePageGridState,
+} from "@/components/page/page-grid-context";
 import PageGridBrickItem from "@/components/page/page-grid-brick-item";
 import {
   GRID_COLS,
   buildLayoutsFromBricks,
 } from "../../service/pages/page-grid";
+import { cn } from "@/lib/utils";
 
 const resizeRatioConstraint: LayoutConstraint = {
   name: "resizeRatioConstraint",
@@ -54,7 +58,9 @@ type GridTestProps = {
   isMobilePreview?: boolean;
 };
 
-export default function PageGridBrickSection({ isMobilePreview = false }: GridTestProps) {
+export default function PageGridBrickSection({
+  isMobilePreview = false,
+}: GridTestProps) {
   const viewportBreakpoint = useWindowBreakpoint();
   const breakpoint: GridBreakpoint = isMobilePreview
     ? "mobile"
@@ -75,16 +81,20 @@ export default function PageGridBrickSection({ isMobilePreview = false }: GridTe
     }
 
     return {
-      desktop: baseLayouts.desktop.map((item) => ({
-        ...item,
-        isDraggable: false,
-        isResizable: false,
-      })),
-      mobile: baseLayouts.mobile.map((item) => ({
-        ...item,
-        isDraggable: false,
-        isResizable: false,
-      })),
+      desktop:
+        baseLayouts.desktop &&
+        baseLayouts.desktop.map((item) => ({
+          ...item,
+          isDraggable: false,
+          isResizable: false,
+        })),
+      mobile:
+        baseLayouts.mobile &&
+        baseLayouts.mobile.map((item) => ({
+          ...item,
+          isDraggable: false,
+          isResizable: false,
+        })),
     };
   }, [bricks, isEditable]);
 
@@ -138,6 +148,7 @@ export default function PageGridBrickSection({ isMobilePreview = false }: GridTe
             }}
             dragConfig={{
               enabled: isEditable,
+              cancel: '.editable-paragraph'
             }}
             constraints={[resizeRatioConstraint]}
             onDragStop={handleLayoutCommit}
@@ -146,7 +157,10 @@ export default function PageGridBrickSection({ isMobilePreview = false }: GridTe
             {bricks.map((brick) => (
               <div
                 key={brick.id}
-                className="grid h-full w-full place-items-center"
+                className={cn(
+                  "grid h-full w-full place-items-center",
+                  isEditable && "cursor-grab"
+                )}
               >
                 <PageGridBrickItem
                   brick={brick}

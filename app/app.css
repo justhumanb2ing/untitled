@@ -75,7 +75,7 @@
     inset 3px 3px 6px oklch(0 0 0 / 0.22),
     inset -3px -3px 6px oklch(1 0 0 / 0.04);
 
-  border-radius: 32px;
+  border-radius: 20px;
 }
 
 /* dark theme */
@@ -90,7 +90,7 @@
     inset 3px 3px 6px oklch(0.15 0.02 260 / 0.45),
     inset -3px -3px 6px oklch(0.7 0.03 260 / 0.06);
 
-  border-radius: 32px;
+  border-radius: 20px;
 }
 
 .react-grid-item {

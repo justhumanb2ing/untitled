@@ -4,6 +4,7 @@ import EditableParagraph from "@/components/profile/editable-paragraph";
 import { usePageGridActions } from "@/components/page/page-grid-context";
 import { GRID_MARGIN, type GridBreakpoint } from "@/config/grid-rule";
 import type { PageGridBrick } from "../../../service/pages/page-grid";
+import { cn } from "@/lib/utils";
 
 type PageGridTextBrickProps = {
   brick: PageGridBrick<"text">;
@@ -116,7 +117,7 @@ export default function PageGridTextBrick({
   ]);
 
   return (
-    <div className="flex h-full w-full items-start rounded-lg">
+    <div className="flex h-full w-full min-w-0 box-border items-start rounded-lg">
       <EditableParagraph
         elementRef={paragraphRef as RefObject<HTMLParagraphElement>}
         value={brick.data.text}
@@ -126,7 +127,14 @@ export default function PageGridTextBrick({
         placeholder="Write something..."
         multiline
         ariaLabel="Text block"
-        className="box-border w-full text-lg px-6 py-3.5 font-medium leading-5 text-foreground data-[empty=true]:before:top-3.5 data-[empty=true]:before:left-7 xl:py-5.5 xl:leading-6 xl:data-[empty=true]:before:top-5.5"
+        className={cn(
+          "editable-paragraph",
+          "min-w-48 w-fit max-w-full rounded-lg wrap-break-word break-all text-wrap box-border text-lg px-4 py-3.5 font-medium text-foreground transition-colors duration-300",
+          "hover:bg-muted",
+          "data-[empty=true]:max-w-full",
+          "data-[empty=true]:before:top-3.5 data-[empty=true]:before:left-5",
+          "xl:py-2.5 xl:data-[empty=true]:before:top-3.5",
+        )}
         style={{ minHeight: 0 }}
       />
     </div>

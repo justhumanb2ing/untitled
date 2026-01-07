@@ -28,7 +28,7 @@ const BRICK_RENDERERS: BrickRendererMap = {
     />
   ),
   link: ({ brick }) => (
-    <div className="flex h-full w-full flex-col justify-center gap-1 rounded-3xl bg-muted/40 p-4 text-sm">
+    <div className="flex h-full w-full flex-col justify-center gap-1 rounded-xl bg-muted/40 p-4 text-sm">
       <span className="font-medium text-foreground">
         {brick.data.title || brick.data.url || "Untitled link"}
       </span>
@@ -76,7 +76,7 @@ export default function PageGridBrickItem({
   return (
     <Item
       variant="muted"
-      className="h-full w-full rounded-lg p-0"
+      className="h-full w-full rounded-xl p-0 bg-transparent"
       render={
         <div className="h-full w-full min-h-0 min-w-0 self-stretch">
           {renderBrick(brick, rowHeight, breakpoint)}

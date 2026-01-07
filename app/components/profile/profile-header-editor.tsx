@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 import {
   DotsThreeIcon,
   ImageSquareIcon,
-  SealCheckIcon,
   XIcon,
 } from "@phosphor-icons/react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -576,27 +575,25 @@ function ProfileHeaderCardForm({
                           side="bottom"
                           align="end"
                           sideOffset={12}
-                          className="w-52 p-2 rounded-xl"
+                          className="w-36 p-2 rounded-2xl"
                         >
                           <div className="flex flex-col gap-1">
                             <Button
                               type="button"
                               variant="ghost"
-                              className="w-full justify-start gap-2 text-sm py-4.5"
+                              className="w-full justify-start gap-2 text-sm py-4.5 rounded-xl"
                               onClick={handleUploadClick}
                             >
-                              <ImageSquareIcon className="size-4" />
-                              Upload image
+                              Upload
                             </Button>
                             {hasImage && (
                               <Button
                                 type="button"
                                 variant="ghost"
-                                className="w-full justify-start gap-2 text-sm py-4.5 text-destructive hover:text-destructive"
+                                className="w-full justify-start gap-2 text-sm py-4.5 rounded-xl"
                                 onClick={handleRemoveClick}
                               >
-                                <XIcon className="size-4" weight="bold" />
-                                Remove image
+                                Remove
                               </Button>
                             )}
                           </div>

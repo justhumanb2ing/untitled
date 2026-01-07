@@ -219,7 +219,7 @@ function pageGridReducer(
         bricks: state.bricks.filter((brick) => brick.id !== action.id),
         shouldPersistDraft: true,
       };
-    case "APPLY_LAYOUT":
+    case "APPLY_LAYOUT": {
       const nextBricks = applyLayoutToBricks(
         state.bricks,
         action.layout,
@@ -234,6 +234,7 @@ function pageGridReducer(
         bricks: nextBricks,
         shouldPersistDraft: true,
       };
+    }
     default:
       return state;
   }
