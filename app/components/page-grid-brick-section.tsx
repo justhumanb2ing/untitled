@@ -67,8 +67,26 @@ export default function PageGridBrickSection({ isMobilePreview = false }: GridTe
     measureBeforeMount: true,
   });
   const { bricks } = usePageGridState();
-  const { updateLayout } = usePageGridActions();
-  const layouts = useMemo(() => buildLayoutsFromBricks(bricks), [bricks]);
+  const { updateLayout, isEditable } = usePageGridActions();
+  const layouts = useMemo(() => {
+    const baseLayouts = buildLayoutsFromBricks(bricks);
+    if (isEditable) {
+      return baseLayouts;
+    }
+
+    return {
+      desktop: baseLayouts.desktop.map((item) => ({
+        ...item,
+        isDraggable: false,
+        isResizable: false,
+      })),
+      mobile: baseLayouts.mobile.map((item) => ({
+        ...item,
+        isDraggable: false,
+        isResizable: false,
+      })),
+    };
+  }, [bricks, isEditable]);
 
   const isDesktop = breakpoint === "desktop";
   const gridWidth = isDesktop ? DESKTOP_WIDTH : containerWidth;
@@ -83,6 +101,10 @@ export default function PageGridBrickSection({ isMobilePreview = false }: GridTe
   const canRenderGrid = isDesktop || mounted;
 
   const handleLayoutCommit = (layout: Layout) => {
+    if (!isEditable) {
+      return;
+    }
+
     updateLayout(layout, breakpoint);
   };
 
@@ -112,7 +134,10 @@ export default function PageGridBrickSection({ isMobilePreview = false }: GridTe
             margin={GRID_MARGIN}
             containerPadding={CONTAINER_PADDING}
             resizeConfig={{
-              enabled: true,
+              enabled: isEditable,
+            }}
+            dragConfig={{
+              enabled: isEditable,
             }}
             constraints={[resizeRatioConstraint]}
             onDragStop={handleLayoutCommit}

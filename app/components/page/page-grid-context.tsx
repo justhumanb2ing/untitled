@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Layout } from "react-grid-layout";
+import { isMobileWeb } from "@toss/utils";
 
 import { getStrictContext } from "@/lib/get-strict-context";
 import { usePageAutoSaveActions } from "@/components/page/page-auto-save-controller";
@@ -256,6 +257,7 @@ export function PageGridProvider({
   initialBricks = [],
   children,
 }: PageGridProviderProps) {
+  const isEditable = isOwner && !isMobileWeb();
   const [state, dispatch] = useReducer(pageGridReducer, {
     bricks: initialBricks,
     shouldPersistDraft: true,
@@ -265,7 +267,7 @@ export function PageGridProvider({
 
   const addMediaFile = useCallback(
     (file: File) => {
-      if (!isOwner) {
+      if (!isEditable) {
         return;
       }
 
@@ -312,17 +314,17 @@ export function PageGridProvider({
         }
       })();
     },
-    [isOwner, ownerId, pageId, uploadPageMedia]
+    [isEditable, ownerId, pageId, uploadPageMedia]
   );
 
   const addTextBrick = useCallback(() => {
-    if (!isOwner) {
+    if (!isEditable) {
       return;
     }
 
     const id = createPageGridBrickId();
     dispatch({ type: "ADD_TEXT_PLACEHOLDER", id });
-  }, [isOwner]);
+  }, [isEditable]);
 
   const updateTextBrick = useCallback(
     ({
@@ -340,7 +342,7 @@ export function PageGridProvider({
       isEditing: boolean;
       persist?: boolean;
     }) => {
-      if (!isOwner) {
+      if (!isEditable) {
         return;
       }
 
@@ -354,7 +356,7 @@ export function PageGridProvider({
         persist,
       });
     },
-    [isOwner]
+    [isEditable]
   );
 
   const updateTextBrickRowSpanLocal = useCallback(
@@ -379,9 +381,13 @@ export function PageGridProvider({
 
   const updateLayout = useCallback(
     (layout: Layout, breakpoint: GridBreakpoint) => {
+      if (!isEditable) {
+        return;
+      }
+
       dispatch({ type: "APPLY_LAYOUT", layout, breakpoint });
     },
-    []
+    [isEditable]
   );
 
   const layoutSnapshot = useMemo(
@@ -390,7 +396,7 @@ export function PageGridProvider({
   );
 
   useEffect(() => {
-    if (!isOwner) {
+    if (!isEditable) {
       return;
     }
 
@@ -399,7 +405,7 @@ export function PageGridProvider({
     }
 
     updateDraft({ layout: layoutSnapshot as Json });
-  }, [isOwner, layoutSnapshot, updateDraft, state.shouldPersistDraft]);
+  }, [isEditable, layoutSnapshot, updateDraft, state.shouldPersistDraft]);
 
   const stateValue = useMemo(
     () => ({
@@ -415,7 +421,7 @@ export function PageGridProvider({
       updateTextBrick,
       updateTextBrickRowSpanLocal,
       updateLayout,
-      isEditable: isOwner,
+      isEditable,
     }),
     [
       addMediaFile,
@@ -423,7 +429,7 @@ export function PageGridProvider({
       updateLayout,
       updateTextBrick,
       updateTextBrickRowSpanLocal,
-      isOwner,
+      isEditable,
     ]
   );
 
