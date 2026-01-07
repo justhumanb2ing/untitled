@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Layout } from "react-grid-layout";
-import type { LayoutConstraint } from "react-grid-layout/core";
+import { gridBounds, type LayoutConstraint } from "react-grid-layout/core";
 import { Responsive, useContainerWidth } from "react-grid-layout";
 import {
   BREAKPOINTS,
@@ -150,7 +150,7 @@ export default function PageGridBrickSection({
               enabled: isEditable,
               cancel: '.editable-paragraph'
             }}
-            constraints={[resizeRatioConstraint]}
+            constraints={[gridBounds, resizeRatioConstraint]}
             onDragStop={handleLayoutCommit}
             onResizeStop={handleLayoutCommit}
           >
