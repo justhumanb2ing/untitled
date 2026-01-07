@@ -72,34 +72,32 @@ export async function loader(args: Route.LoaderArgs) {
 
   let umamiResult: UmamiResponse | null = null;
 
-  if (isOwner) {
-    const umamiConfig = resolveUmamiConfig();
+  const umamiConfig = resolveUmamiConfig();
 
-    if (!umamiConfig) {
+  if (!umamiConfig) {
+    umamiResult = {
+      ok: false,
+      status: 500,
+      error: "Missing Umami environment configuration.",
+    };
+  } else {
+    try {
+      const { startAt, endAt } = getTodayRange(UMAMI_TIMEZONE);
+      umamiResult = await fetchUmamiVisits({
+        ...umamiConfig,
+        websiteId: UMAMI_WEBSITE_ID,
+        startAt,
+        endAt,
+        unit: UMAMI_UNIT,
+        timezone: UMAMI_TIMEZONE,
+        pageId: page.id,
+      });
+    } catch (error) {
       umamiResult = {
         ok: false,
         status: 500,
-        error: "Missing Umami environment configuration.",
+        error: error instanceof Error ? error.message : error,
       };
-    } else {
-      try {
-        const { startAt, endAt } = getTodayRange(UMAMI_TIMEZONE);
-        umamiResult = await fetchUmamiVisits({
-          ...umamiConfig,
-          websiteId: UMAMI_WEBSITE_ID,
-          startAt,
-          endAt,
-          unit: UMAMI_UNIT,
-          timezone: UMAMI_TIMEZONE,
-          pageId: page.id,
-        });
-      } catch (error) {
-        umamiResult = {
-          ok: false,
-          status: 500,
-          error: error instanceof Error ? error.message : error,
-        };
-      }
     }
   }
 
@@ -190,8 +188,8 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
                       <div className="flex items-center gap-1">
                         <SavingStatusIndicator />
                       </div>
+                      <Separator orientation="vertical" className={"my-1"} />
                     </OwnerGate>
-                    <Separator orientation="vertical" className={"my-1"} />
                     {umamiResult && umamiResult.ok ? (
                       <p className="text-xs">
                         <NumberTicker
@@ -233,8 +231,8 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
                         <div className="flex items-center gap-1">
                           <SavingStatusIndicator />
                         </div>
+                        <Separator orientation="vertical" className={"my-1"} />
                       </OwnerGate>
-                      <Separator orientation="vertical" className={"my-1"} />
                       {umamiResult && umamiResult.ok ? (
                         <p className="text-xs">
                           <NumberTicker
