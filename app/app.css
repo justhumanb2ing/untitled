@@ -65,11 +65,7 @@
 
 /* light / default */
 .react-grid-item.react-grid-placeholder {
-  background: color-mix(
-    in oklch,
-    var(--background) 75%,
-    oklch(0 0 0)
-  );
+  background: color-mix(in oklch, var(--background) 75%, oklch(0 0 0));
 
   box-shadow:
     inset 3px 3px 6px oklch(0 0 0 / 0.22),
@@ -91,6 +87,17 @@
     inset -3px -3px 6px oklch(0.7 0.03 260 / 0.06);
 
   border-radius: 20px;
+}
+
+.toolbar-shadow {
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    0 27px 54px rgba(0, 0, 0, 0.04),
+    0 17.5px 31.625px rgba(0, 0, 0, 0.03),
+    0 10.4px 17.2px rgba(0, 0, 0, 0.024),
+    0 5.4px 8.775px rgba(0, 0, 0, 0.02),
+    0 2.2px 4.4px rgba(0, 0, 0, 0.016),
+    0 0.5px 2.125px rgba(0, 0, 0, 0.01);
 }
 
 .react-grid-item {

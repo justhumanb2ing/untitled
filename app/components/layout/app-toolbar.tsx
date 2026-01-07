@@ -9,12 +9,6 @@ import { Button } from "../ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { toastManager } from "@/components/ui/toast";
 import { usePageGridActions } from "@/components/page/page-grid-context";
-import {
-  ArticleNyTimesIcon,
-  LinkIcon,
-  MapPinAreaIcon,
-  VideoIcon,
-} from "@phosphor-icons/react";
 import { getMediaValidationError } from "../../../service/pages/page-grid";
 
 type Props = {};
@@ -61,8 +55,8 @@ export default function AppToolbar({}: Props) {
 
   return (
     <aside className={cn("fixed bottom-10 left-1/2 -translate-x-1/2")}>
-      <ToolbarRoot className={"shadow-sm rounded-xl"}>
-        <ToolbarGroup>
+      <ToolbarRoot className={"toolbar-shadow border-0 px-3 py-2"}>
+        <ToolbarGroup className={"gap-2"}>
           <Tooltip>
             <TooltipTrigger
               render={
@@ -71,15 +65,14 @@ export default function AppToolbar({}: Props) {
                     <Button
                       size={"icon-lg"}
                       variant={"ghost"}
-                      className={"size-10"}
+                      className={"size-8 p-1"}
                       type="button"
                     >
-                      {/* <img
-                        src="/link-icon.png"
+                      <img
+                        src="/link.svg"
                         alt="link"
-                        className="w-full h-full object-cover scale-150"
-                      /> */}
-                      <LinkIcon weight="bold" className="size-6" />
+                        className="w-full h-full object-cover"
+                      />
                     </Button>
                   }
                 />
@@ -98,17 +91,16 @@ export default function AppToolbar({}: Props) {
                       type="button"
                       size={"icon-lg"}
                       variant={"ghost"}
-                      className={"size-10"}
+                      className={"size-8 p-1"}
                       onClick={handleTextClick}
                       disabled={!isEditable}
                       aria-disabled={!isEditable}
                     >
-                      {/* <img
-                        src="/text-icon.png"
+                      <img
+                        src="/note.svg"
                         alt="text"
-                        className="w-full h-full object-cover scale-150"
-                      /> */}
-                      <ArticleNyTimesIcon weight="bold" className="size-6" />
+                        className="w-full h-full object-cover"
+                      />
                     </Button>
                   }
                 />
@@ -126,18 +118,17 @@ export default function AppToolbar({}: Props) {
                     <Button
                       size={"icon-lg"}
                       variant={"ghost"}
-                      className={"size-10"}
+                      className={"size-8 p-1"}
                       type="button"
                       onClick={handleMediaClick}
                       disabled={!isEditable}
                       aria-disabled={!isEditable}
                     >
-                      {/* <img
-                        src="/image-video-icon.png"
+                      <img
+                        src="/photo.svg"
                         alt="image&video"
-                        className="w-full h-full object-cover scale-150"
-                      /> */}
-                      <VideoIcon weight="fill" className="size-6" />
+                        className="w-full h-full object-cover"
+                      />
                     </Button>
                   }
                 />
@@ -155,14 +146,13 @@ export default function AppToolbar({}: Props) {
                     <Button
                       size={"icon-lg"}
                       variant={"ghost"}
-                      className={"size-10"}
+                      className={"size-8 p-1"}
                     >
-                      {/* <img
-                        src="/map-icon.png"
+                      <img
+                        src="/map.svg"
                         alt="map"
-                        className="w-full h-full object-cover scale-150"
-                      /> */}
-                      <MapPinAreaIcon weight="fill" className="size-6" />
+                        className="w-full h-full object-cover"
+                      />
                     </Button>
                   }
                 />
