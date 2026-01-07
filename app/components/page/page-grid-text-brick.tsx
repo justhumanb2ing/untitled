@@ -16,7 +16,8 @@ export default function PageGridTextBrick({
   rowHeight,
   breakpoint,
 }: PageGridTextBrickProps) {
-  const { updateTextBrick, isEditable } = usePageGridActions();
+  const { updateTextBrick, updateTextBrickRowSpanLocal, isEditable } =
+    usePageGridActions();
   const paragraphRef = useRef<HTMLParagraphElement>(null);
   const latestTextRef = useRef(brick.data.text);
 
@@ -82,6 +83,19 @@ export default function PageGridTextBrick({
     }
 
     const handleResize = () => {
+      if (!isEditable && breakpoint === "mobile") {
+        updateTextBrickRowSpanLocal({
+          id: brick.id,
+          rowSpan: resolveRowSpan(),
+          breakpoint,
+        });
+        return;
+      }
+
+      if (!isEditable) {
+        return;
+      }
+
       const isEditing = brick.status === "editing";
       pushUpdate(latestTextRef.current, isEditing, isEditing);
     };
@@ -91,10 +105,18 @@ export default function PageGridTextBrick({
     observer.observe(element);
 
     return () => observer.disconnect();
-  }, [brick.status, pushUpdate]);
+  }, [
+    brick.id,
+    brick.status,
+    breakpoint,
+    isEditable,
+    pushUpdate,
+    resolveRowSpan,
+    updateTextBrickRowSpanLocal,
+  ]);
 
   return (
-    <div className="flex h-full w-full items-start rounded-lg bg-muted/40">
+    <div className="flex h-full w-full items-start rounded-lg">
       <EditableParagraph
         elementRef={paragraphRef as RefObject<HTMLParagraphElement>}
         value={brick.data.text}

@@ -42,6 +42,11 @@ type PageGridActions = {
     isEditing: boolean;
     persist?: boolean;
   }) => void;
+  updateTextBrickRowSpanLocal: (payload: {
+    id: string;
+    rowSpan: number;
+    breakpoint: GridBreakpoint;
+  }) => void;
   updateLayout: (layout: Layout, breakpoint: GridBreakpoint) => void;
   isEditable: boolean;
 };
@@ -71,6 +76,12 @@ type PageGridAction =
       breakpoint: GridBreakpoint;
       isEditing: boolean;
       persist?: boolean;
+    }
+  | {
+      type: "UPDATE_TEXT_BRICK_ROWSPAN_LOCAL";
+      id: string;
+      rowSpan: number;
+      breakpoint: GridBreakpoint;
     }
   | { type: "REMOVE_BRICK"; id: string }
   | {
@@ -167,6 +178,39 @@ function pageGridReducer(
       return {
         bricks: nextBricks,
         shouldPersistDraft: action.persist ?? true,
+      };
+    }
+    case "UPDATE_TEXT_BRICK_ROWSPAN_LOCAL": {
+      let didUpdate = false;
+      const nextBricks = state.bricks.map((brick) => {
+        if (brick.id !== action.id || brick.type !== "text") {
+          return brick;
+        }
+
+        const currentGrid = brick.style[action.breakpoint].grid;
+        if (currentGrid.h === action.rowSpan) {
+          return brick;
+        }
+
+        didUpdate = true;
+        return {
+          ...brick,
+          style: {
+            ...brick.style,
+            [action.breakpoint]: {
+              grid: { ...currentGrid, h: action.rowSpan },
+            },
+          },
+        };
+      });
+
+      if (!didUpdate) {
+        return state;
+      }
+
+      return {
+        bricks: nextBricks,
+        shouldPersistDraft: false,
       };
     }
     case "REMOVE_BRICK":
@@ -313,6 +357,26 @@ export function PageGridProvider({
     [isOwner]
   );
 
+  const updateTextBrickRowSpanLocal = useCallback(
+    ({
+      id,
+      rowSpan,
+      breakpoint,
+    }: {
+      id: string;
+      rowSpan: number;
+      breakpoint: GridBreakpoint;
+    }) => {
+      dispatch({
+        type: "UPDATE_TEXT_BRICK_ROWSPAN_LOCAL",
+        id,
+        rowSpan,
+        breakpoint,
+      });
+    },
+    []
+  );
+
   const updateLayout = useCallback(
     (layout: Layout, breakpoint: GridBreakpoint) => {
       dispatch({ type: "APPLY_LAYOUT", layout, breakpoint });
@@ -349,10 +413,18 @@ export function PageGridProvider({
       addMediaFile,
       addTextBrick,
       updateTextBrick,
+      updateTextBrickRowSpanLocal,
       updateLayout,
       isEditable: isOwner,
     }),
-    [addMediaFile, addTextBrick, updateLayout, updateTextBrick, isOwner]
+    [
+      addMediaFile,
+      addTextBrick,
+      updateLayout,
+      updateTextBrick,
+      updateTextBrickRowSpanLocal,
+      isOwner,
+    ]
   );
 
   return (
