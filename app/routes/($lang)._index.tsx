@@ -8,6 +8,9 @@ import { getAuth } from "@clerk/react-router/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import UserButton from "@/components/account/user-button";
 import { useIntlayer } from "react-intlayer";
+import { MapCanvas } from "@/components/map-canvas";
+import { MapSearch } from "@/components/map-search";
+import { useState } from "react";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -40,6 +43,7 @@ export async function loader(args: Route.LoaderArgs) {
 export default function Home({ loaderData }: Route.ComponentProps) {
   const { primaryHandle } = loaderData;
   const { startForFree } = useIntlayer("home");
+  const [center, setCenter] = useState<[number, number] | null>(null);
 
   return (
     <main>
@@ -58,6 +62,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           <LocaleSwitcher />
         </nav>
       </header>
+
+      <div className="flex flex-col items-center gap-4">
+        <div className="size-80">
+          <MapCanvas />
+        </div>
+
+        <MapSearch onSelect={setCenter} />
+      </div>
     </main>
   );
 }

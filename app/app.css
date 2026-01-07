@@ -104,6 +104,14 @@
   transition: visibility 500ms ease 0s;
 }
 
+.mapboxgl-ctrl-logo {
+  display: hidden;
+}
+
+.map-wrapper .mapboxgl-control-container {
+  display: none !important;
+}
+
 @theme inline {
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
