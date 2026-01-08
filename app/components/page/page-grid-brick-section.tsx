@@ -23,7 +23,7 @@ import PageGridBrickItem from "@/components/page/page-grid-brick-item";
 import {
   GRID_COLS,
   buildLayoutsFromBricks,
-} from "../../service/pages/page-grid";
+} from "../../../service/pages/page-grid";
 import { cn } from "@/lib/utils";
 
 const resizeRatioConstraint: LayoutConstraint = {
@@ -144,7 +144,7 @@ export default function PageGridBrickSection({
             margin={GRID_MARGIN}
             containerPadding={CONTAINER_PADDING}
             resizeConfig={{
-              enabled: isEditable,
+              enabled: false,
             }}
             dragConfig={{
               enabled: isEditable,

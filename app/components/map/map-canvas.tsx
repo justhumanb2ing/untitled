@@ -2,15 +2,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { motion } from "motion/react";
-import { Button } from "./ui/button";
-import { ButtonGroup } from "./ui/button-group";
+import { Button } from "../ui/button";
+import { ButtonGroup } from "../ui/button-group";
 import {
   ArrowCircleUpRightIcon,
   CrosshairSimpleIcon,
   MinusIcon,
   PlusIcon,
 } from "@phosphor-icons/react";
-import { MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM } from "../../constants/map";
+import { MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM } from "../../../constants/map";
 import { cn } from "@/lib/utils";
 
 type Props = {

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { MapCanvas } from "@/components/map-canvas";
+import { MapCanvas } from "@/components/map/map-canvas";
 import { Item } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";

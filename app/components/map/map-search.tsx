@@ -1,8 +1,8 @@
 import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import { Input } from "./ui/input";
-import { Popover, PopoverPanel, PopoverTrigger } from "./ui/popover";
-import { Button } from "./ui/button";
+import { Input } from "../ui/input";
+import { Popover, PopoverPanel, PopoverTrigger } from "../ui/popover";
+import { Button } from "../ui/button";
 import { MagnifyingGlassIcon, XIcon } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
