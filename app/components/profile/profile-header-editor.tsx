@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type RefObject } from "react";
 import {
   DotsThreeIcon,
   ImageSquareIcon,
@@ -22,6 +22,8 @@ import EditableParagraph from "./editable-paragraph";
 import { usePageAutoSaveActions } from "@/components/page/page-auto-save-controller";
 import { usePageImageUploader } from "@/hooks/use-page-image-uploader";
 import VisibilityToggle from "./visibility-toggle";
+import { toastManager } from "@/components/ui/toast";
+import { getMediaValidationError } from "../../../service/pages/page-grid";
 
 const profileHeaderSchema = z.object({
   image_url: z
@@ -362,22 +364,21 @@ function LegacyProfileHeaderForm({
                   </Popover>
                 )}
               </div>
-              <FormControl>
-                <input
-                  ref={imageInputRef}
-                  type="file"
-                  accept="image/*"
-                  name={field.name}
-                  onBlur={field.onBlur}
-                  className="sr-only"
-                  onChange={(event) => {
-                    const file = event.currentTarget.files?.[0] ?? null;
-                    field.onChange(file);
-                  }}
-                  disabled={isReadOnly}
-                  aria-disabled={isReadOnly}
-                />
-              </FormControl>
+                <FormControl>
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/*"
+                    name={field.name}
+                    onBlur={field.onBlur}
+                    className="sr-only"
+                    onChange={(event) =>
+                      handleProfileImageInputChange(event, field.onChange)
+                    }
+                    disabled={isReadOnly}
+                    aria-disabled={isReadOnly}
+                  />
+                </FormControl>
               <FormMessage className="text-center" />
             </FormItem>
           )}
@@ -620,10 +621,9 @@ function ProfileHeaderCardForm({
                     name={field.name}
                     onBlur={field.onBlur}
                     className="sr-only"
-                    onChange={(event) => {
-                      const file = event.currentTarget.files?.[0] ?? null;
-                      field.onChange(file);
-                    }}
+                    onChange={(event) =>
+                      handleProfileImageInputChange(event, field.onChange)
+                    }
                     disabled={isReadOnly}
                     aria-disabled={isReadOnly}
                   />
@@ -636,4 +636,26 @@ function ProfileHeaderCardForm({
       </Form>
     </div>
   );
+}
+
+function handleProfileImageInputChange(
+  event: ChangeEvent<HTMLInputElement>,
+  onChange: (value: File | null) => void
+) {
+  const file = event.currentTarget.files?.[0] ?? null;
+
+  if (file) {
+    const validationError = getMediaValidationError(file);
+    if (validationError) {
+      toastManager.add({
+        type: "error",
+        title: "Upload blocked",
+        description: validationError,
+      });
+      event.currentTarget.value = "";
+      return;
+    }
+  }
+
+  onChange(file);
 }
