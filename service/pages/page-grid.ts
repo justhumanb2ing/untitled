@@ -1,8 +1,18 @@
 import type { Layout, LayoutItem, ResponsiveLayouts } from "react-grid-layout";
 
-import type { GridBreakpoint, GridSize } from "@/config/grid-rule";
+import type {
+  GridBreakpoint,
+  GridResponsive,
+  GridSize,
+  BrickResponsive,
+} from "@/config/grid-rule";
 import { findColumnStackPosition } from "@/utils/grid-utils";
-import type { BrickRow, BrickRowMap, BrickType } from "types/brick";
+import type {
+  BrickRow,
+  BrickRowMap,
+  BrickStyle,
+  BrickType,
+} from "types/brick";
 import type { Json } from "../../types/database.types";
 
 export type PageGridBrickType = Exclude<BrickType, "section">;
@@ -372,20 +382,263 @@ export function serializePageLayout(
 
 /**
  * Parses a persisted page layout into grid bricks with ready status.
+ * Supports layouts that come as JSON strings or have legacy responsive structures.
  */
 export function parsePageLayoutSnapshot(layout: Json | null): PageGridBrick[] {
-  if (!layout || !isRecord(layout)) {
+  const normalizedLayout = normalizeLayoutValue(layout);
+  if (!normalizedLayout) {
     return [];
   }
 
+  const bricksValue = extractBrickCandidates(normalizedLayout);
+  if (!bricksValue) {
+    return [];
+  }
+
+  const layoutAccumulator: LayoutAccumulator = {
+    desktop: [],
+    mobile: [],
+  };
+
+  const bricks: PageGridBrick[] = [];
+  for (const candidate of bricksValue) {
+    const brick = normalizeBrickCandidate(candidate, layoutAccumulator);
+    if (brick) {
+      bricks.push(brick);
+    }
+  }
+
+  return bricks;
+}
+
+type LayoutAccumulator = Record<GridBreakpoint, LayoutItem[]>;
+
+function normalizeLayoutValue(layout: Json | null): Record<string, unknown> | null {
+  if (layout === null) {
+    return null;
+  }
+
+  if (typeof layout === "string") {
+    try {
+      const parsed = JSON.parse(layout) as Json;
+      return normalizeRecordLayout(parsed);
+    } catch {
+      return null;
+    }
+  }
+
+  return normalizeRecordLayout(layout);
+}
+
+function normalizeRecordLayout(value: Json): Record<string, unknown> | null {
+  if (Array.isArray(value)) {
+    return { bricks: value };
+  }
+
+  if (isRecord(value)) {
+    return value;
+  }
+
+  return null;
+}
+
+function extractBrickCandidates(
+  layout: Record<string, unknown>
+): unknown[] | null {
   const bricksValue = layout.bricks;
-  if (!Array.isArray(bricksValue)) {
-    return [];
+  if (Array.isArray(bricksValue)) {
+    return bricksValue;
   }
 
-  return bricksValue
-    .filter(isPageGridBrickRow)
-    .map((brick) => ({ ...brick, status: "ready" }));
+  const itemsValue = layout.items;
+  if (Array.isArray(itemsValue)) {
+    return itemsValue;
+  }
+
+  return null;
+}
+
+function normalizeBrickCandidate(
+  value: unknown,
+  layoutAccumulator: LayoutAccumulator
+): PageGridBrick | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const type = deriveBrickType(value);
+  if (!type) {
+    return null;
+  }
+
+  const layout = resolveBrickLayout(value, type, layoutAccumulator);
+  if (!layout) {
+    return null;
+  }
+
+  const id =
+    typeof value.id === "string" && value.id.length > 0
+      ? value.id
+      : createPageGridBrickId();
+  const data = mergeBrickData(value.data, type);
+  const createdAt = ensureTimestamp(value.created_at ?? value.createdAt);
+  const updatedAt = ensureTimestamp(value.updated_at ?? value.updatedAt);
+
+  const brick: PageGridBrick = {
+    id,
+    type,
+    status: "ready",
+    position: layout.position,
+    style: layout.style,
+    data,
+    created_at: createdAt,
+    updated_at: updatedAt,
+  };
+
+  layoutAccumulator.desktop.push(buildLayoutItem(brick, "desktop"));
+  layoutAccumulator.mobile.push(buildLayoutItem(brick, "mobile"));
+
+  return brick;
+}
+
+function deriveBrickType(value: Record<string, unknown>): PageGridBrickType | null {
+  const type = value.type;
+  if (typeof type !== "string") {
+    return null;
+  }
+
+  if (!PAGE_GRID_TYPE_SET.has(type as PageGridBrickType)) {
+    return null;
+  }
+
+  return type as PageGridBrickType;
+}
+
+function mergeBrickData(
+  raw: unknown,
+  type: PageGridBrickType
+): BrickRowMap[PageGridBrickType] {
+  const defaults = BRICK_DATA_FACTORIES[type]({});
+  if (!isRecord(raw)) {
+    return defaults;
+  }
+
+  const normalized = { ...defaults } as BrickRowMap[PageGridBrickType];
+
+  for (const key of Object.keys(defaults) as (keyof typeof defaults)[]) {
+    if (Object.prototype.hasOwnProperty.call(raw, key)) {
+      const value = raw[key];
+      if (value !== undefined) {
+        normalized[key] = value as BrickRowMap[PageGridBrickType][typeof key];
+      }
+    }
+  }
+
+  return normalized;
+}
+
+type BrickLayout = {
+  position: GridResponsive<GridPosition>;
+  style: BrickResponsive<BrickStyle>;
+};
+
+function resolveBrickLayout(
+  value: Record<string, unknown>,
+  type: PageGridBrickType,
+  layoutAccumulator: LayoutAccumulator
+): BrickLayout | null {
+  const desktop = resolveBreakpointLayout(
+    value,
+    type,
+    "desktop",
+    layoutAccumulator.desktop
+  );
+  if (!desktop) {
+    return null;
+  }
+
+  const mobile = resolveBreakpointLayout(
+    value,
+    type,
+    "mobile",
+    layoutAccumulator.mobile
+  );
+  if (!mobile) {
+    return null;
+  }
+
+  return {
+    position: {
+      desktop: desktop.position,
+      mobile: mobile.position,
+    },
+    style: {
+      desktop: { grid: desktop.grid },
+      mobile: { grid: mobile.grid },
+    },
+  };
+}
+
+function resolveBreakpointLayout(
+  value: Record<string, unknown>,
+  type: PageGridBrickType,
+  breakpoint: GridBreakpoint,
+  existingLayout: LayoutItem[]
+): { position: GridPosition; grid: GridSize } | null {
+  const cols = GRID_COLS[breakpoint];
+  const rule = GRID_RULES[type];
+  const fallbackGrid = rule.resolveGrid(cols);
+
+  const styleValue = extractResponsiveValue(value.style, breakpoint);
+  const grid =
+    isRecord(styleValue) && isGridSize(styleValue.grid)
+      ? styleValue.grid
+      : fallbackGrid;
+
+  const positionValue = extractResponsiveValue(value.position, breakpoint);
+  const position = isGridPosition(positionValue)
+    ? positionValue
+    : findColumnStackPosition(existingLayout, cols, grid.w);
+
+  return {
+    position,
+    grid,
+  };
+}
+
+function extractResponsiveValue(
+  value: unknown,
+  breakpoint: GridBreakpoint
+): unknown {
+  if (value === null || value === undefined) {
+    return undefined;
+  }
+
+  if (!isRecord(value)) {
+    return value;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(value, breakpoint)) {
+    return value[breakpoint];
+  }
+
+  if (Object.prototype.hasOwnProperty.call(value, "desktop")) {
+    return value.desktop;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(value, "mobile")) {
+    return value.mobile;
+  }
+
+  return value;
+}
+
+function ensureTimestamp(value: unknown): string {
+  if (typeof value === "string" && value.length > 0) {
+    return value;
+  }
+
+  return new Date().toISOString();
 }
 
 function createLayoutItem(
@@ -475,59 +728,6 @@ function isGridPosition(value: unknown): value is { x: number; y: number } {
   }
 
   return isNumber(value.x) && isNumber(value.y);
-}
-
-function isGridResponsive<T>(
-  value: unknown,
-  guard: (value: unknown) => value is T
-): value is { mobile: T; desktop: T } {
-  if (!isRecord(value)) {
-    return false;
-  }
-
-  return guard(value.mobile) && guard(value.desktop);
-}
-
-function isPageGridBrickRow(
-  value: unknown
-): value is BrickRow<PageGridBrickType> {
-  if (!isRecord(value)) {
-    return false;
-  }
-
-  if (
-    typeof value.id !== "string" ||
-    !PAGE_GRID_TYPE_SET.has(value.type as PageGridBrickType)
-  ) {
-    return false;
-  }
-
-  if (!isRecord(value.data)) {
-    return false;
-  }
-
-  if (!isGridResponsive(value.position, isGridPosition)) {
-    return false;
-  }
-
-  if (
-    !isGridResponsive(
-      value.style,
-      (styleValue: unknown): styleValue is { grid: GridSize } =>
-        isRecord(styleValue) && isGridSize(styleValue.grid)
-    )
-  ) {
-    return false;
-  }
-
-  if (
-    typeof value.created_at !== "string" ||
-    typeof value.updated_at !== "string"
-  ) {
-    return false;
-  }
-
-  return true;
 }
 
 function shouldPersistBrick(brick: PageGridBrick) {

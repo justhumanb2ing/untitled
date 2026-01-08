@@ -46,7 +46,7 @@ export default function PageGridTextBrick({
       return 1;
     }
 
-    const marginY = GRID_MARGIN[1];
+    const marginY = GRID_MARGIN["desktop"]![1];
     const rawSpan = (targetHeight + marginY) / (rowHeight + marginY);
     return Number(rawSpan.toFixed(2));
   }, [rowHeight]);
@@ -133,7 +133,7 @@ export default function PageGridTextBrick({
           "hover:bg-muted",
           "data-[empty=true]:max-w-full",
           "data-[empty=true]:before:top-3.5 data-[empty=true]:before:left-5",
-          "xl:py-2.5 xl:data-[empty=true]:before:top-3.5",
+          "xl:py-2.5 xl:data-[empty=true]:before:top-2.5"
         )}
         style={{ minHeight: 0 }}
       />
