@@ -1,23 +1,44 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { cn } from "@/lib/utils";
-
+import { motion } from "motion/react";
+import { Button } from "./ui/button";
+import { ButtonGroup } from "./ui/button-group";
+import {
+  CrosshairSimpleIcon,
+  MinusIcon,
+  PlusIcon,
+} from "@phosphor-icons/react";
 type Props = {
   center?: [number, number];
   zoom?: number;
+  onControlsChange?: (controls: MapCanvasControls | null) => void;
+  controlsPanelOpen?: boolean;
 };
 
-export function MapCanvas({ center, zoom }: Props) {
+export type MapCanvasControls = {
+  canMove: boolean;
+  toggleMove: () => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
+  geolocate: () => void;
+};
+
+export function MapCanvas({
+  center,
+  zoom,
+  onControlsChange,
+  controlsPanelOpen = false,
+}: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const geolocateRef = useRef<mapboxgl.GeolocateControl | null>(null);
-  const geoMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const [canMove, setCanMove] = useState(false);
 
   function enableMapInteraction(map: mapboxgl.Map) {
     map.dragPan.enable();
     map.scrollZoom.enable();
+    map.boxZoom.enable();
     map.doubleClickZoom.enable();
     map.touchZoomRotate.enable();
   }
@@ -32,17 +53,21 @@ export function MapCanvas({ center, zoom }: Props) {
     map.touchZoomRotate.disable();
   }
 
-  function toggleMove() {
+  const toggleMove = useCallback(() => {
     if (!mapRef.current) return;
 
-    if (canMove) {
-      disableMapInteraction(mapRef.current);
-    } else {
-      enableMapInteraction(mapRef.current);
-    }
+    setCanMove((prevCanMove) => {
+      const nextCanMove = !prevCanMove;
 
-    setCanMove(!canMove);
-  }
+      if (nextCanMove) {
+        enableMapInteraction(mapRef.current!);
+      } else {
+        disableMapInteraction(mapRef.current!);
+      }
+
+      return nextCanMove;
+    });
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -52,7 +77,9 @@ export function MapCanvas({ center, zoom }: Props) {
       style: "mapbox://styles/justhumanb2ing/cmk406try001601pr180409zf",
       center: center ?? [126.9970831, 37.550263],
       zoom: zoom ?? 13,
-      accessToken: import.meta.env.VITE_MAPBOX_ACCESS_TOKEN,
+      maxZoom: 15,
+      minZoom: 7,
+      accessToken: import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN,
       attributionControl: false,
       logoPosition: "bottom-right",
     });
@@ -100,90 +127,108 @@ export function MapCanvas({ center, zoom }: Props) {
 
     mapRef.current.flyTo({
       center,
-      zoom: zoom ?? 14,
+      zoom: zoom ?? 13,
       essential: true,
     });
   }, [center, zoom]);
+
+  const handleZoomIn = useCallback(() => {
+    if (!canMove) return;
+    mapRef.current?.zoomIn();
+  }, [canMove]);
+
+  const handleZoomOut = useCallback(() => {
+    if (!canMove) return;
+    mapRef.current?.zoomOut();
+  }, [canMove]);
+
+  const handleGeolocate = useCallback(() => {
+    if (!canMove) return;
+    geolocateRef.current?.trigger();
+  }, [canMove]);
+
+  const controlsPayload = useMemo(
+    () => ({
+      canMove,
+      toggleMove,
+      zoomIn: handleZoomIn,
+      zoomOut: handleZoomOut,
+      geolocate: handleGeolocate,
+    }),
+    [canMove, toggleMove, handleZoomIn, handleZoomOut, handleGeolocate]
+  );
+
+  useEffect(() => {
+    onControlsChange?.(controlsPayload);
+  }, [onControlsChange, controlsPayload]);
+
+  useEffect(() => {
+    return () => {
+      onControlsChange?.(null);
+    };
+  }, [onControlsChange]);
+
+  const controlsReady = Boolean(mapRef.current);
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <div
         ref={containerRef}
-        style={{
-          width: "100%",
-          height: "100%",
-          borderRadius: 16,
-          overflow: "hidden",
-        }}
-        className="map-wrapper"
+        className="map-wrapper w-full h-full rounded-xl overflow-hidden"
       />
       {/* 중앙 고정 마커 (UI Overlay) */}
-      <div
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          pointerEvents: "none",
-          zIndex: 10,
-        }}
-      >
-        <div
-          style={{
-            width: 28,
-            height: 28,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "#fff",
-            borderRadius: "9999px",
-            padding: 4,
-            boxShadow: "1px 2px 13px 4px rgba(0,0,0,0.25)",
-          }}
-        >
-          <div
-            style={{
-              width: "100%",
-              height: "100%",
-              backgroundColor: "#3B82F6",
-              borderRadius: "9999px",
-            }}
-          />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10">
+        <div className="size-7 flex items-center justify-center bg-white rounded-full p-1 shadow-[1px_2px_13px_4px_rgba(0,0,0,0.25)]">
+          <div className="size-full bg-blue-500 rounded-full" />
         </div>
       </div>
-
-      {/* 완전 커스텀 컨트롤 */}
       <div
-        style={{
-          position: "absolute",
-          top: 16,
-          right: 16,
-          display: "flex",
-          flexDirection: "column",
-          gap: 8,
-        }}
+        contentEditable
+        suppressContentEditableWarning
+        className="absolute bottom-3 left-3 bg-muted border rounded-lg p-2 py-1 w-fit focus:outline-none"
       >
-        <button onClick={() => mapRef.current?.zoomIn()}>＋</button>
-        <button onClick={() => mapRef.current?.zoomOut()}>－</button>
-        {/* TODO: 내 위치 찾지 못하는 오류 발생 -> 원인 파악 못함 */}
-        <button
-          onClick={() => {
-            geolocateRef.current?.trigger();
-          }}
-          disabled
-        >
-          내 위치
-        </button>
-        <button
-          onClick={toggleMove}
-          className={cn(
-            "px-3 py-1.5 rounded-md text-sm font-medium",
-            canMove ? "bg-blue-600 text-white" : "bg-white text-gray-900 border"
-          )}
-        >
-          {canMove ? "Done" : "Move"}
-        </button>
+        Location
       </div>
+      {controlsPanelOpen && (
+        <div className="absolute top-4 right-4">
+          <ButtonGroup
+            orientation={"vertical"}
+            aria-label="Map controls"
+            className="-space-y-0.5"
+          >
+            <Button
+              size="icon-lg"
+              className="transition-none focus-visible:z-10"
+              disabled={!mapRef.current}
+              onClick={() => handleZoomIn()}
+            >
+              <motion.p whileTap={{ scale: 0.8 }}>
+                <PlusIcon weight="bold" />
+              </motion.p>
+            </Button>
+            <Button
+              size="icon-lg"
+              className="transition-none focus-visible:z-10"
+              disabled={!mapRef.current}
+              onClick={() => handleZoomOut()}
+            >
+              <motion.p whileTap={{ scale: 0.8 }}>
+                <MinusIcon weight="bold" />
+              </motion.p>
+            </Button>
+            <Button
+              size="icon-lg"
+              className="transition-none focus-visible:z-10"
+              disabled={!mapRef.current}
+              onClick={() => handleGeolocate()}
+            >
+              <motion.p whileTap={{ scale: 0.8 }}>
+                <CrosshairSimpleIcon weight="bold" />
+              </motion.p>
+            </Button>
+          </ButtonGroup>
+        </div>
+      )}
     </div>
   );
 }
