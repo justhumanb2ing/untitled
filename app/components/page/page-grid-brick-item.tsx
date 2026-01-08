@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { MapCanvas } from "@/components/map/map-canvas";
+import { MapCanvas, type MapCanvasControls } from "@/components/map/map-canvas";
 import { Item } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
@@ -13,11 +13,18 @@ import type {
   PageGridBrickType,
 } from "../../../service/pages/page-grid";
 
+type MapControlsOverrides = {
+  center?: [number, number] | null;
+  controlsPanelOpen?: boolean;
+  onControlsChange?: (controls: MapCanvasControls | null) => void;
+};
+
 type BrickRendererMap = {
   [K in PageGridBrickType]: (payload: {
     brick: PageGridBrick<K>;
     rowHeight: number;
     breakpoint: GridBreakpoint;
+    mapOverrides?: MapControlsOverrides;
   }) => ReactNode;
 };
 
@@ -36,7 +43,7 @@ const BRICK_RENDERERS: BrickRendererMap = {
       </span>
     </div>
   ),
-  map: ({ brick }) => renderMapBrick(brick),
+  map: ({ brick, mapOverrides }) => renderMapBrick(brick, mapOverrides),
   image: ({ brick }) =>
     renderMediaFrame(
       brick,
@@ -69,12 +76,14 @@ interface PageGridBrickItemProps {
   brick: PageGridBrick;
   rowHeight: number;
   breakpoint: GridBreakpoint;
+  mapOverrides?: MapControlsOverrides;
 }
 
 export default function PageGridBrickItem({
   brick,
   rowHeight,
   breakpoint,
+  mapOverrides,
 }: PageGridBrickItemProps) {
   return (
     <Item
@@ -82,7 +91,7 @@ export default function PageGridBrickItem({
       className="h-full w-full rounded-xl p-0 bg-transparent"
       render={
         <div className="h-full w-full min-h-0 min-w-0 self-stretch">
-          {renderBrick(brick, rowHeight, breakpoint)}
+          {renderBrick(brick, rowHeight, breakpoint, mapOverrides)}
         </div>
       }
     />
@@ -92,12 +101,21 @@ export default function PageGridBrickItem({
 function renderBrick<T extends PageGridBrickType>(
   brick: PageGridBrick<T>,
   rowHeight: number,
-  breakpoint: GridBreakpoint
+  breakpoint: GridBreakpoint,
+  mapOverrides?: MapControlsOverrides
 ) {
-  return BRICK_RENDERERS[brick.type]({ brick, rowHeight, breakpoint });
+  return BRICK_RENDERERS[brick.type]({
+    brick,
+    rowHeight,
+    breakpoint,
+    mapOverrides,
+  });
 }
 
-function renderMapBrick(brick: PageGridBrick<"map">) {
+function renderMapBrick(
+  brick: PageGridBrick<"map">,
+  mapOverrides?: MapControlsOverrides
+) {
   const hasCoordinates = brick.data.lng !== null && brick.data.lat !== null;
   const center = hasCoordinates
     ? ([brick.data.lng, brick.data.lat] as [number, number])
@@ -106,14 +124,17 @@ function renderMapBrick(brick: PageGridBrick<"map">) {
   return (
     <div className="relative h-full w-full overflow-hidden rounded-3xl bg-muted/40">
       <MapCanvas
-        center={center}
+        center={
+          mapOverrides?.center ?? center
+        }
         zoom={brick.data.zoom ?? MAP_DEFAULT_ZOOM}
-        controlsPanelOpen={false}
+        controlsPanelOpen={mapOverrides?.controlsPanelOpen ?? false}
         showCenterIndicator
         showLocationLabel
         showGeolocateControl={false}
         locationLabel={brick.data.caption}
         href={brick.data.href}
+        onControlsChange={mapOverrides?.onControlsChange}
       />
     </div>
   );

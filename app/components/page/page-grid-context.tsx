@@ -56,6 +56,7 @@ type PageGridActions = {
     breakpoint: GridBreakpoint;
   }) => void;
   updateLayout: (layout: Layout, breakpoint: GridBreakpoint) => void;
+  removeBrick: (id: string) => void;
   isEditable: boolean;
 };
 
@@ -448,6 +449,17 @@ export function PageGridProvider({
     [isEditable]
   );
 
+  const removeBrick = useCallback(
+    (id: string) => {
+      if (!isEditable) {
+        return;
+      }
+
+      dispatch({ type: "REMOVE_BRICK", id });
+    },
+    [isEditable]
+  );
+
   const layoutSnapshot = useMemo(
     () => serializePageLayout(state.bricks),
     [state.bricks]
@@ -480,6 +492,7 @@ export function PageGridProvider({
       updateTextBrick,
       updateTextBrickRowSpanLocal,
       updateLayout,
+      removeBrick,
       isEditable,
     }),
     [
@@ -489,6 +502,7 @@ export function PageGridProvider({
       updateLayout,
       updateTextBrick,
       updateTextBrickRowSpanLocal,
+      removeBrick,
       isEditable,
     ]
   );
