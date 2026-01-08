@@ -258,7 +258,7 @@ export function MapCanvas({
           >
             <Button
               size="icon-lg"
-              className="transition-none focus-visible:z-10"
+              className="transition-none focus-visible:z-10 bg-black text-white hover:bg-black/80"
               disabled={!mapRef.current}
               onClick={() => handleZoomIn()}
             >
@@ -268,7 +268,7 @@ export function MapCanvas({
             </Button>
             <Button
               size="icon-lg"
-              className="transition-none focus-visible:z-10"
+              className="transition-none focus-visible:z-10 bg-black text-white hover:bg-black/80"
               disabled={!mapRef.current}
               onClick={() => handleZoomOut()}
             >
@@ -278,7 +278,7 @@ export function MapCanvas({
             </Button>
             <Button
               size="icon-lg"
-              className="transition-none focus-visible:z-10"
+              className="transition-none focus-visible:z-10 bg-black text-white hover:bg-black/80"
               disabled={!mapRef.current}
               onClick={() => handleGeolocate()}
             >

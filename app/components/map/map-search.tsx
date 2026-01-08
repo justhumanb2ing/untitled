@@ -62,7 +62,7 @@ export function MapSearch({ onSelect, isOpen, onOpenChange }: Props) {
         );
 
         const json = await res.json();
-        console.log(json);
+        
         setResults(json.features ?? []);
       } catch {
         // ignore abort
@@ -83,10 +83,10 @@ export function MapSearch({ onSelect, isOpen, onOpenChange }: Props) {
         render={
           <Button
             size="icon-lg"
-            variant="default"
+            variant="ghost"
             className={cn(
               "size-8 inline-flex items-center justify-center transition-colors focus-visible:z-10",
-              isOpen ? "bg-brand text-white hover:bg-brand" : ""
+              isOpen ? "bg-brand text-white hover:bg-brand" : "hover:bg-white/10"
             )}
           >
             <motion.p whileTap={{ scale: 0.8 }}>
