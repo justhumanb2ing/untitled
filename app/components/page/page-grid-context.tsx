@@ -25,6 +25,12 @@ import {
   type PageGridBrick,
   type PageGridMediaType,
 } from "../../../service/pages/page-grid";
+import {
+  MAP_DEFAULT_LAT,
+  MAP_DEFAULT_LNG,
+  MAP_DEFAULT_ZOOM,
+  buildGoogleMapsHref,
+} from "../../../constants/map";
 import type { Json } from "types/database.types";
 
 type PageGridState = {
@@ -35,6 +41,7 @@ type PageGridState = {
 type PageGridActions = {
   addMediaFile: (file: File) => void;
   addTextBrick: () => void;
+  addMapBrick: () => void;
   updateTextBrick: (payload: {
     id: string;
     text: string;
@@ -64,6 +71,15 @@ type PageGridAction =
       mediaType: PageGridMediaType;
     }
   | { type: "ADD_TEXT_PLACEHOLDER"; id: string }
+  | {
+      type: "ADD_MAP_PLACEHOLDER";
+      id: string;
+      lat: number;
+      lng: number;
+      zoom: number;
+      href: string;
+      caption: string | null;
+    }
   | {
       type: "COMPLETE_MEDIA_UPLOAD";
       id: string;
@@ -131,6 +147,26 @@ function pageGridReducer(
         type: "text",
         status: "draft",
         bricks: state.bricks,
+      });
+
+      return {
+        bricks: [...state.bricks, brick],
+        shouldPersistDraft: true,
+      };
+    }
+    case "ADD_MAP_PLACEHOLDER": {
+      const brick = createPageGridBrick({
+        id: action.id,
+        type: "map",
+        status: "ready",
+        bricks: state.bricks,
+        payload: {
+          lat: action.lat,
+          lng: action.lng,
+          zoom: action.zoom,
+          href: action.href,
+          caption: action.caption,
+        },
       });
 
       return {
@@ -327,6 +363,27 @@ export function PageGridProvider({
     dispatch({ type: "ADD_TEXT_PLACEHOLDER", id });
   }, [isEditable]);
 
+  const addMapBrick = useCallback(() => {
+    if (!isEditable) {
+      return;
+    }
+
+    const id = createPageGridBrickId();
+    dispatch({
+      type: "ADD_MAP_PLACEHOLDER",
+      id,
+      lat: MAP_DEFAULT_LAT,
+      lng: MAP_DEFAULT_LNG,
+      zoom: MAP_DEFAULT_ZOOM,
+      href: buildGoogleMapsHref(
+        MAP_DEFAULT_LAT,
+        MAP_DEFAULT_LNG,
+        MAP_DEFAULT_ZOOM
+      ),
+      caption: null,
+    });
+  }, [isEditable]);
+
   const updateTextBrick = useCallback(
     ({
       id,
@@ -419,6 +476,7 @@ export function PageGridProvider({
     () => ({
       addMediaFile,
       addTextBrick,
+      addMapBrick,
       updateTextBrick,
       updateTextBrickRowSpanLocal,
       updateLayout,
@@ -427,6 +485,7 @@ export function PageGridProvider({
     [
       addMediaFile,
       addTextBrick,
+      addMapBrick,
       updateLayout,
       updateTextBrick,
       updateTextBrickRowSpanLocal,

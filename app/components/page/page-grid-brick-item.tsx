@@ -1,11 +1,13 @@
 import type { ReactNode } from "react";
 
+import { MapCanvas } from "@/components/map-canvas";
 import { Item } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import PageGridTextBrick from "@/components/page/page-grid-text-brick";
 import type { GridBreakpoint } from "@/config/grid-rule";
 import { cn } from "@/lib/utils";
+import { MAP_DEFAULT_ZOOM } from "../../../constants/map";
 import type {
   PageGridBrick,
   PageGridBrickType,
@@ -34,6 +36,7 @@ const BRICK_RENDERERS: BrickRendererMap = {
       </span>
     </div>
   ),
+  map: ({ brick }) => renderMapBrick(brick),
   image: ({ brick }) =>
     renderMediaFrame(
       brick,
@@ -92,6 +95,28 @@ function renderBrick<T extends PageGridBrickType>(
   breakpoint: GridBreakpoint
 ) {
   return BRICK_RENDERERS[brick.type]({ brick, rowHeight, breakpoint });
+}
+
+function renderMapBrick(brick: PageGridBrick<"map">) {
+  const hasCoordinates = brick.data.lng !== null && brick.data.lat !== null;
+  const center = hasCoordinates
+    ? ([brick.data.lng, brick.data.lat] as [number, number])
+    : undefined;
+
+  return (
+    <div className="relative h-full w-full overflow-hidden rounded-3xl bg-muted/40">
+      <MapCanvas
+        center={center}
+        zoom={brick.data.zoom ?? MAP_DEFAULT_ZOOM}
+        controlsPanelOpen={false}
+        showCenterIndicator
+        showLocationLabel
+        showGeolocateControl={false}
+        locationLabel={brick.data.caption}
+        href={brick.data.href}
+      />
+    </div>
+  );
 }
 
 function renderMediaFrame(brick: PageGridBrick, content: ReactNode) {

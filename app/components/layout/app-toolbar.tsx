@@ -14,7 +14,8 @@ import { getMediaValidationError } from "../../../service/pages/page-grid";
 type Props = {};
 
 export default function AppToolbar({}: Props) {
-  const { addMediaFile, addTextBrick, isEditable } = usePageGridActions();
+  const { addMediaFile, addTextBrick, addMapBrick, isEditable } =
+    usePageGridActions();
   const mediaInputRef = useRef<HTMLInputElement>(null);
 
   const handleMediaClick = () => {
@@ -51,6 +52,14 @@ export default function AppToolbar({}: Props) {
     }
 
     addTextBrick();
+  };
+
+  const handleMapClick = () => {
+    if (!isEditable) {
+      return;
+    }
+
+    addMapBrick();
   };
 
   return (
@@ -147,6 +156,10 @@ export default function AppToolbar({}: Props) {
                       size={"icon-lg"}
                       variant={"ghost"}
                       className={"size-8 p-1"}
+                      type="button"
+                      onClick={handleMapClick}
+                      disabled={!isEditable}
+                      aria-disabled={!isEditable}
                     >
                       <img
                         src="/map.svg"

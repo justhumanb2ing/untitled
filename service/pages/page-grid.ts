@@ -5,7 +5,7 @@ import { findColumnStackPosition } from "@/utils/grid-utils";
 import type { BrickRow, BrickRowMap, BrickType } from "types/brick";
 import type { Json } from "../../types/database.types";
 
-export type PageGridBrickType = Exclude<BrickType, "map" | "section">;
+export type PageGridBrickType = Exclude<BrickType, "section">;
 export type PageGridMediaType = Extract<PageGridBrickType, "image" | "video">;
 export type PageGridBrickStatus =
   | "ready"
@@ -42,6 +42,7 @@ const VIDEO_EXTENSIONS = new Set(["mp4", "mov", "webm", "ogg", "ogv", "m4v"]);
 const PAGE_GRID_TYPES: readonly PageGridBrickType[] = [
   "text",
   "link",
+  "map",
   "image",
   "video",
 ];
@@ -50,6 +51,11 @@ const PAGE_GRID_TYPE_SET = new Set<PageGridBrickType>(PAGE_GRID_TYPES);
 type BrickFactoryPayload = {
   url?: string;
   text?: string;
+  lat?: number | null;
+  lng?: number | null;
+  zoom?: number | null;
+  href?: string;
+  caption?: string | null;
 };
 
 type BrickDataFactoryMap = {
@@ -65,6 +71,13 @@ const BRICK_DATA_FACTORIES: BrickDataFactoryMap = {
     site_name: null,
     icon_url: null,
     image_url: null,
+  }),
+  map: (payload) => ({
+    lat: payload.lat ?? null,
+    lng: payload.lng ?? null,
+    zoom: payload.zoom ?? null,
+    href: payload.href ?? "",
+    caption: payload.caption ?? null,
   }),
   image: (payload) => ({
     image_url: payload.url ?? "",
@@ -109,6 +122,7 @@ const FULL_WIDTH_RULE: GridRule = {
 const GRID_RULES: Record<PageGridBrickType, GridRule> = {
   text: FULL_WIDTH_RULE,
   link: MEDIA_RULE,
+  map: MEDIA_RULE,
   image: MEDIA_RULE,
   video: MEDIA_RULE,
 };
@@ -183,9 +197,8 @@ export function createPageGridBrick(params: {
   id: string;
   type: PageGridBrickType;
   status: PageGridBrickStatus;
-  url?: string;
-  text?: string;
   bricks: PageGridBrick[];
+  payload?: BrickFactoryPayload;
   timestamp?: string;
 }): PageGridBrick {
   const layouts = buildLayoutsFromBricks(params.bricks);
@@ -217,10 +230,7 @@ export function createPageGridBrick(params: {
     },
     created_at: timestamp,
     updated_at: timestamp,
-    data: BRICK_DATA_FACTORIES[params.type]({
-      url: params.url,
-      text: params.text,
-    }),
+    data: BRICK_DATA_FACTORIES[params.type](params.payload ?? {}),
   };
 }
 

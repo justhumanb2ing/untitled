@@ -30,6 +30,8 @@ export interface BrickMapRow {
   lat: number | null;
   lng: number | null;
   zoom: number | null;
+  href: string;
+  caption: string | null;
 }
 
 export interface BrickSectionRow {
