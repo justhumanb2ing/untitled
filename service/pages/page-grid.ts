@@ -5,6 +5,7 @@ import type {
   GridResponsive,
   GridSize,
   BrickResponsive,
+  GridPosition,
 } from "@/config/grid-rule";
 import { findColumnStackPosition } from "@/utils/grid-utils";
 import type {
