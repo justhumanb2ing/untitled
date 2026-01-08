@@ -63,6 +63,7 @@ export function MapCanvas({
   const geolocateRef = useRef<mapboxgl.GeolocateControl | null>(null);
   const [canMove, setCanMove] = useState(false);
   const viewportChangeRef = useRef(onViewportChange);
+  const lastViewportRef = useRef<MapCanvasViewport | null>(null);
   const handleInteractionStart = useCallback(
     (event: SyntheticEvent<HTMLDivElement>) => {
       if (!canMove) {
@@ -114,11 +115,13 @@ export function MapCanvas({
   useEffect(() => {
     if (!containerRef.current) return;
 
+    const initialCenter = center ?? MAP_DEFAULT_CENTER;
+    const initialZoom = zoom ?? MAP_DEFAULT_ZOOM;
     const map = new mapboxgl.Map({
       container: containerRef.current,
       style: "mapbox://styles/justhumanb2ing/cmk406try001601pr180409zf",
-      center: center ?? MAP_DEFAULT_CENTER,
-      zoom: zoom ?? MAP_DEFAULT_ZOOM,
+      center: initialCenter,
+      zoom: initialZoom,
       maxZoom: 15,
       minZoom: 7,
       accessToken: import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN,
@@ -128,6 +131,10 @@ export function MapCanvas({
 
     disableMapInteraction(map);
     mapRef.current = map;
+    lastViewportRef.current = {
+      center: [initialCenter[0], initialCenter[1]],
+      zoom: initialZoom,
+    };
 
     map.on("moveend", () => {
       const c = map.getCenter();
@@ -174,9 +181,21 @@ export function MapCanvas({
   useEffect(() => {
     if (!mapRef.current || !center) return;
 
+    const nextZoom = zoom ?? MAP_DEFAULT_ZOOM;
+    const prevViewport = lastViewportRef.current;
+    const isSameCenter =
+      prevViewport?.center &&
+      prevViewport.center[0] === center[0] &&
+      prevViewport.center[1] === center[1];
+
+    if (isSameCenter && prevViewport.zoom === nextZoom) {
+      return;
+    }
+
+    lastViewportRef.current = { center, zoom: nextZoom };
     mapRef.current.flyTo({
       center,
-      zoom: zoom ?? MAP_DEFAULT_ZOOM,
+      zoom: nextZoom,
       essential: true,
     });
   }, [center, zoom]);
