@@ -63,6 +63,10 @@
   }
 }
 
+.react-resizable-handle {
+  display: none;
+}
+
 /* light / default */
 .react-grid-item.react-grid-placeholder {
   background: color-mix(in oklch, var(--background) 75%, oklch(0 0 0));

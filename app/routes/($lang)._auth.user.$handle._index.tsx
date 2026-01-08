@@ -3,7 +3,9 @@ import BottomActionBar from "@/components/layout/bottom-action-bar";
 import type { Route } from "./+types/($lang)._auth.user.$handle._index";
 import { getAuth } from "@clerk/react-router/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
-import { LightningIcon, SealCheckIcon } from "@phosphor-icons/react";
+import {
+  LightningIcon,
+} from "@phosphor-icons/react";
 import { OwnerGate } from "@/components/account/owner-gate";
 import ProfileHeaderEditor from "@/components/profile/profile-header-editor";
 import { cn } from "@/lib/utils";
@@ -21,10 +23,9 @@ import {
   UMAMI_WEBSITE_ID,
   type UmamiResponse,
 } from "../../service/umami/umami";
-import PageBrickSection from "@/components/page/page-brick-section";
 import AppToolbar from "@/components/layout/app-toolbar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import PageGridBrickSection from "@/components/page-grid-brick-section";
+import PageGridBrickSection from "@/components/page/page-grid-brick-section";
 import { PageGridProvider } from "@/components/page/page-grid-context";
 import { parsePageLayoutSnapshot } from "../../service/pages/page-grid";
 
