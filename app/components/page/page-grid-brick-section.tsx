@@ -19,12 +19,17 @@ import {
   usePageGridActions,
   usePageGridState,
 } from "@/components/page/page-grid-context";
+import BlockResizeController, {
+  type ResizeOption,
+} from "@/components/page/block-resize-controller";
 import PageGridBrickItem from "@/components/page/page-grid-brick-item";
 import {
   GRID_COLS,
   buildLayoutsFromBricks,
 } from "../../../service/pages/page-grid";
 import { cn } from "@/lib/utils";
+import { StackMinusIcon } from "@phosphor-icons/react";
+import { Button } from "../ui/button";
 
 const resizeRatioConstraint: LayoutConstraint = {
   name: "resizeRatioConstraint",
@@ -110,6 +115,29 @@ export default function PageGridBrickSection({
   const rowHeight = getRowHeightForSquare(columnWidth, 2, GRID_MARGIN[1]);
   const canRenderGrid = isDesktop || mounted;
 
+  const handleResizeOptionSelect = (brickId: string, size: ResizeOption) => {
+    if (!isEditable) {
+      return;
+    }
+
+    const layout = layouts?.[breakpoint];
+    if (!layout) {
+      return;
+    }
+
+    const targetItem = layout.find((item) => item.i === brickId);
+    if (targetItem && targetItem.w === size.w && targetItem.h === size.h) {
+      return;
+    }
+
+    updateLayout(
+      layout.map((item) =>
+        item.i === brickId ? { ...item, w: size.w, h: size.h } : item
+      ),
+      breakpoint
+    );
+  };
+
   const handleLayoutCommit = (layout: Layout) => {
     if (!isEditable) {
       return;
@@ -148,7 +176,7 @@ export default function PageGridBrickSection({
             }}
             dragConfig={{
               enabled: isEditable,
-              cancel: '.editable-paragraph'
+              cancel: ".editable-paragraph",
             }}
             constraints={[gridBounds, resizeRatioConstraint]}
             onDragStop={handleLayoutCommit}
@@ -158,10 +186,44 @@ export default function PageGridBrickSection({
               <div
                 key={brick.id}
                 className={cn(
-                  "grid h-full w-full place-items-center",
-                  isEditable && "cursor-grab"
+                  "relative grid h-full w-full place-items-center",
+                  isEditable && "cursor-grab group"
                 )}
               >
+                {isEditable && brick.type !== "text" && (
+                  <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 z-10 flex gap-1 opacity-0 pointer-events-none transition duration-150 group-hover:opacity-100 group-hover:pointer-events-auto">
+                    <div
+                      data-no-drag
+                      className={cn(
+                        "pointer-events-auto bg-black/80 backdrop-blur-md p-1 rounded-xl flex shadow-xl border border-white/10 animate-in fade-in zoom-in duration-200 items-center"
+                      )}
+                      onMouseDown={(event) => event.stopPropagation()}
+                      onTouchStart={(event) => event.stopPropagation()}
+                    >
+                      <BlockResizeController
+                        currentSize={brick.style[breakpoint].grid}
+                        onSelect={(size) =>
+                          handleResizeOptionSelect(brick.id, size)
+                        }
+                      />
+                      <Button
+                        type="button"
+                        size={"icon-lg"}
+                        variant={"ghost"}
+                        data-no-drag
+                        className={cn(
+                          "transition-all rounded-lg group-hover:opacity-100 hover:bg-white/10"
+                        )}
+                        aria-label="블록 삭제"
+                      >
+                        <StackMinusIcon
+                          weight="bold"
+                          className="size-4 text-white"
+                        />
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 <PageGridBrickItem
                   brick={brick}
                   rowHeight={rowHeight}
