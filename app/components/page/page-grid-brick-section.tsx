@@ -26,6 +26,7 @@ import PageGridBrickItem from "@/components/page/page-grid-brick-item";
 import {
   GRID_COLS,
   buildLayoutsFromBricks,
+  type PageGridBrick,
 } from "../../../service/pages/page-grid";
 import { MAP_DEFAULT_ZOOM, buildGoogleMapsHref } from "../../../constants/map";
 import { motion } from "motion/react";
@@ -42,6 +43,10 @@ const resizeRatioConstraint: LayoutConstraint = {
   name: "resizeRatioConstraint",
   constrainSize: resizeRatioConstraintHandler,
 };
+
+const isMapPageGridBrick = (
+  brick: PageGridBrick
+): brick is PageGridBrick<"map"> => brick.type === "map";
 
 const useWindowBreakpoint = () => {
   const [breakpoint, setBreakpoint] = useState<GridBreakpoint>(() => {
@@ -216,9 +221,11 @@ export default function PageGridBrickSection({
   useEffect(() => {
     const nextZooms: Record<string, number | null> = {};
     for (const brick of bricks) {
-      if (brick.type === "map") {
-        nextZooms[brick.id] = brick.data.zoom;
+      if (!isMapPageGridBrick(brick)) {
+        continue;
       }
+
+      nextZooms[brick.id] = brick.data.zoom;
     }
     mapBrickZoomRef.current = nextZooms;
   }, [bricks]);
@@ -318,13 +325,17 @@ export default function PageGridBrickSection({
   const isDesktop = breakpoint === "desktop";
   const gridWidth = isDesktop ? DESKTOP_WIDTH : containerWidth;
   const cols = GRID_COLS[breakpoint];
+  const marginPair =
+    GRID_MARGIN[breakpoint] ?? GRID_MARGIN.desktop ?? [0, 0];
+  const paddingPair =
+    CONTAINER_PADDING[breakpoint] ?? CONTAINER_PADDING.desktop ?? [0, 0];
   const columnWidth = getColumnWidth(
     gridWidth,
     cols,
-    GRID_MARGIN[0],
-    CONTAINER_PADDING[0]
+    marginPair[0],
+    paddingPair[0]
   );
-  const rowHeight = getRowHeightForSquare(columnWidth, 2, GRID_MARGIN[1]);
+  const rowHeight = getRowHeightForSquare(columnWidth, 2, marginPair[1]);
   const canRenderGrid = isDesktop || mounted;
 
   const {
@@ -415,7 +426,7 @@ export default function PageGridBrickSection({
             onResizeStop={handleLayoutCommit}
           >
             {bricks.map((brick) => {
-              const isMapBrick = brick.type === "map";
+              const isMapBrick = isMapPageGridBrick(brick);
               const baseCenter =
                 isMapBrick && brick.data.lng !== null && brick.data.lat !== null
                   ? ([brick.data.lng, brick.data.lat] as [number, number])
@@ -428,7 +439,7 @@ export default function PageGridBrickSection({
                     center: centerOverride,
                     controlsPanelOpen: mapPopoverState === "controls",
                     onControlsChange: getMapControlsHandler(brick.id),
-                    onViewportChange: (viewport) =>
+                    onViewportChange: (viewport: MapCanvasViewport) =>
                       handleMapViewportChange(brick.id, viewport),
                   }
                 : undefined;
