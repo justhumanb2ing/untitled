@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
 
-import { MapCanvas, type MapCanvasControls } from "@/components/map/map-canvas";
+import {
+  MapCanvas,
+  type MapCanvasControls,
+  type MapCanvasViewport,
+} from "@/components/map/map-canvas";
 import { Item } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
@@ -17,6 +21,7 @@ type MapControlsOverrides = {
   center?: [number, number] | null;
   controlsPanelOpen?: boolean;
   onControlsChange?: (controls: MapCanvasControls | null) => void;
+  onViewportChange?: (viewport: MapCanvasViewport) => void;
 };
 
 type BrickRendererMap = {
@@ -135,6 +140,7 @@ function renderMapBrick(
         locationLabel={brick.data.caption}
         href={brick.data.href}
         onControlsChange={mapOverrides?.onControlsChange}
+        onViewportChange={mapOverrides?.onViewportChange}
       />
     </div>
   );

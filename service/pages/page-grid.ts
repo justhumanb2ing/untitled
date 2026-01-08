@@ -286,6 +286,36 @@ export function updatePageGridBrick(
 }
 
 /**
+ * Applies partial map data updates without overriding unaffected fields.
+ */
+export function updateMapBrickData(
+  brick: PageGridBrick<"map">,
+  payload: Partial<BrickRowMap["map"]>
+): PageGridBrick<"map"> {
+  const nextData: BrickRowMap["map"] = {
+    ...brick.data,
+    ...payload,
+  };
+
+  const hasChanges =
+    brick.data.lat !== nextData.lat ||
+    brick.data.lng !== nextData.lng ||
+    brick.data.zoom !== nextData.zoom ||
+    brick.data.href !== nextData.href ||
+    brick.data.caption !== nextData.caption;
+
+  if (!hasChanges) {
+    return brick;
+  }
+
+  return {
+    ...brick,
+    data: nextData,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+/**
  * Builds responsive layouts for the current bricks.
  */
 export function buildLayoutsFromBricks(

@@ -8,7 +8,7 @@ export type BrickResponsive<T> = {
   desktop: T;
 };
 
-export const GRID_GAP = 16;
+export const GRID_GAP = 32;
 export const GRID_MARGIN: readonly [number, number] = [GRID_GAP, GRID_GAP];
 export const CONTAINER_PADDING: readonly [number, number] = [0, 0];
 export const DEFAULT_ROW_HEIGHT = 60;

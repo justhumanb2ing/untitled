@@ -13,6 +13,7 @@ import { usePageAutoSaveActions } from "@/components/page/page-auto-save-control
 import { usePageMediaUploader } from "@/hooks/use-page-media-uploader";
 import { toastManager } from "@/components/ui/toast";
 import type { GridBreakpoint } from "@/config/grid-rule";
+import type { BrickMapRow } from "types/brick";
 import {
   applyLayoutToBricks,
   createPageGridBrick,
@@ -21,6 +22,7 @@ import {
   resolveMediaType,
   resolveTextBrickStatus,
   serializePageLayout,
+  updateMapBrickData,
   updatePageGridBrick,
   type PageGridBrick,
   type PageGridMediaType,
@@ -56,9 +58,13 @@ type PageGridActions = {
     breakpoint: GridBreakpoint;
   }) => void;
   updateLayout: (layout: Layout, breakpoint: GridBreakpoint) => void;
-  removeBrick: (id: string) => void;
-  isEditable: boolean;
-};
+    removeBrick: (id: string) => void;
+    isEditable: boolean;
+    updateMapBrick: (payload: {
+      id: string;
+      data: Partial<BrickMapRow>;
+    }) => void;
+  };
 
 const [PageGridStateProvider, usePageGridState] =
   getStrictContext<PageGridState>("PageGridState");
@@ -100,6 +106,11 @@ type PageGridAction =
       id: string;
       rowSpan: number;
       breakpoint: GridBreakpoint;
+    }
+  | {
+      type: "UPDATE_MAP_BRICK";
+      id: string;
+      data: Partial<BrickMapRow>;
     }
   | { type: "REMOVE_BRICK"; id: string }
   | {
@@ -264,6 +275,31 @@ function pageGridReducer(
       );
 
       if (nextBricks === state.bricks) {
+        return state;
+      }
+
+      return {
+        bricks: nextBricks,
+        shouldPersistDraft: true,
+      };
+    }
+    case "UPDATE_MAP_BRICK": {
+      let didUpdate = false;
+      const nextBricks = state.bricks.map((brick) => {
+        if (brick.id !== action.id || brick.type !== "map") {
+          return brick;
+        }
+
+        const updatedBrick = updateMapBrickData(brick, action.data);
+        if (updatedBrick === brick) {
+          return brick;
+        }
+
+        didUpdate = true;
+        return updatedBrick;
+      });
+
+      if (!didUpdate) {
         return state;
       }
 
@@ -460,6 +496,21 @@ export function PageGridProvider({
     [isEditable]
   );
 
+  const updateMapBrick = useCallback(
+    (payload: { id: string; data: Partial<BrickMapRow> }) => {
+      if (!isEditable) {
+        return;
+      }
+
+      dispatch({
+        type: "UPDATE_MAP_BRICK",
+        id: payload.id,
+        data: payload.data,
+      });
+    },
+    [isEditable]
+  );
+
   const layoutSnapshot = useMemo(
     () => serializePageLayout(state.bricks),
     [state.bricks]
@@ -493,6 +544,7 @@ export function PageGridProvider({
       updateTextBrickRowSpanLocal,
       updateLayout,
       removeBrick,
+      updateMapBrick,
       isEditable,
     }),
     [
@@ -503,6 +555,7 @@ export function PageGridProvider({
       updateTextBrick,
       updateTextBrickRowSpanLocal,
       removeBrick,
+      updateMapBrick,
       isEditable,
     ]
   );

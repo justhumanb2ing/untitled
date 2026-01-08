@@ -27,9 +27,13 @@ import {
   GRID_COLS,
   buildLayoutsFromBricks,
 } from "../../../service/pages/page-grid";
+import { MAP_DEFAULT_ZOOM, buildGoogleMapsHref } from "../../../constants/map";
 import { motion } from "motion/react";
 import { MapSearch } from "@/components/map/map-search";
-import type { MapCanvasControls } from "@/components/map/map-canvas";
+import type {
+  MapCanvasControls,
+  MapCanvasViewport,
+} from "@/components/map/map-canvas";
 import { cn } from "@/lib/utils";
 import { SlideshowIcon, StackMinusIcon } from "@phosphor-icons/react";
 import { Button } from "../ui/button";
@@ -68,7 +72,13 @@ type GridTestProps = {
 
 type ActiveMapPopover = "controls" | "search" | null;
 
-function useMapBrickInteractor() {
+type UseMapBrickInteractorOptions = {
+  onSearchSelect?: (brickId: string, nextCenter: [number, number]) => void;
+};
+
+function useMapBrickInteractor({
+  onSearchSelect,
+}: UseMapBrickInteractorOptions = {}) {
   const mapControlsRef = useRef<Record<string, MapCanvasControls | null>>({});
   const mapControlHandlersRef = useRef<
     Record<string, (controls: MapCanvasControls | null) => void>
@@ -170,8 +180,9 @@ function useMapBrickInteractor() {
         ...prev,
         [brickId]: null,
       }));
+      onSearchSelect?.(brickId, nextCenter);
     },
-    []
+    [onSearchSelect]
   );
 
   return {
@@ -199,7 +210,87 @@ export default function PageGridBrickSection({
     measureBeforeMount: true,
   });
   const { bricks } = usePageGridState();
-  const { updateLayout, removeBrick, isEditable } = usePageGridActions();
+  const { updateLayout, removeBrick, isEditable, updateMapBrick } =
+    usePageGridActions();
+  const mapBrickZoomRef = useRef<Record<string, number | null>>({});
+  useEffect(() => {
+    const nextZooms: Record<string, number | null> = {};
+    for (const brick of bricks) {
+      if (brick.type === "map") {
+        nextZooms[brick.id] = brick.data.zoom;
+      }
+    }
+    mapBrickZoomRef.current = nextZooms;
+  }, [bricks]);
+
+  const mapAutoSaveTimersRef = useRef<
+    Record<string, ReturnType<typeof setTimeout>>
+  >({});
+  const pendingMapViewportsRef = useRef<Record<string, MapCanvasViewport>>({});
+
+  useEffect(() => {
+    return () => {
+      Object.values(mapAutoSaveTimersRef.current).forEach(clearTimeout);
+    };
+  }, []);
+  const scheduleMapUpdate = useCallback(
+    (brickId: string, viewport: MapCanvasViewport) => {
+      pendingMapViewportsRef.current[brickId] = viewport;
+
+      if (mapAutoSaveTimersRef.current[brickId]) {
+        clearTimeout(mapAutoSaveTimersRef.current[brickId]);
+      }
+
+      mapAutoSaveTimersRef.current[brickId] = setTimeout(() => {
+        const nextViewport = pendingMapViewportsRef.current[brickId];
+        if (!nextViewport) {
+          delete mapAutoSaveTimersRef.current[brickId];
+          return;
+        }
+
+        const [lng, lat] = nextViewport.center;
+        const normalizedZoom = Number.isFinite(nextViewport.zoom)
+          ? Number(nextViewport.zoom.toFixed(2))
+          : MAP_DEFAULT_ZOOM;
+
+        updateMapBrick({
+          id: brickId,
+          data: {
+            lat,
+            lng,
+            zoom: normalizedZoom,
+            href: buildGoogleMapsHref(lat, lng, normalizedZoom),
+          },
+        });
+
+        delete pendingMapViewportsRef.current[brickId];
+        delete mapAutoSaveTimersRef.current[brickId];
+      }, 650);
+    },
+    [updateMapBrick]
+  );
+
+  const handleMapSearchSelection = useCallback(
+    (brickId: string, nextCenter: [number, number]) => {
+      const recordedZoom = mapBrickZoomRef.current[brickId];
+      const targetZoom = Number.isFinite(recordedZoom ?? NaN)
+        ? recordedZoom!
+        : MAP_DEFAULT_ZOOM;
+
+      scheduleMapUpdate(brickId, {
+        center: nextCenter,
+        zoom: targetZoom,
+      });
+    },
+    [scheduleMapUpdate]
+  );
+
+  const handleMapViewportChange = useCallback(
+    (brickId: string, viewport: MapCanvasViewport) => {
+      scheduleMapUpdate(brickId, viewport);
+    },
+    [scheduleMapUpdate]
+  );
   const layouts = useMemo(() => {
     const baseLayouts = buildLayoutsFromBricks(bricks);
     if (isEditable) {
@@ -244,7 +335,9 @@ export default function PageGridBrickSection({
     handleMapControlsToggle,
     handleMapSearchOpenChange,
     handleMapSearchSelect,
-  } = useMapBrickInteractor();
+  } = useMapBrickInteractor({
+    onSearchSelect: handleMapSearchSelection,
+  });
 
   const handleResizeOptionSelect = (brickId: string, size: ResizeOption) => {
     if (!isEditable) {
@@ -335,6 +428,8 @@ export default function PageGridBrickSection({
                     center: centerOverride,
                     controlsPanelOpen: mapPopoverState === "controls",
                     onControlsChange: getMapControlsHandler(brick.id),
+                    onViewportChange: (viewport) =>
+                      handleMapViewportChange(brick.id, viewport),
                   }
                 : undefined;
               const controlsAvailable = !!controlsReady[brick.id];
@@ -388,7 +483,7 @@ export default function PageGridBrickSection({
                             <Button
                               type="button"
                               size={"icon-lg"}
-                              variant="default"
+                              variant="ghost"
                               data-no-drag
                               disabled={!controlsAvailable}
                               className={cn(

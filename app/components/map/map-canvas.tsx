@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type SyntheticEvent,
+} from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { motion } from "motion/react";
@@ -17,6 +24,7 @@ type Props = {
   center?: [number, number];
   zoom?: number;
   onControlsChange?: (controls: MapCanvasControls | null) => void;
+  onViewportChange?: (viewport: MapCanvasViewport) => void;
   controlsPanelOpen?: boolean;
   showCenterIndicator?: boolean;
   showLocationLabel?: boolean;
@@ -33,10 +41,16 @@ export type MapCanvasControls = {
   geolocate: () => void;
 };
 
+export type MapCanvasViewport = {
+  center: [number, number];
+  zoom: number;
+};
+
 export function MapCanvas({
   center,
   zoom,
   onControlsChange,
+  onViewportChange,
   controlsPanelOpen = false,
   showCenterIndicator = true,
   showLocationLabel = true,
@@ -48,6 +62,17 @@ export function MapCanvas({
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const geolocateRef = useRef<mapboxgl.GeolocateControl | null>(null);
   const [canMove, setCanMove] = useState(false);
+  const viewportChangeRef = useRef(onViewportChange);
+  const handleInteractionStart = useCallback(
+    (event: SyntheticEvent<HTMLDivElement>) => {
+      if (!canMove) {
+        return;
+      }
+
+      event.stopPropagation();
+    },
+    [canMove]
+  );
 
   function enableMapInteraction(map: mapboxgl.Map) {
     map.dragPan.enable();
@@ -84,6 +109,9 @@ export function MapCanvas({
   }, []);
 
   useEffect(() => {
+    viewportChangeRef.current = onViewportChange;
+  }, [onViewportChange]);
+  useEffect(() => {
     if (!containerRef.current) return;
 
     const map = new mapboxgl.Map({
@@ -103,7 +131,10 @@ export function MapCanvas({
 
     map.on("moveend", () => {
       const c = map.getCenter();
-      // 현재 중심 좌표: c.lng, c.lat
+      viewportChangeRef.current?.({
+        center: [c.lng, c.lat],
+        zoom: map.getZoom(),
+      });
     });
 
     map.on("load", () => {
@@ -208,6 +239,9 @@ export function MapCanvas({
     <div className="relative w-full h-full">
       <div
         ref={containerRef}
+        onPointerDown={handleInteractionStart}
+        onMouseDown={handleInteractionStart}
+        onTouchStart={handleInteractionStart}
         className="map-wrapper w-full h-full rounded-xl overflow-hidden"
       />
       {/* 중앙 고정 마커 (UI Overlay) */}
