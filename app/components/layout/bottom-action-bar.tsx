@@ -50,20 +50,9 @@ export default function BottomActionBar({ isOwner }: BottomActionBarProps) {
         <Tooltip>
           <TooltipTrigger
             render={
-              <Button
-                variant={"ghost"}
-                size={"icon-lg"}
-                render={
-                  <NavLink prefetch="viewport" to={settingTo} end>
-                    {({ isActive }) => (
-                      <GearSixIcon
-                        weight={isActive ? "fill" : "regular"}
-                        className="size-4"
-                      />
-                    )}
-                  </NavLink>
-                }
-              />
+              <Button variant={"ghost"} size={"icon-lg"}>
+                <GearSixIcon weight="regular" className="size-4" />
+              </Button>
             }
           />
           <TooltipContent side="bottom" sideOffset={8}>
@@ -74,7 +63,12 @@ export default function BottomActionBar({ isOwner }: BottomActionBarProps) {
 
       <ThemeToggle iconSize="size-4" />
 
-      <Separator orientation="vertical" className={"my-1.5"} />
+      <Separator
+        orientation="vertical"
+        className={
+          "my-1.5 rounded-full data-[orientation=vertical]:bg-muted data-[orientation=vertical]:w-0.5"
+        }
+      />
 
       <LocaleSwitcher />
       <UserAuthButton />

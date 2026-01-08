@@ -62,6 +62,10 @@ export default function AppToolbar({}: Props) {
     addMapBrick();
   };
 
+  if (!isEditable) {
+    return null;
+  }
+  
   return (
     <aside className={cn("fixed bottom-10 left-1/2 -translate-x-1/2")}>
       <ToolbarRoot className={"toolbar-shadow border-0 px-3 py-2"}>

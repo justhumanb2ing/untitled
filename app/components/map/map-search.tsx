@@ -62,7 +62,7 @@ export function MapSearch({ onSelect, isOpen, onOpenChange }: Props) {
         );
 
         const json = await res.json();
-        
+
         setResults(json.features ?? []);
       } catch {
         // ignore abort
@@ -82,15 +82,20 @@ export function MapSearch({ onSelect, isOpen, onOpenChange }: Props) {
       <PopoverTrigger
         render={
           <Button
+            type="button"
             size="icon-lg"
-            variant="ghost"
+            variant={isOpen ? "brand" : "ghost"}
             className={cn(
-              "size-8 inline-flex items-center justify-center transition-colors focus-visible:z-10",
-              isOpen ? "bg-brand text-white hover:bg-brand" : "hover:bg-white/10"
+              "rounded-lg transition-colors focus-visible:z-10",
+              isOpen ? "text-white" : "hover:bg-white/10"
             )}
+            aria-pressed={isOpen}
           >
             <motion.p whileTap={{ scale: 0.8 }}>
-              <MagnifyingGlassIcon weight="bold" />
+              <MagnifyingGlassIcon
+                weight="bold"
+                className="size-4 text-white"
+              />
             </motion.p>
           </Button>
         }
@@ -103,7 +108,7 @@ export function MapSearch({ onSelect, isOpen, onOpenChange }: Props) {
           stiffness: 260,
           damping: 28,
         }}
-        className="w-60 rounded-lg p-1 gap-0"
+        className="w-60 rounded-lg p-1 gap-0 bg-black text-white"
       >
         <div className="relative">
           <Input
@@ -113,7 +118,7 @@ export function MapSearch({ onSelect, isOpen, onOpenChange }: Props) {
             placeholder="Location"
             autoFocus
             autoComplete="off"
-            className="w-full rounded-md h-8 pe-9 focus-visible:border-0 focus-visible:ring-0"
+            className="w-full rounded-md h-8 pe-9 focus-visible:border-0 focus-visible:ring-0 bg-[#e5e5e5]/20"
           />
           {query && (
             <button
@@ -135,12 +140,12 @@ export function MapSearch({ onSelect, isOpen, onOpenChange }: Props) {
                 variant={"ghost"}
                 size={"sm"}
                 onClick={() => handleSelectQueryItem(r.center, r.place_name)}
-                render={
-                  <li className="cursor-pointer py-3.5 justify-start rounded-sm font-normal">
-                    {r.place_name}
-                  </li>
+                className={
+                  "rounded-sm justify-start py-3.5 hover:bg-[#e5e5e5]/20 hover:text-white font-normal "
                 }
-              />
+              >
+                <li>{r.place_name}</li>
+              </Button>
             ))}
           </ul>
         )}

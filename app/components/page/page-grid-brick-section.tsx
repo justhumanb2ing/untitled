@@ -442,6 +442,37 @@ export default function PageGridBrickSection({
                     isEditable && "cursor-grab group"
                   )}
                 >
+                  {isEditable && (
+                    <aside className="z-9999 absolute -top-3 -right-3 opacity-0 pointer-events-none transition duration-150 group-hover:opacity-100 group-hover:pointer-events-auto">
+                      <div
+                        className={cn(
+                          "pointer-events-auto bg-black/80 backdrop-blur-md p-1 rounded-xl flex shadow-xl border border-white/10 animate-in fade-in zoom-in duration-200 items-center"
+                        )}
+                      >
+                        <Button
+                          type="button"
+                          size={"icon-lg"}
+                          variant={"ghost"}
+                          data-no-drag
+                          className={cn(
+                            "transition-all rounded-lg hover:bg-white/10"
+                          )}
+                          aria-label="블록 삭제"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            handleBlockRemove(brick.id);
+                          }}
+                        >
+                          <StackMinusIcon
+                            weight="bold"
+                            className="size-4 text-white"
+                          />
+                        </Button>
+                      </div>
+                    </aside>
+                  )}
+
                   {isEditable && brick.type !== "text" && (
                     <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 z-9999 flex gap-1 opacity-0 pointer-events-none transition duration-150 group-hover:opacity-100 group-hover:pointer-events-auto">
                       <div
@@ -458,28 +489,8 @@ export default function PageGridBrickSection({
                             handleResizeOptionSelect(brick.id, size)
                           }
                         />
-                        <Button
-                          type="button"
-                          size={"icon-lg"}
-                          variant={"ghost"}
-                          data-no-drag
-                          className={cn(
-                            "transition-all rounded-lg group-hover:opacity-100 hover:bg-white/10"
-                          )}
-                          aria-label="블록 삭제"
-                          onClick={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            handleBlockRemove(brick.id);
-                          }}
-                        >
-                          <StackMinusIcon
-                            weight="bold"
-                            className="size-4 text-white"
-                          />
-                        </Button>
                         {isMapBrick && (
-                          <>
+                          <div className="flex items-center">
                             <Button
                               type="button"
                               size={"icon-lg"}
@@ -500,7 +511,10 @@ export default function PageGridBrickSection({
                               }}
                             >
                               <motion.p whileTap={{ scale: 0.8 }}>
-                                <SlideshowIcon weight="bold" />
+                                <SlideshowIcon
+                                  weight="bold"
+                                  className="size-4 text-white"
+                                />
                               </motion.p>
                             </Button>
                             <div data-no-drag>
@@ -514,7 +528,7 @@ export default function PageGridBrickSection({
                                 }
                               />
                             </div>
-                          </>
+                          </div>
                         )}
                       </div>
                     </div>

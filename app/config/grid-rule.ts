@@ -9,8 +9,14 @@ export type BrickResponsive<T> = {
 };
 
 export const GRID_GAP = 32;
-export const GRID_MARGIN: readonly [number, number] = [GRID_GAP, GRID_GAP];
-export const CONTAINER_PADDING: readonly [number, number] = [0, 0];
+export const GRID_MARGIN: Partial<
+  Record<"mobile" | "desktop", readonly [number, number]>
+> = {
+  desktop: [GRID_GAP, GRID_GAP],
+};
+export const CONTAINER_PADDING: Partial<
+  Record<"mobile" | "desktop", readonly [number, number]>
+> = { desktop: [16, 16], mobile: [0, 0] };
 export const DEFAULT_ROW_HEIGHT = 60;
 export const DESKTOP_WIDTH = 880;
 export const BREAKPOINTS: Record<GridBreakpoint, number> = {
