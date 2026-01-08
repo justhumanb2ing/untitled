@@ -16,7 +16,7 @@ export const GRID_MARGIN: Partial<
 };
 export const CONTAINER_PADDING: Partial<
   Record<"mobile" | "desktop", readonly [number, number]>
-> = { desktop: [16, 16], mobile: [0, 0] };
+> = { desktop: [16, 16], mobile: [6, 6] };
 export const DEFAULT_ROW_HEIGHT = 60;
 export const DESKTOP_WIDTH = 880;
 export const BREAKPOINTS: Record<GridBreakpoint, number> = {

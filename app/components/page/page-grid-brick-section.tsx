@@ -426,6 +426,10 @@ export default function PageGridBrickSection({
             onResizeStop={handleLayoutCommit}
           >
             {bricks.map((brick) => {
+              const floatingControlsPosition = isDesktop
+                ? "-top-3 -right-3"
+                : "top-2 left-2";
+              const resizeControlsPosition = isDesktop ? "-bottom-5" : "bottom-2";
               const isMapBrick = isMapPageGridBrick(brick);
               const baseCenter =
                 isMapBrick && brick.data.lng !== null && brick.data.lat !== null
@@ -454,7 +458,12 @@ export default function PageGridBrickSection({
                   )}
                 >
                   {isEditable && (
-                    <aside className="z-9999 absolute -top-3 -right-3 opacity-0 pointer-events-none transition duration-150 group-hover:opacity-100 group-hover:pointer-events-auto">
+                    <aside
+                      className={cn(
+                        "z-9999 absolute opacity-0 pointer-events-none transition duration-150 group-hover:opacity-100 group-hover:pointer-events-auto",
+                        floatingControlsPosition
+                      )}
+                    >
                       <div
                         className={cn(
                           "pointer-events-auto bg-black/80 backdrop-blur-md p-1 rounded-xl flex shadow-xl border border-white/10 animate-in fade-in zoom-in duration-200 items-center"
@@ -485,7 +494,12 @@ export default function PageGridBrickSection({
                   )}
 
                   {isEditable && brick.type !== "text" && (
-                    <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 z-9999 flex gap-1 opacity-0 pointer-events-none transition duration-150 group-hover:opacity-100 group-hover:pointer-events-auto">
+                    <div
+                      className={cn(
+                        "absolute left-1/2 -translate-x-1/2 z-9999 flex gap-1 opacity-0 pointer-events-none transition duration-150 group-hover:opacity-100 group-hover:pointer-events-auto",
+                        resizeControlsPosition
+                      )}
+                    >
                       <div
                         data-no-drag
                         className={cn(
