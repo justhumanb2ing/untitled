@@ -93,9 +93,15 @@ export default function PageGridBrickItem({
   return (
     <Item
       variant="muted"
-      className="h-full w-full rounded-xl p-0 bg-transparent"
+      className="h-full w-full rounded-3xl p-0 bg-transparent"
       render={
-        <div className="h-full w-full min-h-0 min-w-0 self-stretch">
+        <div
+          className={cn(
+            "h-full w-full min-h-0 min-w-0 self-stretch",
+            brick.type !== "text" &&
+              "shadow-[0px_6px_13px_-6px_rgba(0,0,0,0.1)] border-none ring ring-[#e5e5e5]"
+          )}
+        >
           {renderBrick(brick, rowHeight, breakpoint, mapOverrides)}
         </div>
       }
@@ -129,9 +135,7 @@ function renderMapBrick(
   return (
     <div className="relative h-full w-full overflow-hidden rounded-3xl bg-muted/40">
       <MapCanvas
-        center={
-          mapOverrides?.center ?? center
-        }
+        center={mapOverrides?.center ?? center}
         zoom={brick.data.zoom ?? MAP_DEFAULT_ZOOM}
         controlsPanelOpen={mapOverrides?.controlsPanelOpen ?? false}
         showCenterIndicator
