@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "../../types/database.types";
+import { sanitizeFileName } from "./file-name-utils";
 
 const PAGE_IMAGE_BUCKET = "untitled-bucket";
 
@@ -62,9 +63,9 @@ export function createPageImageUploader(
 function resolvePageImagePath(userId: string, pageId: string, file: File) {
   const extension = resolveImageExtension(file);
   const baseName = resolveImageBaseName(file.name);
-  const resolvedBaseName = baseName.length > 0 ? baseName : "profile";
+  const sanitizedBaseName = sanitizeFileName(baseName, "profile");
 
-  return `pages/${userId}/${pageId}/profile/${resolvedBaseName}.${extension}`;
+  return `pages/${userId}/${pageId}/profile/${sanitizedBaseName}.${extension}`;
 }
 
 function resolveImageBaseName(fileName: string) {

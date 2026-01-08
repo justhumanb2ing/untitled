@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "../../types/database.types";
+import { sanitizeFileName } from "./file-name-utils";
 
 const PAGE_MEDIA_BUCKET = "untitled-bucket";
 
@@ -60,16 +61,15 @@ export function createPageMediaUploader(
  * Resolves a stable storage path for page media uploads.
  */
 function resolvePageMediaPath(userId: string, pageId: string, file: File) {
-  return `pages/${userId}/${pageId}/${resolveFileName(file.name)}`;
-}
-
-function resolveFileName(fileName: string) {
-  const cleanedName = fileName.trim().replace(/[\\/]/g, "-");
-  if (cleanedName.length > 0) {
-    return cleanedName;
-  }
-
-  return `upload-${Date.now()}`;
+  const extension = file.name.split(".").pop();
+  const fallback =
+    extension && extension.length > 0
+      ? `upload-${Date.now()}.${extension}`
+      : `upload-${Date.now()}`;
+  return `pages/${userId}/${pageId}/${sanitizeFileName(
+    file.name,
+    fallback
+  )}`;
 }
 
 function buildCacheKey(file: File) {
