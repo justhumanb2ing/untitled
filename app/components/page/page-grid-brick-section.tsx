@@ -463,7 +463,7 @@ export default function PageGridBrickSection({
   );
 
   return (
-    <div className="space-y-4">
+    <div className={"space-y-4"}>
       <div
         ref={containerRef}
         className={`${isDesktop ? "" : "w-full"}`}
@@ -499,12 +499,6 @@ export default function PageGridBrickSection({
             onResizeStop={handleLayoutCommit}
           >
             {bricks.map((brick: PageGridBrick) => {
-              const floatingControlsPosition = isDesktop
-                ? "-top-3 -right-3"
-                : "top-2 left-2";
-              const resizeControlsPosition = isDesktop
-                ? "-bottom-5"
-                : "bottom-2";
               const isMapBrick = isMapPageGridBrick(brick);
               const baseCenter =
                 isMapBrick && brick.data.lng !== null && brick.data.lat !== null
@@ -545,7 +539,7 @@ export default function PageGridBrickSection({
                     <aside
                       className={cn(
                         "z-9999 absolute opacity-0 pointer-events-none transition duration-150 group-hover:opacity-100 group-hover:pointer-events-auto",
-                        floatingControlsPosition,
+                        "-top-3 -right-2",
                         controlsPinned && "opacity-100 pointer-events-auto"
                       )}
                     >
@@ -582,7 +576,7 @@ export default function PageGridBrickSection({
                     <div
                       className={cn(
                         "absolute left-1/2 -translate-x-1/2 z-9999 flex gap-1 opacity-0 pointer-events-none transition duration-150 group-hover:opacity-100 group-hover:pointer-events-auto",
-                        resizeControlsPosition,
+                        "-bottom-5",
                         controlsPinned && "opacity-100 pointer-events-auto"
                       )}
                     >

@@ -101,7 +101,7 @@ export default function PageGridBrickItem({
           className={cn(
             "h-full w-full min-h-0 min-w-0 self-stretch",
             brick.type !== "text" &&
-              "shadow-[0px_6px_13px_-6px_rgba(0,0,0,0.1)] border-none ring"
+              "shadow-[0px_6px_13px_-6px_rgba(0,0,0,0.1)] border-none ring ring-[#e5e5e5] dark:ring-[#2b2b2b]"
           )}
         >
           {renderBrick(brick, rowHeight, breakpoint, mapOverrides)}

@@ -3,9 +3,7 @@ import BottomActionBar from "@/components/layout/bottom-action-bar";
 import type { Route } from "./+types/($lang)._auth.user.$handle._index";
 import { getAuth } from "@clerk/react-router/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
-import {
-  LightningIcon,
-} from "@phosphor-icons/react";
+import { LightningIcon } from "@phosphor-icons/react";
 import { OwnerGate } from "@/components/account/owner-gate";
 import ProfileHeaderEditor from "@/components/profile/profile-header-editor";
 import { cn } from "@/lib/utils";
@@ -254,7 +252,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
               <section
                 className={cn(
                   "max-w-2xl shrink relative",
-                  isMobilePreview ? "py-0" : "xl:py-24 xl:flex-5"
+                  isMobilePreview ? "py-0" : "xl:py-24 xl:flex-5 xl:mt-4"
                 )}
               >
                 <ProfileHeaderEditor
@@ -281,7 +279,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
                 className={cn(
                   "px-4 pb-8 grow shrink-0 scrollbar-hide",
                   isMobilePreview
-                    ? "max-w-full py-0 px-8 pb-8"
+                    ? "max-w-full py-0 px-8 pb-8 pt-10"
                     : "xl:px-0 xl:pt-24 xl:pb-0 xl:flex-14 xl:w-full xl:max-w-[880px] xl:min-h-0 xl:overflow-y-auto"
                 )}
               >
