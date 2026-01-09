@@ -119,6 +119,17 @@ const MEDIA_RULE: GridRule = {
   }),
 };
 
+const LINK_RULE: GridRule = {
+  resolveGrid: () => ({ w: 1, h: 2 }),
+  resolveConstraints: (cols) => ({
+    minW: 1,
+    maxW: Math.min(2, cols),
+    minH: 1,
+    maxH: 4,
+    isResizable: true,
+  }),
+};
+
 const FULL_WIDTH_RULE: GridRule = {
   resolveGrid: (cols) => ({ w: cols, h: 1 }),
   resolveConstraints: (_cols, grid) => ({
@@ -132,7 +143,7 @@ const FULL_WIDTH_RULE: GridRule = {
 
 const GRID_RULES: Record<PageGridBrickType, GridRule> = {
   text: FULL_WIDTH_RULE,
-  link: MEDIA_RULE,
+  link: LINK_RULE,
   map: MEDIA_RULE,
   image: MEDIA_RULE,
   video: MEDIA_RULE,

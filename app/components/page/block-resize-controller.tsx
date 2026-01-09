@@ -1,6 +1,7 @@
 import type { MouseEvent } from "react";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
+import type { PageGridBrickType } from "../../../service/pages/page-grid";
 
 export type ResizeOption = { w: number; h: number; label?: string };
 
@@ -11,12 +12,19 @@ export const SIZE_OPTIONS: ResizeOption[] = [
   { w: 2, h: 4, label: "2x2" },
 ];
 
+const LINK_SIZE_OPTIONS: ResizeOption[] = [
+  { w: 2, h: 1, label: "1x1 (S)" },
+  ...SIZE_OPTIONS,
+];
+
 type Props = {
+  brickType?: PageGridBrickType;
   currentSize?: ResizeOption;
   onSelect?: (size: ResizeOption) => void;
 };
 
 export default function BlockResizeController({
+  brickType,
   currentSize,
   onSelect,
 }: Props) {
@@ -29,18 +37,26 @@ export default function BlockResizeController({
     onSelect?.(size);
   };
 
+  const sizeOptions =
+    brickType === "link" ? LINK_SIZE_OPTIONS : SIZE_OPTIONS;
+
   return (
     <>
-      {SIZE_OPTIONS.map((size) => {
+      {sizeOptions.map((size) => {
         const isActive = currentSize?.w === size.w && currentSize?.h === size.h;
+        const label = size.label ?? `${size.w}x${size.h}`;
+        const isCompact = size.h === 1;
+        const topRowClass =
+          size.h >= 1 ? (isCompact ? "bg-white/70" : "bg-white") : "bg-white/20";
+        const bottomRowClass = size.h >= 4 ? "bg-white" : "bg-white/20";
 
         return (
           <Button
             type="button"
-            key={size.label}
+            key={`${size.w}x${size.h}`}
             size={"icon-lg"}
             variant={"ghost"}
-            title={size.label}
+            title={label}
             aria-pressed={isActive}
             onClick={(event) => handleClick(event, size)}
             className={cn(
@@ -53,22 +69,22 @@ export default function BlockResizeController({
             <div className="grid grid-cols-[6px_6px] grid-rows-[6px_6px]">
               <div
                 className={`w-[5px] h-[5px] rounded-[1px] ${
-                  size.w >= 1 && size.h >= 2 ? "bg-white" : "bg-white/20"
+                  size.w >= 1 && size.h >= 1 ? topRowClass : "bg-white/20"
                 }`}
               />
               <div
                 className={`w-[5px] h-[5px] rounded-[1px] ${
-                  size.w >= 2 && size.h >= 2 ? "bg-white" : "bg-white/20"
+                  size.w >= 2 && size.h >= 1 ? topRowClass : "bg-white/20"
                 }`}
               />
               <div
                 className={`w-[5px] h-[5px] rounded-[1px] ${
-                  size.w >= 1 && size.h >= 4 ? "bg-white" : "bg-white/20"
+                  size.w >= 1 && size.h >= 4 ? bottomRowClass : "bg-white/20"
                 }`}
               />
               <div
                 className={`w-[5px] h-[5px] rounded-[1px] ${
-                  size.w >= 2 && size.h >= 4 ? "bg-white" : "bg-white/20"
+                  size.w >= 2 && size.h >= 4 ? bottomRowClass : "bg-white/20"
                 }`}
               />
             </div>

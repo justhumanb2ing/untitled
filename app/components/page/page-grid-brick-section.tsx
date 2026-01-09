@@ -592,6 +592,7 @@ export default function PageGridBrickSection({
                       >
                         {/* Block Resize Controller */}
                         <BlockResizeController
+                          brickType={brick.type}
                           currentSize={brick.style[breakpoint].grid}
                           onSelect={(size) =>
                             handleResizeOptionSelect(brick.id, size)

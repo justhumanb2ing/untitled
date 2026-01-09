@@ -153,15 +153,14 @@ function renderLinkBrick(brick: PageGridBrick<"link">) {
   return (
     <div
       className={cn(
-        "relative flex h-full w-full flex-col justify-center gap-1 rounded-xl p-4 text-sm",
-        isUploading ? "bg-muted/60" : "bg-muted/40"
+        "relative flex h-full w-full flex-col justify-center gap-1 rounded-3xl p-4 text-sm overflow-hidden",
+        isUploading ? "bg-muted/60" : "bg-muted/30"
       )}
       aria-busy={isUploading}
     >
       {isUploading ? (
         <>
           <Skeleton className="absolute inset-0" />
-          <UploadOverlay />
         </>
       ) : (
         <span className="font-medium text-foreground">

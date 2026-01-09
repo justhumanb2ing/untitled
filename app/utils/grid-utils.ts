@@ -102,7 +102,7 @@ export const resizeRatioConstraintHandler: NonNullable<
     h: Math.min(Math.max(h, minH), maxH),
   };
   const candidates: Array<{ w: number; h: number }> = [];
-  const allowedHeights = [2, 4];
+  const allowedHeights = minH <= 1 ? [1, 2, 4] : [2, 4];
 
   for (let candidateW = 1; candidateW <= 2; candidateW += 1) {
     for (const candidateH of allowedHeights) {
