@@ -17,9 +17,11 @@ import { useAuth, useSession } from "@clerk/react-router";
 import { resolveExternalHref } from "@/utils/resolve-external-href";
 import type { LinkCrawlResponse } from "types/link-crawl";
 
-type Props = {};
+interface AppToolbarProps {
+  isDesktop: boolean;
+}
 
-export default function AppToolbar({}: Props) {
+export default function AppToolbar({ isDesktop }: AppToolbarProps) {
   const {
     addMediaFile,
     addTextBrick,
@@ -162,7 +164,12 @@ export default function AppToolbar({}: Props) {
   }
 
   return (
-    <aside className={cn("fixed bottom-10 left-1/2 -translate-x-1/2")}>
+    <aside
+      className={cn(
+        "fixed bottom-10 left-1/2 -translate-x-1/2",
+        !isDesktop && "bottom-28"
+      )}
+    >
       <ToolbarRoot className={"toolbar-shadow border-0 px-3 py-2"}>
         <ToolbarGroup className={"gap-2"}>
           <Popover open={isLinkPopoverOpen} onOpenChange={setIsLinkPopoverOpen}>

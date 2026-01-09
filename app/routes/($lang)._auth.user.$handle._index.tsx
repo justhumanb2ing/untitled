@@ -323,7 +323,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
             onToggle={setPreviewLayout}
           />
 
-          <AppToolbar />
+          <AppToolbar isDesktop={!isMobilePreview} />
         </div>
       </PageGridProvider>
     </PageAutoSaveController>
