@@ -13,9 +13,9 @@ import { toastManager } from "@/components/ui/toast";
 import { usePageGridActions } from "@/components/page/page-grid-context";
 import { getMediaValidationError } from "../../../service/pages/page-grid";
 import { XIcon } from "@phosphor-icons/react";
-import { useAuth, useSession } from "@clerk/react-router";
+import { useAuth } from "@clerk/react-router";
 import { resolveExternalHref } from "@/utils/resolve-external-href";
-import type { LinkCrawlResponse } from "types/link-crawl";
+import type { OgCrawlResponse } from "types/link-crawl";
 
 interface AppToolbarProps {
   isDesktop: boolean;
@@ -65,14 +65,15 @@ export default function AppToolbar({ isDesktop }: AppToolbarProps) {
         throw new Error("Missing authentication token.");
       }
 
+      const crawlerEndpoint = import.meta.env.VITE_CRAWLER_SERVER_ENDPOINT;
+      if (!crawlerEndpoint) {
+        throw new Error("Crawler server endpoint is not configured.");
+      }
+
       const response = await fetch(
-        "https://silhouette-crawler-server.up.railway.app/crawl",
+        `${crawlerEndpoint.replace(/\/$/, "")}/api/crawl?url=${normalizedUrl}&mode=auto`,
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ url: normalizedUrl }),
+          method: "GET",
         }
       );
 
@@ -81,7 +82,7 @@ export default function AppToolbar({ isDesktop }: AppToolbarProps) {
         throw new Error(errorText || "Failed to create link.");
       }
 
-      const { data } = (await response.json()) as LinkCrawlResponse;
+      const { data } = (await response.json()) as OgCrawlResponse;
 
       updateLinkBrick({
         id: placeholderId,
@@ -90,7 +91,7 @@ export default function AppToolbar({ isDesktop }: AppToolbarProps) {
           description: data.description ?? null,
           site_name: data.site_name ?? null,
           url: data.url ?? normalizedUrl,
-          icon_url: data.icon ?? null,
+          icon_url: data.favicon ?? null,
           image_url: data.image ?? null,
         },
       });

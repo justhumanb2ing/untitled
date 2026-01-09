@@ -1,12 +1,18 @@
-type Og = {
+export type CrawlMode = 'static' | 'dynamic';
+
+export interface OgData {
   title: string | null;
   description: string | null;
-  image: string | null;
-  site_name: string | null;
   url: string | null;
-  icon: string | null;
-};
-export type LinkCrawlResponse = {
-  success: boolean;
-  data: Og;
-};
+  site_name: string | null;
+  image: string | null;
+  favicon: string | null;
+}
+
+export interface OgCrawlResponse {
+  ok: true;
+  mode: CrawlMode;
+  fallback: boolean;
+  durationMs: number;
+  data: OgData;
+}

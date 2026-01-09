@@ -293,20 +293,22 @@ function LinkBrickContent({ brick, grid }: LinkBrickContentProps) {
 
   const renderIcon = (iconSize?: string) => {
     return viewModel.showIcon ? (
-      viewModel.iconUrl ? (
-        <img
-          src={viewModel.iconUrl}
-          alt=""
-          className={cn(
-            "size-7 shrink-0 rounded-lg object-cover xl:size-9",
-            iconSize
-          )}
-        />
-      ) : (
-        <span className="size-5 shrink-0 rounded-lg flex items-center justify-center xl:size-6">
-          <LinkSimpleIcon weight="bold" className="size-full" />
-        </span>
-      )
+      <a href={brick.data.url} target="_blank" rel="noopener noreferrer">
+        {viewModel.iconUrl ? (
+          <img
+            src={viewModel.iconUrl}
+            alt=""
+            className={cn(
+              "size-7 shrink-0 rounded-lg object-cover xl:size-9",
+              iconSize
+            )}
+          />
+        ) : (
+          <span className="size-5 shrink-0 rounded-lg flex items-center justify-center xl:size-6">
+            <LinkSimpleIcon weight="bold" className="size-full" />
+          </span>
+        )}
+      </a>
     ) : null;
   };
 
