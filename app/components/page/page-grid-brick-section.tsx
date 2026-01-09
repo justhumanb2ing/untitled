@@ -535,6 +535,7 @@ export default function PageGridBrickSection({
                     isEditable && "cursor-grab group"
                   )}
                 >
+                  {/* Block Remove Button */}
                   {isEditable && (
                     <aside
                       className={cn(
@@ -572,6 +573,7 @@ export default function PageGridBrickSection({
                     </aside>
                   )}
 
+                  {/* Block Hovered Buttons */}
                   {isEditable && brick.type !== "text" && (
                     <div
                       className={cn(
@@ -588,12 +590,15 @@ export default function PageGridBrickSection({
                         onMouseDown={(event) => event.stopPropagation()}
                         onTouchStart={(event) => event.stopPropagation()}
                       >
+                        {/* Block Resize Controller */}
                         <BlockResizeController
                           currentSize={brick.style[breakpoint].grid}
                           onSelect={(size) =>
                             handleResizeOptionSelect(brick.id, size)
                           }
                         />
+
+                        {/* Media Block Additional Buttons */}
                         {isMediaBrick && (
                           <div className="flex items-center">
                             <Popover
@@ -697,6 +702,8 @@ export default function PageGridBrickSection({
                             </Popover>
                           </div>
                         )}
+
+                        {/* Map Block Additional Buttons */}
                         {isMapBrick && (
                           <div className="flex items-center">
                             <Button
