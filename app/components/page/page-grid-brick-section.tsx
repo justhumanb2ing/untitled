@@ -530,6 +530,8 @@ export default function PageGridBrickSection({
                 : undefined;
               const isMediaLinkPopoverOpen = !!mediaLinkPopovers[brick.id];
               const controlsAvailable = !!controlsReady[brick.id];
+              const controlsPinned =
+                isMediaLinkPopoverOpen || mapPopoverState !== null;
 
               return (
                 <div
@@ -543,7 +545,8 @@ export default function PageGridBrickSection({
                     <aside
                       className={cn(
                         "z-9999 absolute opacity-0 pointer-events-none transition duration-150 group-hover:opacity-100 group-hover:pointer-events-auto",
-                        floatingControlsPosition
+                        floatingControlsPosition,
+                        controlsPinned && "opacity-100 pointer-events-auto"
                       )}
                     >
                       <div
@@ -579,7 +582,8 @@ export default function PageGridBrickSection({
                     <div
                       className={cn(
                         "absolute left-1/2 -translate-x-1/2 z-9999 flex gap-1 opacity-0 pointer-events-none transition duration-150 group-hover:opacity-100 group-hover:pointer-events-auto",
-                        resizeControlsPosition
+                        resizeControlsPosition,
+                        controlsPinned && "opacity-100 pointer-events-auto"
                       )}
                     >
                       <div
@@ -647,7 +651,7 @@ export default function PageGridBrickSection({
                                   stiffness: 260,
                                   damping: 28,
                                 }}
-                                className="w-60 rounded-lg p-1 gap-0 bg-black text-white"
+                                className="w-60 rounded-lg p-1 gap-0 bg-black text-white border-none"
                               >
                                 <div className="relative">
                                   <Input
