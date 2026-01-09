@@ -1,4 +1,4 @@
-import { useRef, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
 import { cn } from "@/lib/utils";
 import {
   ToolbarButton,
@@ -7,9 +7,12 @@ import {
 } from "../ui/toolbar";
 import { Button } from "../ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { Input } from "../ui/input";
+import { Popover, PopoverPanel, PopoverTrigger } from "../ui/popover";
 import { toastManager } from "@/components/ui/toast";
 import { usePageGridActions } from "@/components/page/page-grid-context";
 import { getMediaValidationError } from "../../../service/pages/page-grid";
+import { XIcon } from "@phosphor-icons/react";
 
 type Props = {};
 
@@ -17,6 +20,16 @@ export default function AppToolbar({}: Props) {
   const { addMediaFile, addTextBrick, addMapBrick, isEditable } =
     usePageGridActions();
   const mediaInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false);
+  const [linkInputValue, setLinkInputValue] = useState("");
+
+  const handleClearInput = () => {
+    setLinkInputValue("");
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
 
   const handleMediaClick = () => {
     if (!isEditable) {
@@ -65,36 +78,83 @@ export default function AppToolbar({}: Props) {
   if (!isEditable) {
     return null;
   }
-  
+
   return (
     <aside className={cn("fixed bottom-10 left-1/2 -translate-x-1/2")}>
       <ToolbarRoot className={"toolbar-shadow border-0 px-3 py-2"}>
         <ToolbarGroup className={"gap-2"}>
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <ToolbarButton
-                  render={
-                    <Button
-                      size={"icon-lg"}
-                      variant={"ghost"}
-                      className={"size-8 p-1"}
-                      type="button"
-                    >
-                      <img
-                        src="/link.svg"
-                        alt="link"
-                        className="w-full h-full object-cover"
+          <Popover open={isLinkPopoverOpen} onOpenChange={setIsLinkPopoverOpen}>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <PopoverTrigger
+                    render={
+                      <ToolbarButton
+                        render={
+                          <Button
+                            size={"icon-lg"}
+                            variant={"ghost"}
+                            className={"size-8 p-1"}
+                            type="button"
+                          >
+                            <img
+                              src="/link.svg"
+                              alt="link"
+                              className="w-full h-full object-cover"
+                            />
+                          </Button>
+                        }
                       />
-                    </Button>
-                  }
+                    }
+                  />
+                }
+              />
+              <TooltipContent side="top" sideOffset={8}>
+                <p>Link</p>
+              </TooltipContent>
+            </Tooltip>
+            <PopoverPanel
+              side="top"
+              sideOffset={16}
+              transition={{
+                type: "spring",
+                stiffness: 260,
+                damping: 28,
+              }}
+              className="w-64 rounded-[16px] p-0 overflow-hidden border-[0.5px]"
+            >
+              <div>
+                <Input
+                  ref={inputRef}
+                  type="url"
+                  inputMode="url"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  autoFocus
+                  placeholder="Link"
+                  value={linkInputValue}
+                  onChange={(event) => setLinkInputValue(event.target.value)}
+                  aria-label="Link URL"
+                  className="font-light text-sm! bg-transparent focus-visible:border-none focus-visible:ring-0 h-11 pl-3 pe-9 placeholder:text-ring"
                 />
-              }
-            />
-            <TooltipContent side="top" sideOffset={8}>
-              <p>Link</p>
-            </TooltipContent>
-          </Tooltip>
+                {linkInputValue && (
+                  <button
+                    aria-label="Clear input"
+                    className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-md outline-none transition-[color,box-shadow] focus:z-10 focus-visible:border-0 focus-visible:ring-0 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                    onClick={handleClearInput}
+                    type="button"
+                  >
+                    <XIcon
+                      aria-hidden="true"
+                      weight="bold"
+                      className="size-4"
+                    />
+                  </button>
+                )}
+              </div>
+            </PopoverPanel>
+          </Popover>
           <Tooltip>
             <TooltipTrigger
               render={
