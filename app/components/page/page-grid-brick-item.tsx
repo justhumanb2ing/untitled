@@ -9,7 +9,7 @@ import { Item } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import PageGridTextBrick from "@/components/page/page-grid-text-brick";
-import type { GridBreakpoint } from "@/config/grid-rule";
+import type { GridBreakpoint, GridSize } from "@/config/grid-rule";
 import { cn } from "@/lib/utils";
 import { resolveExternalHref } from "@/utils/resolve-external-href";
 import { MAP_DEFAULT_ZOOM } from "../../../constants/map";
@@ -17,7 +17,12 @@ import type {
   PageGridBrick,
   PageGridBrickType,
 } from "../../../service/pages/page-grid";
-import { ArrowCircleUpRightIcon } from "@phosphor-icons/react";
+import {
+  buildLinkBrickViewModel,
+  type LinkBrickVariant,
+  type LinkBrickViewModel,
+} from "../../../service/pages/link-brick-view-model";
+import { ArrowCircleUpRightIcon, LinkSimpleIcon } from "@phosphor-icons/react";
 import type { BrickImageRow, BrickVideoRow } from "types/brick";
 
 type MapControlsOverrides = {
@@ -32,6 +37,7 @@ type BrickRendererMap = {
     brick: PageGridBrick<K>;
     rowHeight: number;
     breakpoint: GridBreakpoint;
+    grid: GridSize;
     mapOverrides?: MapControlsOverrides;
   }) => ReactNode;
 };
@@ -44,7 +50,7 @@ const BRICK_RENDERERS: BrickRendererMap = {
       breakpoint={breakpoint}
     />
   ),
-  link: ({ brick }) => renderLinkBrick(brick),
+  link: ({ brick, grid }) => renderLinkBrick(brick, grid),
   map: ({ brick, mapOverrides }) => renderMapBrick(brick, mapOverrides),
   image: ({ brick }) =>
     renderMediaFrame(
@@ -112,10 +118,13 @@ function renderBrick<T extends PageGridBrickType>(
   breakpoint: GridBreakpoint,
   mapOverrides?: MapControlsOverrides
 ) {
+  const grid = brick.style[breakpoint].grid;
+
   return BRICK_RENDERERS[brick.type]({
     brick,
     rowHeight,
     breakpoint,
+    grid,
     mapOverrides,
   });
 }
@@ -147,13 +156,132 @@ function renderMapBrick(
   );
 }
 
-function renderLinkBrick(brick: PageGridBrick<"link">) {
+function renderLinkBrick(brick: PageGridBrick<"link">, grid: GridSize) {
   const isUploading = brick.status === "uploading";
+  const viewModel = buildLinkBrickViewModel(brick.data, grid);
+  const lineClampTitle = resolveLineClampClass(viewModel.titleLines);
+  const lineClampDescription = resolveLineClampClass(
+    viewModel.descriptionLines
+  );
+
+  const renderIcon = (iconSize?: string) => {
+    return viewModel.showIcon ? (
+      viewModel.iconUrl ? (
+        <img
+          src={viewModel.iconUrl}
+          alt=""
+          className={cn("size-10 shrink-0 rounded-lg object-cover", iconSize)}
+        />
+      ) : (
+        <span className="size-5 shrink-0 rounded-lg flex items-center justify-center">
+          <LinkSimpleIcon weight="bold" className="size-full" />
+        </span>
+      )
+    ) : null;
+  };
+
+  const layoutElement = (layout: LinkBrickVariant) => {
+    switch (layout) {
+      case "compact":
+        return (
+          <div className="h-full flex items-center gap-4">
+            {renderIcon()}
+            <span className={cn("font-light text-foreground", lineClampTitle)}>
+              {viewModel.title}
+            </span>
+          </div>
+        );
+      case "standard":
+        return (
+          <div className="h-full flex flex-col justify-between">
+            <div className="flex flex-col gap-4">
+              {renderIcon("size-10")}
+              <span className={cn("font-light text-foreground")}>
+                {viewModel.title}
+              </span>
+            </div>
+            <p className="text-muted-foreground text-right">
+              {viewModel.siteLabel}
+            </p>
+          </div>
+        );
+      case "wide":
+        return (
+          <div className="h-full flex flex-row justify-between gap-8">
+            <div className="flex flex-col justify-between flex-1">
+              <div className="flex flex-col gap-4">
+                {renderIcon("size-10")}
+                <span className={cn("font-light text-foreground")}>
+                  {viewModel.title}
+                </span>
+              </div>
+              <p className="text-muted-foreground">{viewModel.siteLabel}</p>
+            </div>
+
+            <div className="shrink-0 flex-2 overflow-hidden rounded-lg">
+              {viewModel.imageUrl ? (
+                <img
+                  src={viewModel.imageUrl}
+                  alt={viewModel.siteLabel ?? ""}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full bg-muted" />
+              )}
+            </div>
+          </div>
+        );
+      case "tall":
+        return (
+          <div className="h-full flex flex-col justify-between gap-8">
+            <div className="flex flex-col gap-4 flex-2">
+              {renderIcon("size-10")}
+              <span className={cn("font-light text-foreground")}>
+                {viewModel.title}
+              </span>
+            </div>
+            <div className="shrink-0 flex-2 overflow-hidden rounded-lg">
+              {viewModel.imageUrl ? (
+                <img
+                  src={viewModel.imageUrl}
+                  alt={viewModel.siteLabel ?? ""}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full bg-muted" />
+              )}
+            </div>
+          </div>
+        );
+      case "rich":
+        return (
+          <div className="h-full flex flex-col justify-between gap-8">
+            <div className="flex flex-col gap-4 flex-2">
+              {renderIcon("size-10")}
+              <span className={cn("font-light text-foreground")}>
+                {viewModel.title}
+              </span>
+            </div>
+            <div className="shrink-0 flex-3 overflow-hidden rounded-lg">
+              {viewModel.imageUrl ? (
+                <img
+                  src={viewModel.imageUrl}
+                  alt={viewModel.siteLabel ?? ""}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full bg-muted" />
+              )}
+            </div>
+          </div>
+        );
+    }
+  };
 
   return (
     <div
       className={cn(
-        "relative flex h-full w-full flex-col justify-center gap-1 rounded-3xl p-4 text-sm overflow-hidden",
+        "relative h-full w-full rounded-3xl p-4 text-sm overflow-hidden",
         isUploading ? "bg-muted/60" : "bg-muted/30"
       )}
       aria-busy={isUploading}
@@ -163,9 +291,9 @@ function renderLinkBrick(brick: PageGridBrick<"link">) {
           <Skeleton className="absolute inset-0" />
         </>
       ) : (
-        <span className="font-medium text-foreground">
-          {brick.data.title || brick.data.url || "Untitled link"}
-        </span>
+        <div className="h-full">
+          {layoutElement(viewModel.variant)}
+        </div>
       )}
     </div>
   );
@@ -212,4 +340,17 @@ function UploadOverlay() {
       <Spinner className="size-5" />
     </div>
   );
+}
+
+function resolveLineClampClass(lines: number) {
+  switch (lines) {
+    case 1:
+      return "line-clamp-1";
+    case 2:
+      return "line-clamp-2";
+    case 3:
+      return "line-clamp-3";
+    default:
+      return "";
+  }
 }
