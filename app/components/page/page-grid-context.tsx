@@ -13,7 +13,7 @@ import { usePageAutoSaveActions } from "@/components/page/page-auto-save-control
 import { usePageMediaUploader } from "@/hooks/use-page-media-uploader";
 import { toastManager } from "@/components/ui/toast";
 import type { GridBreakpoint } from "@/config/grid-rule";
-import type { BrickMapRow } from "types/brick";
+import type { BrickLinkRow, BrickMapRow } from "types/brick";
 import {
   applyLayoutToBricks,
   createPageGridBrick,
@@ -22,6 +22,7 @@ import {
   resolveMediaType,
   resolveTextBrickStatus,
   serializePageLayout,
+  updateLinkBrickData,
   updateMediaBrickLinkData,
   updateMapBrickData,
   updatePageGridBrick,
@@ -45,6 +46,7 @@ type PageGridActions = {
   addMediaFile: (file: File) => void;
   addTextBrick: () => void;
   addMapBrick: () => void;
+  addLinkBrick: (url: string) => string;
   updateTextBrick: (payload: {
     id: string;
     text: string;
@@ -66,6 +68,7 @@ type PageGridActions = {
     data: Partial<BrickMapRow>;
   }) => void;
   updateMediaBrickLink: (payload: { id: string; linkUrl: string | null }) => void;
+  updateLinkBrick: (payload: { id: string; data: BrickLinkRow }) => void;
 };
 
 const [PageGridStateProvider, usePageGridState] =
@@ -89,6 +92,7 @@ type PageGridAction =
       href: string;
       caption: string | null;
     }
+  | { type: "ADD_LINK_PLACEHOLDER"; id: string; url: string }
   | {
       type: "COMPLETE_MEDIA_UPLOAD";
       id: string;
@@ -118,6 +122,11 @@ type PageGridAction =
       type: "UPDATE_MEDIA_LINK";
       id: string;
       linkUrl: string | null;
+    }
+  | {
+      type: "UPDATE_LINK_BRICK";
+      id: string;
+      data: BrickLinkRow;
     }
   | { type: "REMOVE_BRICK"; id: string }
   | {
@@ -185,6 +194,22 @@ function pageGridReducer(
           zoom: action.zoom,
           href: action.href,
           caption: action.caption,
+        },
+      });
+
+      return {
+        bricks: [...state.bricks, brick],
+        shouldPersistDraft: true,
+      };
+    }
+    case "ADD_LINK_PLACEHOLDER": {
+      const brick = createPageGridBrick({
+        id: action.id,
+        type: "link",
+        status: "uploading",
+        bricks: state.bricks,
+        payload: {
+          url: action.url,
         },
       });
 
@@ -304,6 +329,45 @@ function pageGridReducer(
 
         didUpdate = true;
         return updatedBrick;
+      });
+
+      if (!didUpdate) {
+        return state;
+      }
+
+      return {
+        bricks: nextBricks,
+        shouldPersistDraft: true,
+      };
+    }
+    case "UPDATE_LINK_BRICK": {
+      let didUpdate = false;
+      const timestamp = new Date().toISOString();
+      const nextBricks = state.bricks.map((brick) => {
+        if (brick.id !== action.id || brick.type !== "link") {
+          return brick;
+        }
+
+        const updatedBrick = updateLinkBrickData(
+          brick,
+          action.data,
+          timestamp
+        );
+        const nextBrick =
+          updatedBrick === brick && brick.status === "ready"
+            ? brick
+            : {
+                ...updatedBrick,
+                status: "ready",
+                updated_at: timestamp,
+              };
+
+        if (nextBrick === brick) {
+          return brick;
+        }
+
+        didUpdate = true;
+        return nextBrick;
       });
 
       if (!didUpdate) {
@@ -456,6 +520,19 @@ export function PageGridProvider({
     });
   }, [isEditable]);
 
+  const addLinkBrick = useCallback(
+    (url: string) => {
+      if (!isEditable) {
+        return "";
+      }
+
+      const id = createPageGridBrickId();
+      dispatch({ type: "ADD_LINK_PLACEHOLDER", id, url });
+      return id;
+    },
+    [isEditable]
+  );
+
   const updateTextBrick = useCallback(
     ({
       id,
@@ -561,6 +638,21 @@ export function PageGridProvider({
     [isEditable]
   );
 
+  const updateLinkBrick = useCallback(
+    (payload: { id: string; data: BrickLinkRow }) => {
+      if (!isEditable) {
+        return;
+      }
+
+      dispatch({
+        type: "UPDATE_LINK_BRICK",
+        id: payload.id,
+        data: payload.data,
+      });
+    },
+    [isEditable]
+  );
+
   const layoutSnapshot = useMemo(
     () => serializePageLayout(state.bricks),
     [state.bricks]
@@ -590,24 +682,28 @@ export function PageGridProvider({
       addMediaFile,
       addTextBrick,
       addMapBrick,
+      addLinkBrick,
       updateTextBrick,
       updateTextBrickRowSpanLocal,
       updateLayout,
       removeBrick,
       updateMapBrick,
       updateMediaBrickLink,
+      updateLinkBrick,
       isEditable,
     }),
     [
       addMediaFile,
       addTextBrick,
       addMapBrick,
+      addLinkBrick,
       updateLayout,
       updateTextBrick,
       updateTextBrickRowSpanLocal,
       removeBrick,
       updateMapBrick,
       updateMediaBrickLink,
+      updateLinkBrick,
       isEditable,
     ]
   );

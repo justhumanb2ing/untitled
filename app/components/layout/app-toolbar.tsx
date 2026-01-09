@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { cn } from "@/lib/utils";
 import {
   ToolbarButton,
@@ -13,16 +13,98 @@ import { toastManager } from "@/components/ui/toast";
 import { usePageGridActions } from "@/components/page/page-grid-context";
 import { getMediaValidationError } from "../../../service/pages/page-grid";
 import { XIcon } from "@phosphor-icons/react";
+import { useAuth, useSession } from "@clerk/react-router";
+import { resolveExternalHref } from "@/utils/resolve-external-href";
+import type { LinkCrawlResponse } from "types/link-crawl";
 
 type Props = {};
 
 export default function AppToolbar({}: Props) {
-  const { addMediaFile, addTextBrick, addMapBrick, isEditable } =
-    usePageGridActions();
+  const {
+    addMediaFile,
+    addTextBrick,
+    addMapBrick,
+    addLinkBrick,
+    updateLinkBrick,
+    removeBrick,
+    isEditable,
+  } = usePageGridActions();
+  const { getToken } = useAuth();
   const mediaInputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false);
   const [linkInputValue, setLinkInputValue] = useState("");
+  const [isLinkSubmitting, setIsLinkSubmitting] = useState(false);
+
+  const handleLinkSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!isEditable || isLinkSubmitting) {
+      return;
+    }
+
+    const trimmedUrl = linkInputValue.trim();
+    const normalizedUrl = resolveExternalHref(trimmedUrl);
+    if (!normalizedUrl) {
+      toastManager.add({
+        type: "error",
+        title: "Missing link",
+        description: "Enter a URL to create a link item.",
+      });
+      return;
+    }
+
+    const placeholderId = addLinkBrick(normalizedUrl);
+    setIsLinkSubmitting(true);
+
+    try {
+      const token = await getToken();
+      if (!token) {
+        throw new Error("Missing authentication token.");
+      }
+
+      const response = await fetch("http://localhost:8000/crawl", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ url: normalizedUrl }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to create link.");
+      }
+
+      const { data } = (await response.json()) as LinkCrawlResponse;
+
+      updateLinkBrick({
+        id: placeholderId,
+        data: {
+          title: data.title ?? null,
+          description: data.description ?? null,
+          site_name: data.site_name ?? null,
+          url: data.url ?? normalizedUrl,
+          icon_url: data.icon ?? null,
+          image_url: data.image ?? null,
+        },
+      });
+
+      setLinkInputValue("");
+      inputRef.current?.focus();
+    } catch (error) {
+      removeBrick(placeholderId);
+      toastManager.add({
+        type: "error",
+        title: "Link fetch failed",
+        description:
+          error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      setIsLinkSubmitting(false);
+    }
+  };
 
   const handleClearInput = () => {
     setLinkInputValue("");
@@ -123,20 +205,17 @@ export default function AppToolbar({}: Props) {
               }}
               className="w-64 rounded-[16px] p-0 overflow-hidden border-[0.5px]"
             >
-              <div>
+              <form className="relative" onSubmit={handleLinkSubmit}>
                 <Input
                   ref={inputRef}
-                  type="url"
-                  inputMode="url"
                   autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="none"
                   autoFocus
                   placeholder="Link"
                   value={linkInputValue}
                   onChange={(event) => setLinkInputValue(event.target.value)}
                   aria-label="Link URL"
                   className="font-light text-sm! bg-transparent focus-visible:border-none focus-visible:ring-0 h-11 pl-3 pe-9 placeholder:text-ring"
+                  disabled={isLinkSubmitting}
                 />
                 {linkInputValue && (
                   <button
@@ -144,6 +223,7 @@ export default function AppToolbar({}: Props) {
                     className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-md outline-none transition-[color,box-shadow] focus:z-10 focus-visible:border-0 focus-visible:ring-0 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                     onClick={handleClearInput}
                     type="button"
+                    disabled={isLinkSubmitting}
                   >
                     <XIcon
                       aria-hidden="true"
@@ -152,7 +232,7 @@ export default function AppToolbar({}: Props) {
                     />
                   </button>
                 )}
-              </div>
+              </form>
             </PopoverPanel>
           </Popover>
           <Tooltip>

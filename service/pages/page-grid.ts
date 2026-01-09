@@ -297,6 +297,38 @@ export function updatePageGridBrick(
 }
 
 /**
+ * Applies partial link data updates without overriding unaffected fields.
+ */
+export function updateLinkBrickData(
+  brick: PageGridBrick<"link">,
+  payload: Partial<BrickRowMap["link"]>,
+  timestamp: string = new Date().toISOString()
+): PageGridBrick<"link"> {
+  const nextData: BrickRowMap["link"] = {
+    ...brick.data,
+    ...payload,
+  };
+
+  const hasChanges =
+    brick.data.title !== nextData.title ||
+    brick.data.description !== nextData.description ||
+    brick.data.url !== nextData.url ||
+    brick.data.site_name !== nextData.site_name ||
+    brick.data.icon_url !== nextData.icon_url ||
+    brick.data.image_url !== nextData.image_url;
+
+  if (!hasChanges) {
+    return brick;
+  }
+
+  return {
+    ...brick,
+    data: nextData,
+    updated_at: timestamp,
+  };
+}
+
+/**
  * Applies partial map data updates without overriding unaffected fields.
  */
 export function updateMapBrickData(

@@ -11,6 +11,7 @@ import { Spinner } from "@/components/ui/spinner";
 import PageGridTextBrick from "@/components/page/page-grid-text-brick";
 import type { GridBreakpoint } from "@/config/grid-rule";
 import { cn } from "@/lib/utils";
+import { resolveExternalHref } from "@/utils/resolve-external-href";
 import { MAP_DEFAULT_ZOOM } from "../../../constants/map";
 import type {
   PageGridBrick,
@@ -43,13 +44,7 @@ const BRICK_RENDERERS: BrickRendererMap = {
       breakpoint={breakpoint}
     />
   ),
-  link: ({ brick }) => (
-    <div className="flex h-full w-full flex-col justify-center gap-1 rounded-xl bg-muted/40 p-4 text-sm">
-      <span className="font-medium text-foreground">
-        {brick.data.title || brick.data.url || "Untitled link"}
-      </span>
-    </div>
-  ),
+  link: ({ brick }) => renderLinkBrick(brick),
   map: ({ brick, mapOverrides }) => renderMapBrick(brick, mapOverrides),
   image: ({ brick }) =>
     renderMediaFrame(
@@ -152,6 +147,31 @@ function renderMapBrick(
   );
 }
 
+function renderLinkBrick(brick: PageGridBrick<"link">) {
+  const isUploading = brick.status === "uploading";
+
+  return (
+    <div
+      className={cn(
+        "relative flex h-full w-full flex-col justify-center gap-1 rounded-xl p-4 text-sm",
+        isUploading ? "bg-muted/60" : "bg-muted/40"
+      )}
+      aria-busy={isUploading}
+    >
+      {isUploading ? (
+        <>
+          <Skeleton className="absolute inset-0" />
+          <UploadOverlay />
+        </>
+      ) : (
+        <span className="font-medium text-foreground">
+          {brick.data.title || brick.data.url || "Untitled link"}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function renderMediaFrame(brick: PageGridBrick, content: ReactNode) {
   const isUploading = brick.status === "uploading";
   const linkUrl = resolveExternalHref(
@@ -185,31 +205,6 @@ function renderMediaFrame(brick: PageGridBrick, content: ReactNode) {
       {isUploading && <UploadOverlay />}
     </div>
   );
-}
-
-function resolveExternalHref(value: string | null | undefined) {
-  const trimmed = value?.trim();
-  if (!trimmed) {
-    return null;
-  }
-
-  if (trimmed.startsWith("/") || trimmed.startsWith("#")) {
-    return trimmed;
-  }
-
-  if (trimmed.startsWith("//")) {
-    return trimmed;
-  }
-
-  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) {
-    return trimmed;
-  }
-
-  if (/^(mailto|tel):/i.test(trimmed)) {
-    return trimmed;
-  }
-
-  return `https://${trimmed}`;
 }
 
 function UploadOverlay() {
