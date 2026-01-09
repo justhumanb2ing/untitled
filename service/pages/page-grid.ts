@@ -120,7 +120,7 @@ const MEDIA_RULE: GridRule = {
 };
 
 const LINK_RULE: GridRule = {
-  resolveGrid: () => ({ w: 1, h: 2 }),
+  resolveGrid: () => ({ w: 2, h: 1 }),
   resolveConstraints: (cols) => ({
     minW: 1,
     maxW: Math.min(2, cols),
