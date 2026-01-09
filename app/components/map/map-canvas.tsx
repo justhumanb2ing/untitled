@@ -292,7 +292,7 @@ export function MapCanvas({
             href={href}
             target="_blank"
             rel="noreferrer"
-            className="bg-white rounded-full right-3 size-8 hover:bg-muted-foreground/20 shadow-[1px_2px_13px_4px_rgba(0,0,0,0.25)]"
+            className="bg-white rounded-full right-3 size-6 hover:bg-muted-foreground/20 shadow-[1px_2px_13px_4px_rgba(0,0,0,0.25)]"
           >
             <ArrowCircleUpRightIcon
               weight="fill"
