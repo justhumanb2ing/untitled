@@ -26,21 +26,6 @@ import { HouseSimpleIcon } from "@phosphor-icons/react";
 
 import { shadcn } from "@clerk/themes";
 
-const themeInitScript = `
-(() => {
-  try {
-    const storedTheme = localStorage.getItem("theme");
-    if (storedTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else if (storedTheme === "light") {
-      document.documentElement.classList.remove("dark");
-    }
-  } catch {
-    // Ignore storage access errors (privacy modes, disabled storage).
-  }
-})();
-`;
-
 const clerkLocalization = {
   signIn: {
     start: {
@@ -134,11 +119,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const isNavigating = Boolean(navigation.location);
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <script
           defer
           src="https://cloud.umami.is/script.js"
