@@ -53,7 +53,7 @@ const LINK_DISPLAY_POLICIES: Record<LinkBrickVariant, LinkBrickDisplayPolicy> =
       showSiteLabel: false,
       showDescription: false,
       showImage: false,
-      titleLines: 2,
+      titleLines: 3,
       descriptionLines: 0,
     },
     wide: {
@@ -62,7 +62,7 @@ const LINK_DISPLAY_POLICIES: Record<LinkBrickVariant, LinkBrickDisplayPolicy> =
       showSiteLabel: true,
       showDescription: false,
       showImage: true,
-      titleLines: 2,
+      titleLines: 3,
       descriptionLines: 1,
     },
     tall: {
@@ -71,16 +71,16 @@ const LINK_DISPLAY_POLICIES: Record<LinkBrickVariant, LinkBrickDisplayPolicy> =
       showSiteLabel: false,
       showDescription: false,
       showImage: true,
-      titleLines: 2,
+      titleLines: 5,
       descriptionLines: 2,
     },
     rich: {
       layout: "stacked",
       showIcon: true,
       showSiteLabel: true,
-      showDescription: false,
+      showDescription: true,
       showImage: true,
-      titleLines: 2,
+      titleLines: 5,
       descriptionLines: 2,
     },
   };

@@ -43,6 +43,14 @@ describe("buildLinkBrickViewModel", () => {
     expect(viewModel.showImage).toBe(true);
   });
 
+  it("resolves title line limits by size", () => {
+    expect(buildLinkBrickViewModel(baseData, { w: 1, h: 1 }).titleLines).toBe(1);
+    expect(buildLinkBrickViewModel(baseData, { w: 1, h: 2 }).titleLines).toBe(3);
+    expect(buildLinkBrickViewModel(baseData, { w: 2, h: 2 }).titleLines).toBe(3);
+    expect(buildLinkBrickViewModel(baseData, { w: 1, h: 4 }).titleLines).toBe(5);
+    expect(buildLinkBrickViewModel(baseData, { w: 2, h: 4 }).titleLines).toBe(5);
+  });
+
   it("falls back to hostname when site name is missing", () => {
     const viewModel = buildLinkBrickViewModel(
       { ...baseData, site_name: null },

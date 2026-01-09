@@ -1,4 +1,11 @@
-import type { ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 import {
   MapCanvas,
@@ -8,10 +15,12 @@ import {
 import { Item } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
+import EditableParagraph from "@/components/profile/editable-paragraph";
 import PageGridTextBrick from "@/components/page/page-grid-text-brick";
 import type { GridBreakpoint, GridSize } from "@/config/grid-rule";
 import { cn } from "@/lib/utils";
 import { resolveExternalHref } from "@/utils/resolve-external-href";
+import { usePageGridActions } from "@/components/page/page-grid-context";
 import { MAP_DEFAULT_ZOOM } from "../../../constants/map";
 import type {
   PageGridBrick,
@@ -20,7 +29,6 @@ import type {
 import {
   buildLinkBrickViewModel,
   type LinkBrickVariant,
-  type LinkBrickViewModel,
 } from "../../../service/pages/link-brick-view-model";
 import { ArrowCircleUpRightIcon, LinkSimpleIcon } from "@phosphor-icons/react";
 import type { BrickImageRow, BrickVideoRow } from "types/brick";
@@ -157,11 +165,127 @@ function renderMapBrick(
 }
 
 function renderLinkBrick(brick: PageGridBrick<"link">, grid: GridSize) {
+  return <LinkBrickContent brick={brick} grid={grid} />;
+}
+
+type LinkBrickContentProps = {
+  brick: PageGridBrick<"link">;
+  grid: GridSize;
+};
+
+function LinkBrickContent({ brick, grid }: LinkBrickContentProps) {
+  const { updateLinkBrick, isEditable } = usePageGridActions();
+  const viewModel = useMemo(
+    () => buildLinkBrickViewModel(brick.data, grid),
+    [brick.data, grid]
+  );
   const isUploading = brick.status === "uploading";
-  const viewModel = buildLinkBrickViewModel(brick.data, grid);
-  const lineClampTitle = resolveLineClampClass(viewModel.titleLines);
-  const lineClampDescription = resolveLineClampClass(
-    viewModel.descriptionLines
+  const titleClampClass = resolveTitleClampClass(viewModel.titleLines);
+
+  const titleDraftRef = useRef(viewModel.title);
+  const [titleDraft, setTitleDraft] = useState(viewModel.title);
+  const isEditingRef = useRef(false);
+  const hasPendingChangeRef = useRef(false);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSavedTitleRef = useRef(normalizeLinkTitle(brick.data.title));
+
+  useEffect(() => {
+    if (isEditingRef.current || hasPendingChangeRef.current) {
+      return;
+    }
+
+    titleDraftRef.current = viewModel.title;
+    setTitleDraft(viewModel.title);
+    lastSavedTitleRef.current = normalizeLinkTitle(brick.data.title);
+  }, [brick.data.title, viewModel.title]);
+
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+    };
+  }, []);
+
+  const commitTitle = useCallback(
+    (nextValue: string) => {
+      if (!isEditable || !hasPendingChangeRef.current) {
+        return;
+      }
+
+      const normalizedTitle = normalizeLinkTitle(nextValue);
+      if (normalizedTitle === lastSavedTitleRef.current) {
+        hasPendingChangeRef.current = false;
+        return;
+      }
+
+      updateLinkBrick({
+        id: brick.id,
+        data: { ...brick.data, title: normalizedTitle },
+      });
+      lastSavedTitleRef.current = normalizedTitle;
+      hasPendingChangeRef.current = false;
+    },
+    [brick.data, brick.id, isEditable, updateLinkBrick]
+  );
+
+  const scheduleTitleSave = useCallback(
+    (nextValue: string) => {
+      if (!isEditable) {
+        return;
+      }
+
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+
+      saveTimerRef.current = setTimeout(() => {
+        saveTimerRef.current = null;
+        commitTitle(nextValue);
+      }, 650);
+    },
+    [commitTitle, isEditable]
+  );
+
+  const handleTitleChange = useCallback(
+    (value: string) => {
+      titleDraftRef.current = value;
+      setTitleDraft(value);
+      hasPendingChangeRef.current = true;
+      scheduleTitleSave(value);
+    },
+    [scheduleTitleSave]
+  );
+
+  const handleTitleBlur = useCallback(() => {
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
+
+    commitTitle(titleDraftRef.current);
+    isEditingRef.current = false;
+  }, [commitTitle]);
+
+  const handleTitleFocus = useCallback(() => {
+    isEditingRef.current = true;
+  }, []);
+
+  const renderTitle = (extraClass?: string) => (
+    <EditableParagraph
+      value={titleDraft}
+      onValueChange={handleTitleChange}
+      onValueBlur={handleTitleBlur}
+      onFocus={handleTitleFocus}
+      readOnly={!isEditable}
+      placeholder="Link title"
+      ariaLabel="Link title"
+      className={cn(
+        "editable-paragraph min-w-0 font-light text-foreground hover:bg-muted p-1 rounded-sm focus:bg-muted",
+        titleClampClass,
+        extraClass
+      )}
+    />
   );
 
   const renderIcon = (iconSize?: string) => {
@@ -170,10 +294,13 @@ function renderLinkBrick(brick: PageGridBrick<"link">, grid: GridSize) {
         <img
           src={viewModel.iconUrl}
           alt=""
-          className={cn("size-10 shrink-0 rounded-lg object-cover", iconSize)}
+          className={cn(
+            "size-7 shrink-0 rounded-lg object-cover xl:size-9",
+            iconSize
+          )}
         />
       ) : (
-        <span className="size-5 shrink-0 rounded-lg flex items-center justify-center">
+        <span className="size-5 shrink-0 rounded-lg flex items-center justify-center xl:size-6">
           <LinkSimpleIcon weight="bold" className="size-full" />
         </span>
       )
@@ -184,38 +311,34 @@ function renderLinkBrick(brick: PageGridBrick<"link">, grid: GridSize) {
     switch (layout) {
       case "compact":
         return (
-          <div className="h-full flex items-center gap-4">
+          <div className="h-full flex items-center gap-4 min-w-0">
             {renderIcon()}
-            <span className={cn("font-light text-foreground", lineClampTitle)}>
-              {viewModel.title}
-            </span>
+            {renderTitle("flex-1")}
           </div>
         );
       case "standard":
         return (
-          <div className="h-full flex flex-col justify-between">
-            <div className="flex flex-col gap-4">
-              {renderIcon("size-10")}
-              <span className={cn("font-light text-foreground")}>
-                {viewModel.title}
-              </span>
+          <div className="h-full flex flex-col justify-between min-w-0">
+            <div className="flex flex-col gap-2 min-w-0 xl:gap-4">
+              {renderIcon()}
+              {renderTitle("line-clamp-2 xl:line-clamp-3")}
             </div>
-            <p className="text-muted-foreground text-right">
+            <p className="text-muted-foreground text-xs">
               {viewModel.siteLabel}
             </p>
           </div>
         );
       case "wide":
         return (
-          <div className="h-full flex flex-row justify-between gap-8">
-            <div className="flex flex-col justify-between flex-1">
-              <div className="flex flex-col gap-4">
-                {renderIcon("size-10")}
-                <span className={cn("font-light text-foreground")}>
-                  {viewModel.title}
-                </span>
+          <div className="h-full flex flex-row justify-between gap-8 min-w-0">
+            <div className="flex flex-col justify-between flex-3 min-w-0">
+              <div className="flex flex-col gap-2 min-w-0 xl:gap-4">
+                {renderIcon()}
+                {renderTitle("line-clamp-2 xl:line-clamp-3")}
               </div>
-              <p className="text-muted-foreground">{viewModel.siteLabel}</p>
+              <p className="text-muted-foreground text-xs">
+                {viewModel.siteLabel}
+              </p>
             </div>
 
             <div className="shrink-0 flex-2 overflow-hidden rounded-lg">
@@ -233,12 +356,10 @@ function renderLinkBrick(brick: PageGridBrick<"link">, grid: GridSize) {
         );
       case "tall":
         return (
-          <div className="h-full flex flex-col justify-between gap-8">
-            <div className="flex flex-col gap-4 flex-2">
-              {renderIcon("size-10")}
-              <span className={cn("font-light text-foreground")}>
-                {viewModel.title}
-              </span>
+          <div className="h-full flex flex-col justify-between gap-8 min-w-0">
+            <div className="flex flex-col gap-4 flex-2 min-w-0">
+              {renderIcon()}
+              {renderTitle()}
             </div>
             <div className="shrink-0 flex-2 overflow-hidden rounded-lg">
               {viewModel.imageUrl ? (
@@ -255,12 +376,10 @@ function renderLinkBrick(brick: PageGridBrick<"link">, grid: GridSize) {
         );
       case "rich":
         return (
-          <div className="h-full flex flex-col justify-between gap-8">
-            <div className="flex flex-col gap-4 flex-2">
-              {renderIcon("size-10")}
-              <span className={cn("font-light text-foreground")}>
-                {viewModel.title}
-              </span>
+          <div className="h-full flex flex-col justify-between gap-8 min-w-0">
+            <div className="flex flex-col gap-4 flex-2 min-w-0">
+              {renderIcon()}
+              {renderTitle()}
             </div>
             <div className="shrink-0 flex-3 overflow-hidden rounded-lg">
               {viewModel.imageUrl ? (
@@ -287,13 +406,9 @@ function renderLinkBrick(brick: PageGridBrick<"link">, grid: GridSize) {
       aria-busy={isUploading}
     >
       {isUploading ? (
-        <>
-          <Skeleton className="absolute inset-0" />
-        </>
+        <Skeleton className="absolute inset-0" />
       ) : (
-        <div className="h-full">
-          {layoutElement(viewModel.variant)}
-        </div>
+        <div className="h-full">{layoutElement(viewModel.variant)}</div>
       )}
     </div>
   );
@@ -342,15 +457,24 @@ function UploadOverlay() {
   );
 }
 
-function resolveLineClampClass(lines: number) {
+function resolveTitleClampClass(lines: number) {
   switch (lines) {
     case 1:
-      return "line-clamp-1";
-    case 2:
-      return "line-clamp-2";
+      return "line-clamp-1 truncate";
     case 3:
       return "line-clamp-3";
+    case 5:
+      return "line-clamp-5";
     default:
       return "";
   }
+}
+
+function normalizeLinkTitle(value: string | null | undefined) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
 }
