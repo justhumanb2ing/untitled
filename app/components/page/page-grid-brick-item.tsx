@@ -104,7 +104,10 @@ export default function PageGridBrickItem({
   return (
     <Item
       variant="muted"
-      className="h-full w-full rounded-3xl p-0 bg-transparent"
+      className={cn(
+        "h-full w-full rounded-3xl p-0 bg-background",
+        brick.type === "link" && "rounded-xl"
+      )}
       render={
         <div
           className={cn(
@@ -281,7 +284,7 @@ function LinkBrickContent({ brick, grid }: LinkBrickContentProps) {
       placeholder="Link title"
       ariaLabel="Link title"
       className={cn(
-        "editable-paragraph min-w-0 font-light text-foreground hover:bg-muted p-1 rounded-sm focus:bg-muted",
+        "editable-paragraph min-w-0 font-light text-foreground hover:bg-muted p-1 rounded-sm focus:bg-muted py-2",
         titleClampClass,
         extraClass
       )}
@@ -400,7 +403,7 @@ function LinkBrickContent({ brick, grid }: LinkBrickContentProps) {
   return (
     <div
       className={cn(
-        "relative h-full w-full rounded-3xl p-4 text-sm overflow-hidden",
+        "relative h-full w-full box-border rounded-xl p-4 text-sm overflow-hidden",
         isUploading ? "bg-muted/60" : "bg-muted/30"
       )}
       aria-busy={isUploading}

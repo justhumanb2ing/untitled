@@ -65,14 +65,16 @@ export default function AppToolbar({ isDesktop }: AppToolbarProps) {
         throw new Error("Missing authentication token.");
       }
 
-      const response = await fetch("http://localhost:8000/crawl", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ url: normalizedUrl }),
-      });
+      const response = await fetch(
+        "https://silhouette-crawler-server.up.railway.app/crawl",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ url: normalizedUrl }),
+        }
+      );
 
       if (!response.ok) {
         const errorText = await response.text();

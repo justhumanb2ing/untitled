@@ -710,13 +710,17 @@ export default function PageGridBrickSection({
                             <Button
                               type="button"
                               size={"icon-lg"}
-                              variant="ghost"
+                              variant={
+                                mapPopoverState === "controls"
+                                  ? "brand"
+                                  : "ghost"
+                              }
                               data-no-drag
                               disabled={!controlsAvailable}
                               className={cn(
                                 "transition-colors rounded-lg focus-visible:z-10",
                                 mapPopoverState === "controls"
-                                  ? "bg-brand text-white hover:bg-brand"
+                                  ? "text-white"
                                   : "hover:bg-white/10"
                               )}
                               aria-pressed={mapPopoverState === "controls"}
