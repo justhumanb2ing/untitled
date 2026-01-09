@@ -327,6 +327,27 @@ export function updateMapBrickData(
 }
 
 /**
+ * Applies partial media link updates without overriding unaffected fields.
+ */
+export function updateMediaBrickLinkData(
+  brick: PageGridBrick<"image" | "video">,
+  linkUrl: string | null
+): PageGridBrick<"image" | "video"> {
+  if (brick.data.link_url === linkUrl) {
+    return brick;
+  }
+
+  return {
+    ...brick,
+    data: {
+      ...brick.data,
+      link_url: linkUrl,
+    },
+    updated_at: new Date().toISOString(),
+  };
+}
+
+/**
  * Builds responsive layouts for the current bricks.
  */
 export function buildLayoutsFromBricks(

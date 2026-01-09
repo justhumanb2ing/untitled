@@ -22,6 +22,7 @@ import {
   resolveMediaType,
   resolveTextBrickStatus,
   serializePageLayout,
+  updateMediaBrickLinkData,
   updateMapBrickData,
   updatePageGridBrick,
   type PageGridBrick,
@@ -58,13 +59,14 @@ type PageGridActions = {
     breakpoint: GridBreakpoint;
   }) => void;
   updateLayout: (layout: Layout, breakpoint: GridBreakpoint) => void;
-    removeBrick: (id: string) => void;
-    isEditable: boolean;
-    updateMapBrick: (payload: {
-      id: string;
-      data: Partial<BrickMapRow>;
-    }) => void;
-  };
+  removeBrick: (id: string) => void;
+  isEditable: boolean;
+  updateMapBrick: (payload: {
+    id: string;
+    data: Partial<BrickMapRow>;
+  }) => void;
+  updateMediaBrickLink: (payload: { id: string; linkUrl: string | null }) => void;
+};
 
 const [PageGridStateProvider, usePageGridState] =
   getStrictContext<PageGridState>("PageGridState");
@@ -111,6 +113,11 @@ type PageGridAction =
       type: "UPDATE_MAP_BRICK";
       id: string;
       data: Partial<BrickMapRow>;
+    }
+  | {
+      type: "UPDATE_MEDIA_LINK";
+      id: string;
+      linkUrl: string | null;
     }
   | { type: "REMOVE_BRICK"; id: string }
   | {
@@ -291,6 +298,34 @@ function pageGridReducer(
         }
 
         const updatedBrick = updateMapBrickData(brick, action.data);
+        if (updatedBrick === brick) {
+          return brick;
+        }
+
+        didUpdate = true;
+        return updatedBrick;
+      });
+
+      if (!didUpdate) {
+        return state;
+      }
+
+      return {
+        bricks: nextBricks,
+        shouldPersistDraft: true,
+      };
+    }
+    case "UPDATE_MEDIA_LINK": {
+      let didUpdate = false;
+      const nextBricks = state.bricks.map((brick) => {
+        if (
+          brick.id !== action.id ||
+          (brick.type !== "image" && brick.type !== "video")
+        ) {
+          return brick;
+        }
+
+        const updatedBrick = updateMediaBrickLinkData(brick, action.linkUrl);
         if (updatedBrick === brick) {
           return brick;
         }
@@ -511,6 +546,21 @@ export function PageGridProvider({
     [isEditable]
   );
 
+  const updateMediaBrickLink = useCallback(
+    (payload: { id: string; linkUrl: string | null }) => {
+      if (!isEditable) {
+        return;
+      }
+
+      dispatch({
+        type: "UPDATE_MEDIA_LINK",
+        id: payload.id,
+        linkUrl: payload.linkUrl,
+      });
+    },
+    [isEditable]
+  );
+
   const layoutSnapshot = useMemo(
     () => serializePageLayout(state.bricks),
     [state.bricks]
@@ -545,6 +595,7 @@ export function PageGridProvider({
       updateLayout,
       removeBrick,
       updateMapBrick,
+      updateMediaBrickLink,
       isEditable,
     }),
     [
@@ -556,6 +607,7 @@ export function PageGridProvider({
       updateTextBrickRowSpanLocal,
       removeBrick,
       updateMapBrick,
+      updateMediaBrickLink,
       isEditable,
     ]
   );

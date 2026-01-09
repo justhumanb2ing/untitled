@@ -16,6 +16,8 @@ import type {
   PageGridBrick,
   PageGridBrickType,
 } from "../../../service/pages/page-grid";
+import { ArrowCircleUpRightIcon } from "@phosphor-icons/react";
+import type { BrickImageRow, BrickVideoRow } from "types/brick";
 
 type MapControlsOverrides = {
   center?: [number, number] | null;
@@ -152,6 +154,11 @@ function renderMapBrick(
 
 function renderMediaFrame(brick: PageGridBrick, content: ReactNode) {
   const isUploading = brick.status === "uploading";
+  const linkUrl = resolveExternalHref(
+    brick.type === "image" || brick.type === "video"
+      ? (brick.data as BrickImageRow | BrickVideoRow).link_url
+      : null
+  );
 
   return (
     <div
@@ -162,9 +169,47 @@ function renderMediaFrame(brick: PageGridBrick, content: ReactNode) {
       aria-busy={isUploading}
     >
       {isUploading ? <Skeleton className="absolute inset-0" /> : content}
+      {linkUrl && (
+        <a
+          href={linkUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="bg-white rounded-full absolute top-3 left-3 size-6 shadow-[1px_2px_13px_4px_rgba(0,0,0,0.25)]"
+        >
+          <ArrowCircleUpRightIcon
+            weight="fill"
+            className="size-full text-black"
+          />
+        </a>
+      )}
       {isUploading && <UploadOverlay />}
     </div>
   );
+}
+
+function resolveExternalHref(value: string | null | undefined) {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  if (trimmed.startsWith("/") || trimmed.startsWith("#")) {
+    return trimmed;
+  }
+
+  if (trimmed.startsWith("//")) {
+    return trimmed;
+  }
+
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  if (/^(mailto|tel):/i.test(trimmed)) {
+    return trimmed;
+  }
+
+  return `https://${trimmed}`;
 }
 
 function UploadOverlay() {

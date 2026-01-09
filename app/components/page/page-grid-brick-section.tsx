@@ -36,8 +36,16 @@ import type {
   MapCanvasViewport,
 } from "@/components/map/map-canvas";
 import { cn } from "@/lib/utils";
-import { SlideshowIcon, StackMinusIcon } from "@phosphor-icons/react";
+import {
+  LinkBreakIcon,
+  LinkSimpleIcon,
+  SlideshowIcon,
+  StackMinusIcon,
+  XIcon,
+} from "@phosphor-icons/react";
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Popover, PopoverPanel, PopoverTrigger } from "../ui/popover";
 
 const resizeRatioConstraint: LayoutConstraint = {
   name: "resizeRatioConstraint",
@@ -47,6 +55,11 @@ const resizeRatioConstraint: LayoutConstraint = {
 const isMapPageGridBrick = (
   brick: PageGridBrick
 ): brick is PageGridBrick<"map"> => brick.type === "map";
+
+const isMediaPageGridBrick = (
+  brick: PageGridBrick
+): brick is PageGridBrick<"image" | "video"> =>
+  brick.type === "image" || brick.type === "video";
 
 const useWindowBreakpoint = () => {
   const [breakpoint, setBreakpoint] = useState<GridBreakpoint>(() => {
@@ -215,9 +228,21 @@ export default function PageGridBrickSection({
     measureBeforeMount: true,
   });
   const { bricks } = usePageGridState();
-  const { updateLayout, removeBrick, isEditable, updateMapBrick } =
-    usePageGridActions();
+  const {
+    updateLayout,
+    removeBrick,
+    isEditable,
+    updateMapBrick,
+    updateMediaBrickLink,
+  } = usePageGridActions();
   const mapBrickZoomRef = useRef<Record<string, number | null>>({});
+  const linkInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [mediaLinkPopovers, setMediaLinkPopovers] = useState<
+    Record<string, boolean>
+  >({});
+  const [mediaLinkInputs, setMediaLinkInputs] = useState<
+    Record<string, string>
+  >({});
   useEffect(() => {
     const nextZooms: Record<string, number | null> = {};
     for (const brick of bricks) {
@@ -325,10 +350,9 @@ export default function PageGridBrickSection({
   const isDesktop = breakpoint === "desktop";
   const gridWidth = isDesktop ? DESKTOP_WIDTH : containerWidth;
   const cols = GRID_COLS[breakpoint];
-  const marginPair =
-    GRID_MARGIN[breakpoint] ?? GRID_MARGIN.desktop ?? [0, 0];
-  const paddingPair =
-    CONTAINER_PADDING[breakpoint] ?? CONTAINER_PADDING.desktop ?? [0, 0];
+  const marginPair = GRID_MARGIN[breakpoint] ?? GRID_MARGIN.desktop ?? [0, 0];
+  const paddingPair = CONTAINER_PADDING[breakpoint] ??
+    CONTAINER_PADDING.desktop ?? [0, 0];
   const columnWidth = getColumnWidth(
     gridWidth,
     cols,
@@ -389,6 +413,55 @@ export default function PageGridBrickSection({
     updateLayout(layout, breakpoint);
   };
 
+  const handleMediaLinkPopoverChange = useCallback(
+    (brickId: string, open: boolean, currentValue: string) => {
+      setMediaLinkPopovers((prev) => ({
+        ...prev,
+        [brickId]: open,
+      }));
+
+      if (open) {
+        setMediaLinkInputs((prev) => ({
+          ...prev,
+          [brickId]: currentValue,
+        }));
+      }
+    },
+    []
+  );
+
+  const handleMediaLinkInputChange = useCallback(
+    (brickId: string, value: string) => {
+      setMediaLinkInputs((prev) => ({
+        ...prev,
+        [brickId]: value,
+      }));
+    },
+    []
+  );
+
+  const handleMediaLinkInputClear = useCallback((brickId: string) => {
+    setMediaLinkInputs((prev) => ({
+      ...prev,
+      [brickId]: "",
+    }));
+    linkInputRefs.current[brickId]?.focus();
+  }, []);
+
+  const handleMediaLinkSubmit = useCallback(
+    (brickId: string, value: string) => {
+      updateMediaBrickLink({
+        id: brickId,
+        linkUrl: value.length > 0 ? value : null,
+      });
+      setMediaLinkPopovers((prev) => ({
+        ...prev,
+        [brickId]: false,
+      }));
+    },
+    [updateMediaBrickLink]
+  );
+
   return (
     <div className="space-y-4">
       <div
@@ -425,16 +498,24 @@ export default function PageGridBrickSection({
             onDragStop={handleLayoutCommit}
             onResizeStop={handleLayoutCommit}
           >
-            {bricks.map((brick) => {
+            {bricks.map((brick: PageGridBrick) => {
               const floatingControlsPosition = isDesktop
                 ? "-top-3 -right-3"
                 : "top-2 left-2";
-              const resizeControlsPosition = isDesktop ? "-bottom-5" : "bottom-2";
+              const resizeControlsPosition = isDesktop
+                ? "-bottom-5"
+                : "bottom-2";
               const isMapBrick = isMapPageGridBrick(brick);
               const baseCenter =
                 isMapBrick && brick.data.lng !== null && brick.data.lat !== null
                   ? ([brick.data.lng, brick.data.lat] as [number, number])
                   : null;
+              const isMediaBrick = isMediaPageGridBrick(brick);
+              const mediaLinkValue = isMediaBrick
+                ? (brick.data.link_url ?? "")
+                : "";
+              const mediaLinkInputValue =
+                mediaLinkInputs[brick.id] ?? mediaLinkValue;
               const centerOverride =
                 mapCenters[brick.id] ?? baseCenter ?? undefined;
               const mapPopoverState = activeMapPopover[brick.id] ?? null;
@@ -447,6 +528,7 @@ export default function PageGridBrickSection({
                       handleMapViewportChange(brick.id, viewport),
                   }
                 : undefined;
+              const isMediaLinkPopoverOpen = !!mediaLinkPopovers[brick.id];
               const controlsAvailable = !!controlsReady[brick.id];
 
               return (
@@ -514,6 +596,109 @@ export default function PageGridBrickSection({
                             handleResizeOptionSelect(brick.id, size)
                           }
                         />
+                        {isMediaBrick && (
+                          <div className="flex items-center">
+                            <Popover
+                              open={isMediaLinkPopoverOpen}
+                              onOpenChange={(open) =>
+                                handleMediaLinkPopoverChange(
+                                  brick.id,
+                                  open,
+                                  mediaLinkValue
+                                )
+                              }
+                            >
+                              <PopoverTrigger
+                                render={
+                                  <Button
+                                    type="button"
+                                    size="icon-lg"
+                                    variant="ghost"
+                                    data-no-drag
+                                    className={cn(
+                                      "transition-colors rounded-lg focus-visible:z-10",
+                                      isMediaLinkPopoverOpen
+                                        ? "bg-brand! hover:bg-brand! text-white"
+                                        : "hover:bg-white/10"
+                                    )}
+                                    aria-pressed={isMediaLinkPopoverOpen}
+                                  >
+                                    <motion.p whileTap={{ scale: 0.8 }}>
+                                      {mediaLinkValue ? (
+                                        <LinkSimpleIcon
+                                          weight="bold"
+                                          className="size-4 text-white"
+                                        />
+                                      ) : (
+                                        <LinkBreakIcon
+                                          weight="bold"
+                                          className="size-4 text-white"
+                                        />
+                                      )}
+                                    </motion.p>
+                                  </Button>
+                                }
+                              />
+                              <PopoverPanel
+                                side="bottom"
+                                sideOffset={12}
+                                transition={{
+                                  type: "spring",
+                                  stiffness: 260,
+                                  damping: 28,
+                                }}
+                                className="w-60 rounded-lg p-1 gap-0 bg-black text-white"
+                              >
+                                <div className="relative">
+                                  <Input
+                                    ref={(node) => {
+                                      linkInputRefs.current[brick.id] = node;
+                                    }}
+                                    value={mediaLinkInputValue}
+                                    onChange={(event) =>
+                                      handleMediaLinkInputChange(
+                                        brick.id,
+                                        event.target.value
+                                      )
+                                    }
+                                    onKeyDown={(event) => {
+                                      if (event.key !== "Enter") {
+                                        return;
+                                      }
+
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      handleMediaLinkSubmit(
+                                        brick.id,
+                                        event.currentTarget.value
+                                      );
+                                    }}
+                                    placeholder="Link"
+                                    autoFocus
+                                    autoComplete="off"
+                                    className="w-full rounded-md h-8 pe-9 focus-visible:border-0 focus-visible:ring-0 bg-[#e5e5e5]/20"
+                                  />
+                                  {mediaLinkInputValue && (
+                                    <button
+                                      aria-label="Clear input"
+                                      className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-md text-white outline-none transition-[color,box-shadow] focus:z-10 focus-visible:border-0 focus-visible:ring-0 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                                      onClick={() =>
+                                        handleMediaLinkInputClear(brick.id)
+                                      }
+                                      type="button"
+                                    >
+                                      <XIcon
+                                        aria-hidden="true"
+                                        weight="bold"
+                                        className="size-3"
+                                      />
+                                    </button>
+                                  )}
+                                </div>
+                              </PopoverPanel>
+                            </Popover>
+                          </div>
+                        )}
                         {isMapBrick && (
                           <div className="flex items-center">
                             <Button
