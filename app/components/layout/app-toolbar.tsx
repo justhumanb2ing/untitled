@@ -16,12 +16,13 @@ import { XIcon } from "@phosphor-icons/react";
 import { useAuth } from "@clerk/react-router";
 import { resolveExternalHref } from "@/utils/resolve-external-href";
 import type { OgCrawlResponse } from "types/link-crawl";
+import { isMobileWeb } from "@toss/utils";
 
 interface AppToolbarProps {
-  isDesktop: boolean;
+  isMobilePreview: boolean;
 }
 
-export default function AppToolbar({ isDesktop }: AppToolbarProps) {
+export default function AppToolbar({ isMobilePreview }: AppToolbarProps) {
   const {
     addMediaFile,
     addTextBrick,
@@ -37,6 +38,7 @@ export default function AppToolbar({ isDesktop }: AppToolbarProps) {
   const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false);
   const [linkInputValue, setLinkInputValue] = useState("");
   const [isLinkSubmitting, setIsLinkSubmitting] = useState(false);
+  const isMobileDevice = isMobileWeb();
 
   const handleLinkSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -162,15 +164,15 @@ export default function AppToolbar({ isDesktop }: AppToolbarProps) {
     addMapBrick();
   };
 
-  if (!isEditable) {
+  if (!isEditable || isMobileDevice) {
     return null;
   }
 
   return (
     <aside
       className={cn(
-        "fixed bottom-10 left-1/2 -translate-x-1/2",
-        !isDesktop && "bottom-28"
+        "fixed bottom-10 left-1/2 -translate-x-1/2 ",
+        isMobilePreview ? "bottom-28" : "hidden xl:block"
       )}
     >
       <ToolbarRoot className={"toolbar-shadow border-0 px-3 py-2"}>

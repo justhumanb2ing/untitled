@@ -7,6 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
+import { isMobileWeb } from "@toss/utils";
 
 interface LayoutToggleProps {
   isDesktop: boolean;
@@ -21,19 +22,22 @@ export default function LayoutToggle({
   onToggle,
 }: LayoutToggleProps) {
   const currentValue = isDesktop ? DESKTOP_VALUE : MOBILE_VALUE;
+  const isMobileDevice = isMobileWeb();
   const { desktopTooltip, mobileTooltip } = useIntlayer("layoutToggle");
 
+  if (isMobileDevice) return null;
+  
   return (
     <ToggleGroup
       defaultValue={[currentValue]}
       onValueChange={(nextValue) => {
         if (nextValue.includes(DESKTOP_VALUE)) {
-          onToggle('desktop');
+          onToggle("desktop");
           return;
         }
 
         if (nextValue.includes(MOBILE_VALUE)) {
-          onToggle('mobile');
+          onToggle("mobile");
         }
       }}
       aria-label="Layout width"

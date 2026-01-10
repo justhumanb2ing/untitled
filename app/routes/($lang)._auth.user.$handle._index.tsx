@@ -172,7 +172,6 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
                 "overflow-y-auto overscroll-contain scrollbar-hide"
             )}
           >
-
             {/* Desktop Badge View */}
             <DesktopBadgeView
               isOwner={isOwner}
@@ -270,7 +269,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
             onToggle={setPreviewLayout}
           />
 
-          <AppToolbar isDesktop={!isMobilePreview} />
+          <AppToolbar isMobilePreview={isMobilePreview} />
         </div>
       </PageGridProvider>
     </PageAutoSaveController>
