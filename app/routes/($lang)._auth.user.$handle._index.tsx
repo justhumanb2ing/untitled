@@ -26,6 +26,7 @@ import {
   DesktopBadgeView,
   MobileBadgeView,
 } from "@/components/profile/profile-badge-view";
+import { OwnerGate } from "@/components/account/owner-gate";
 
 type PreviewLayout = "desktop" | "mobile";
 
@@ -265,10 +266,12 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
             </aside>
           </div>
 
-          <LayoutToggle
-            isDesktop={!isMobilePreview}
-            onToggle={setPreviewLayout}
-          />
+          <OwnerGate isOwner={isOwner}>
+            <LayoutToggle
+              isDesktop={!isMobilePreview}
+              onToggle={setPreviewLayout}
+            />
+          </OwnerGate>
 
           <AppToolbar isMobilePreview={isMobilePreview} />
         </div>
