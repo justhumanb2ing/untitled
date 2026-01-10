@@ -103,7 +103,15 @@ export default function DeleteAccountButton() {
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger
         render={
-          <Button type="button" variant="destructive" disabled={isDisabled}>
+          <Button
+            type="button"
+            size={"lg"}
+            variant="ghost"
+            disabled={isDisabled}
+            className={
+              "text-sm text-destructive font-normal hover:text-destructive hover:bg-transparent px-0"
+            }
+          >
             {isDeleting ? "Deleting..." : "Delete account"}
           </Button>
         }

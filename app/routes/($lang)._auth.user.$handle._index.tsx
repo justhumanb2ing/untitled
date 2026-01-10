@@ -161,7 +161,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
           className={cn(
             `flex flex-col gap-4 transition-all ease-in-out duration-700 bg-background relative`,
             isMobilePreview
-              ? "self-start border rounded-4xl shadow-lg max-w-lg mx-auto container my-6 h-[calc(100dvh-3rem)] overflow-hidden"
+              ? "self-start border rounded-[36px] shadow-lg max-w-lg mx-auto container my-6 h-[calc(100dvh-12rem)] overflow-hidden"
               : "max-w-full w-full h-full my-0 min-h-dvh xl:h-dvh xl:overflow-hidden"
           )}
         >
@@ -253,13 +253,14 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
             {/* Action bar */}
             <aside
               className={cn(
-                "static h-28 py-12 border-t flex items-center justify-center",
-                !isMobilePreview &&
-                  "xl:fixed xl:bottom-10 xl:left-10 xl:px-0 xl:mb-0 xl:py-0 xl:h-fit xl:border-none"
+                "static h-28 py-12 border-t flex items-center justify-center xl:fixed xl:bottom-10 xl:left-10 xl:px-0 xl:mb-0 xl:py-0 xl:h-fit xl:border-none"
               )}
             >
               <div className={cn("flex")}>
-                <BottomActionBar isOwner={isOwner} />
+                <BottomActionBar
+                  isOwner={isOwner}
+                  isMobilePreview={isMobilePreview}
+                />
               </div>
             </aside>
           </div>
