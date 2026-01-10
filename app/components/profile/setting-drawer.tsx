@@ -366,7 +366,11 @@ export function SettingDrawer({
         <header className="absolute top-8 right-9 h-fit flex justify-end items-center">
           <aside>
             <DrawerClose asChild>
-              <Button variant={"brand"} size={"lg"} className={"p-5 text-base"}>
+              <Button
+                variant={"brand"}
+                size={"lg"}
+                className={"p-5 text-base dark:text-foreground"}
+              >
                 Cancel
               </Button>
             </DrawerClose>
