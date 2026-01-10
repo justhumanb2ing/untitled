@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState, type ChangeEvent, type RefObject } from "react";
 import {
-  DotsThreeIcon,
-  ImageSquareIcon,
-  XIcon,
-} from "@phosphor-icons/react";
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type RefObject,
+} from "react";
+import { DotsThreeIcon, ImageSquareIcon, XIcon } from "@phosphor-icons/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, type UseFormReturn } from "react-hook-form";
 import { z } from "zod";
@@ -24,6 +26,7 @@ import { usePageImageUploader } from "@/hooks/use-page-image-uploader";
 import VisibilityToggle from "./visibility-toggle";
 import { toastManager } from "@/components/ui/toast";
 import { getMediaValidationError } from "../../../service/pages/page-grid";
+import { Separator } from "../ui/separator";
 
 const profileHeaderSchema = z.object({
   image_url: z
@@ -364,21 +367,21 @@ function LegacyProfileHeaderForm({
                   </Popover>
                 )}
               </div>
-                <FormControl>
-                  <input
-                    ref={imageInputRef}
-                    type="file"
-                    accept="image/*"
-                    name={field.name}
-                    onBlur={field.onBlur}
-                    className="sr-only"
-                    onChange={(event) =>
-                      handleProfileImageInputChange(event, field.onChange)
-                    }
-                    disabled={isReadOnly}
-                    aria-disabled={isReadOnly}
-                  />
-                </FormControl>
+              <FormControl>
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  name={field.name}
+                  onBlur={field.onBlur}
+                  className="sr-only"
+                  onChange={(event) =>
+                    handleProfileImageInputChange(event, field.onChange)
+                  }
+                  disabled={isReadOnly}
+                  aria-disabled={isReadOnly}
+                />
+              </FormControl>
               <FormMessage className="text-center" />
             </FormItem>
           )}
@@ -564,11 +567,17 @@ function ProfileHeaderCardForm({
                             <Button
                               type="button"
                               variant="secondary"
-                              size="icon-lg"
-                              className="rounded-full shadow-[0_10px_25px_-15px_rgba(0,0,0,0.7)] hover:bg-background"
+                              size="lg"
+                              className={cn(
+                                "rounded-lg shadow-[0_10px_25px_-15px_rgba(0,0,0,0.7)] hover:bg-background px-4 text-sm",
+                                isMobilePreview
+                                  ? ""
+                                  : "xl:h-10 xl:px-4 xl:text-base"
+                              )}
                               aria-label="Profile image actions"
                             >
-                              <DotsThreeIcon className="size-5" weight="bold" />
+                              {/* <DotsThreeIcon className="size-5" weight="bold" /> */}
+                              Edit
                             </Button>
                           }
                         />
@@ -576,42 +585,53 @@ function ProfileHeaderCardForm({
                           side="bottom"
                           align="end"
                           sideOffset={12}
-                          className="w-36 p-2 rounded-2xl"
+                          className="w-60 p-2 rounded-2xl"
                         >
-                          <div className="flex flex-col gap-1">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              className="w-full justify-start gap-2 text-sm py-4.5 rounded-xl"
-                              onClick={handleUploadClick}
-                            >
-                              Upload
-                            </Button>
-                            {hasImage && (
+                          <div className="flex flex-col">
+                            <div className="flex flex-col gap-1">
                               <Button
                                 type="button"
                                 variant="ghost"
-                                className="w-full justify-start gap-2 text-sm py-4.5 rounded-xl"
-                                onClick={handleRemoveClick}
+                                className="w-full justify-start gap-2 text-sm py-4.5 rounded-lg"
+                                onClick={handleUploadClick}
                               >
-                                Remove
+                                Upload
                               </Button>
-                            )}
+                              {hasImage && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  className="w-full justify-start gap-2 text-sm py-4.5 rounded-lg"
+                                  onClick={handleRemoveClick}
+                                >
+                                  Remove
+                                </Button>
+                              )}
+                            </div>
+                            <Separator
+                              className={
+                                "rounded-full data-[orientation=horizontal]:bg-muted data-[orientation=horizontal]:h-0.5 my-1"
+                              }
+                            />
+                            <VisibilityToggle
+                              pageId={pageId}
+                              isPublic={isPublic}
+                            />
                           </div>
                         </PopoverPanel>
                       </Popover>
                     </div>
                   )}
-                  {!isReadOnly && (
+                  {/* {!isReadOnly && (
                     <div
                       className={cn(
-                        "absolute top-4.5 right-16",
+                        "absolute top-4 right-16",
                         isMobilePreview ? "block" : ""
                       )}
                     >
                       <VisibilityToggle pageId={pageId} isPublic={isPublic} />
                     </div>
-                  )}
+                  )} */}
                 </div>
                 <FormControl>
                   <input

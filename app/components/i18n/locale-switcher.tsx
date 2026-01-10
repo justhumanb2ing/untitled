@@ -38,7 +38,7 @@ export default function LocaleSwitcher() {
             {...props}
             type="button"
             variant={"ghost"}
-            className="h-8 w-20 overflow-hidden group"
+            className="h-8 w-16 overflow-hidden group"
             onClick={(event) => {
               props.onClick?.(event);
               if (event.defaultPrevented) return;
@@ -59,7 +59,7 @@ export default function LocaleSwitcher() {
                   exit={{ y: -24, opacity: 0 }}
                   transition={{ duration: 0.25, ease: "easeOut" }}
                 >
-                  <TranslateIcon className="size-4" />
+                  {/* <TranslateIcon className="size-4" /> */}
                   <span className="text-xs font-medium">{currentLabel}</span>
                 </motion.span>
               </AnimatePresence>

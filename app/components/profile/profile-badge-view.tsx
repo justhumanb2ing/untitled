@@ -68,7 +68,10 @@ function BadgeView({
         className
       )}
     >
-      <Badge variant={"secondary"} className="px-3 py-3.5 rounded-sm!">
+      <Badge
+        variant={"secondary"}
+        className="px-3 py-3.5 rounded-sm! bg-secondary/50 backdrop-blur-sm"
+      >
         <BadgeContent
           isOwner={isOwner}
           umamiResult={umamiResult}

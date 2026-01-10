@@ -46,14 +46,25 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       <header className="flex items-center justify-end mx-auto max-w-7xl py-4 gap-2 px-2">
         <SignedOut>
           <SignInButton>
-            <Button>{startForFree.value}</Button>
+            <Button
+              variant={"brand"}
+              size={"lg"}
+              className={"rounded-xl h-10 px-4 text-sm"}
+            >
+              {startForFree.value}
+            </Button>
           </SignInButton>
         </SignedOut>
         <SignedIn>
           <UserButton primaryHandle={primaryHandle} />
         </SignedIn>
-        <Separator orientation="vertical" />
-        <nav className="flex items-center justify-end gap-2">
+        <Separator
+          orientation="vertical"
+          className={
+            "my-1.5 rounded-full data-[orientation=vertical]:bg-muted data-[orientation=vertical]:w-0.5"
+          }
+        />
+        <nav className="flex items-center justify-end gap-1">
           <ThemeToggle />
           <LocaleSwitcher />
         </nav>

@@ -50,46 +50,74 @@ export default function VisibilityToggle({
   };
 
   return (
+    // <Button
+    //   type="button"
+    //   size={"lg"}
+    //   variant={"ghost"}
+    //   className="group"
+    //   onClick={handleToggle}
+    //   disabled={isSaving}
+    //   aria-pressed={isPublic}
+    //   aria-busy={isSaving}
+    // >
+    //   <div className="relative w-full h-full flex overflow-hidden">
+    //     <AnimatePresence initial={false} mode="sync">
+    //       {isPublic ? (
+    //         <motion.span
+    //           key="public"
+    //           className="absolute inset-0 flex justify-center items-center gap-1"
+    //           initial={{ y: 24, opacity: 0 }}
+    //           animate={{ y: 0, opacity: 1 }}
+    //           exit={{ y: -24, opacity: 0 }}
+    //           transition={{ duration: 0.25, ease: "easeOut" }}
+    //         >
+    //           {/* <LockOpenIcon className="size-4" /> */}
+    //           <span className="text-xs font-medium">Public</span>
+    //         </motion.span>
+    //       ) : (
+    //         <motion.span
+    //           key="private"
+    //           className="absolute inset-0 flex items-center justify-center gap-1"
+    //           initial={{ y: 24, opacity: 0 }}
+    //           animate={{ y: 0, opacity: 1 }}
+    //           exit={{ y: -24, opacity: 0 }}
+    //           transition={{ duration: 0.25, ease: "easeOut" }}
+    //         >
+    //           {/* <LockIcon className="size-4" /> */}
+    //           <span className="text-xs font-medium">Private</span>
+    //         </motion.span>
+    //       )}
+    //     </AnimatePresence>
+    //   </div>
+    //   <span className="sr-only">
+    //     {isPublic ? "Public page" : "Private page"}
+    //   </span>
+    // </Button>
     <Button
       type="button"
-      className="group h-6 w-20 py-3.5 bg-secondary text-secondary-foreground hover:bg-background"
+      variant={"ghost"}
+      size={"lg"}
       onClick={handleToggle}
       disabled={isSaving}
       aria-pressed={isPublic}
       aria-busy={isSaving}
+      className={"w-full justify-start gap-2 text-sm py-6 rounded-lg"}
     >
-      <span className="sr-only">
-        {isPublic ? "Public page" : "Private page"}
-      </span>
-      <span className="relative flex h-4 w-full items-center justify-center overflow-hidden">
-        <AnimatePresence initial={false} mode="sync">
-          {isPublic ? (
-            <motion.span
-              key="public"
-              className="absolute inset-0 flex items-center justify-center gap-1"
-              initial={{ y: 24, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -24, opacity: 0 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-            >
-              <LockOpenIcon className="size-4" />
-              <span className="text-xs font-medium">Public</span>
-            </motion.span>
-          ) : (
-            <motion.span
-              key="private"
-              className="absolute inset-0 flex items-center justify-center gap-1"
-              initial={{ y: 24, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -24, opacity: 0 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-            >
-              <LockIcon className="size-4" />
-              <span className="text-xs font-medium">Private</span>
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </span>
+      {isPublic ? (
+        <div className="w-full flex flex-col gap-1 items-start">
+          <p>Public</p>
+          <p className="text-xs text-muted-foreground font-normal">
+            Viewable to everyone
+          </p>
+        </div>
+      ) : (
+        <div className="w-full flex flex-col gap-1 items-start">
+          <p>Private</p>
+          <p className="text-xs text-muted-foreground font-normal">
+            Only you can view
+          </p>
+        </div>
+      )}
     </Button>
   );
 }
