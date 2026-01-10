@@ -4,14 +4,10 @@ import type { Route } from "./+types/($lang)._auth.user.$handle._index";
 import { getAuth } from "@clerk/react-router/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import { LightningIcon } from "@phosphor-icons/react";
-import { OwnerGate } from "@/components/account/owner-gate";
 import ProfileHeaderEditor from "@/components/profile/profile-header-editor";
 import { cn } from "@/lib/utils";
 import LayoutToggle from "@/components/layout/layout-toggle";
-import { NumberTicker } from "@/components/effects/number-ticker";
-import { Separator } from "@/components/ui/separator";
 import { PageAutoSaveController } from "@/components/page/page-auto-save-controller";
-import SavingStatusIndicator from "@/components/page/saving-status-indicator";
 import {
   fetchUmamiVisits,
   getTodayRange,
@@ -26,6 +22,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import PageGridBrickSection from "@/components/page/page-grid-brick-section";
 import { PageGridProvider } from "@/components/page/page-grid-context";
 import { parsePageLayoutSnapshot } from "../../service/pages/page-grid";
+import {
+  DesktopBadgeView,
+  MobileBadgeView,
+} from "@/components/profile/profile-badge-view";
 
 type PreviewLayout = "desktop" | "mobile";
 
@@ -172,38 +172,13 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
                 "overflow-y-auto overscroll-contain scrollbar-hide"
             )}
           >
-            <header
-              className={cn(
-                "rounded-lg absolute z-10 overflow-hidden w-fit shrink-0 hidden",
-                isMobilePreview
-                  ? "block top-3.5 left-0"
-                  : "left-2 top-4 xl:block"
-              )}
-            >
-              <div className={cn("w-full px-4", isMobilePreview ? "" : "px-4")}>
-                <div className="flex justify-between items-center gap-2 bg-secondary rounded-lg p-2 backdrop-blur-md overflow-hidden py-2 px-4">
-                  <div className="flex items-center gap-2 justify-end shrink-0">
-                    <OwnerGate isOwner={isOwner}>
-                      <div className="flex items-center gap-1">
-                        <SavingStatusIndicator />
-                      </div>
-                      <Separator orientation="vertical" className={"my-1"} />
-                    </OwnerGate>
-                    {umamiResult && umamiResult.ok ? (
-                      <p className="text-xs">
-                        <NumberTicker
-                          value={umamiResult.data!.visits || 0}
-                          className="text-foreground dark:text-foreground"
-                        />{" "}
-                        View
-                      </p>
-                    ) : (
-                      <p>Error</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </header>
+
+            {/* Desktop Badge View */}
+            <DesktopBadgeView
+              isOwner={isOwner}
+              umamiResult={umamiResult}
+              isMobilePreview={isMobilePreview}
+            />
 
             <div
               className={cn(
@@ -213,40 +188,12 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
                   : " mx-auto container xl:flex-row xl:justify-center xl:max-w-11/12 xl:gap-12 xl:flex-1 xl:min-h-0"
               )}
             >
-              <header
-                className={cn(
-                  "rounded-lg absolute z-10 overflow-hidden w-fit shrink-0 block",
-                  isMobilePreview
-                    ? "hidden top-3.5 left-0"
-                    : "left-2 top-4 xl:hidden"
-                )}
-              >
-                <div
-                  className={cn("w-full px-4", isMobilePreview ? "" : "px-4")}
-                >
-                  <div className="flex justify-between items-center gap-2 bg-secondary rounded-lg p-2 backdrop-blur-md overflow-hidden py-2 px-4">
-                    <div className="flex items-center gap-2 justify-end shrink-0">
-                      <OwnerGate isOwner={isOwner}>
-                        <div className="flex items-center gap-1">
-                          <SavingStatusIndicator />
-                        </div>
-                        <Separator orientation="vertical" className={"my-1"} />
-                      </OwnerGate>
-                      {umamiResult && umamiResult.ok ? (
-                        <p className="text-xs">
-                          <NumberTicker
-                            value={umamiResult.data!.visits || 0}
-                            className="text-foreground dark:text-foreground"
-                          />{" "}
-                          View
-                        </p>
-                      ) : (
-                        <p className="text-xs">Error</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </header>
+              {/* Mobile Badge View */}
+              <MobileBadgeView
+                isOwner={isOwner}
+                umamiResult={umamiResult}
+                isMobilePreview={isMobilePreview}
+              />
 
               {/* Page Information Section */}
               <section
