@@ -128,7 +128,7 @@ export default function PageGridTextBrick({
         multiline
         ariaLabel="Text block"
         className={cn(
-          "editable-paragraph",
+          "non-drag",
           "min-w-48 w-fit max-w-full rounded-lg wrap-break-word break-all text-wrap box-border text-lg px-4 py-3.5 font-medium text-foreground transition-colors duration-300",
           "focus:bg-muted hover:bg-muted",
           "data-[empty=true]:max-w-full",

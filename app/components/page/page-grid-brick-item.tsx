@@ -284,7 +284,7 @@ function LinkBrickContent({ brick, grid }: LinkBrickContentProps) {
       placeholder="Link title"
       ariaLabel="Link title"
       className={cn(
-        "editable-paragraph min-w-0 font-light text-foreground hover:bg-muted p-1 rounded-sm focus:bg-muted py-2",
+        "non-drag min-w-0 font-light text-foreground hover:bg-muted p-1 rounded-sm focus:bg-muted py-2",
         titleClampClass,
         extraClass
       )}
@@ -293,7 +293,12 @@ function LinkBrickContent({ brick, grid }: LinkBrickContentProps) {
 
   const renderIcon = (iconSize?: string) => {
     return viewModel.showIcon ? (
-      <a href={brick.data.url} target="_blank" rel="noopener noreferrer">
+      <a
+        href={brick.data.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-fit link-icon"
+      >
         {viewModel.iconUrl ? (
           <img
             src={viewModel.iconUrl}

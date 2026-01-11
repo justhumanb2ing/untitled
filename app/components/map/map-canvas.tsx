@@ -274,14 +274,15 @@ export function MapCanvas({
       <div className="absolute bottom-3 left-0 px-3 flex items-center justify-between w-full">
         {showLocationLabel && (
           <div
+            role="textbox"
             contentEditable
             suppressContentEditableWarning
             data-placeholder="Location"
             data-empty={!locationLabel}
             className={cn(
-              "relative editable-paragraph cursor-text",
+              "relative non-drag cursor-text",
               "min-w-24 bg-background border rounded-lg p-2 py-2 w-fit focus:outline-none text-base",
-              "data-[empty=true]:before:content-[attr(data-placeholder)] data-[empty=true]:before:absolute data-[empty=true]:before:left-3 data-[empty=true]:before:right-3 data-[empty=true]:before:top-1/2 data-[empty=true]:before:-translate-y-1/2 data-[empty=true]:before:flex data-[empty=true]:before:items-center data-[empty=true]:before:text-muted-foreground"
+              "data-[empty=true]:before:absolute  data-[empty=true]:before:content-[attr(data-placeholder)] data-[empty=true]:before:left-3 data-[empty=true]:before:right-3 data-[empty=true]:before:top-1/2 data-[empty=true]:before:-translate-y-1/2 data-[empty=true]:before:flex data-[empty=true]:before:items-center data-[empty=true]:before:text-muted-foreground"
             )}
           >
             {locationLabel}

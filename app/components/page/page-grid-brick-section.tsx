@@ -494,7 +494,7 @@ export default function PageGridBrickSection({
             }}
             dragConfig={{
               enabled: isEditable,
-              cancel: ".editable-paragraph",
+              cancel: ".non-drag",
             }}
             constraints={[gridBounds, resizeRatioConstraint]}
             onDragStop={handleLayoutCommit}
