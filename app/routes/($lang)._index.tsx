@@ -1,6 +1,5 @@
 import LocaleSwitcher from "@/components/i18n/locale-switcher";
 import type { Route } from "./+types/($lang)._index";
-import { ThemeToggle } from "@/components/common/theme-toggle";
 import { SignedIn, SignedOut, SignInButton } from "@clerk/react-router";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -12,7 +11,7 @@ import { useUmamiPageView } from "@/hooks/use-umami-page-view";
 import { getUmamiEventAttributes } from "@/lib/analytics/umami";
 import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
 import { Link } from "react-router";
-import { LocalizedLink } from "@/components/i18n/localized-link";
+import Logo from "@/components/layout/logo";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -57,14 +56,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     <main>
       {/* Header */}
       <header className="flex items-center justify-between gap-1 mx-auto max-w-7xl py-4 px-4">
-        <div>
-          <LocalizedLink
-            to={"/"}
-            className="font-medium tracking-tighter text-xl sm:text-3xl"
-          >
-            beyondthewave
-          </LocalizedLink>
-        </div>
+        <Logo />
         <aside className="flex items-center gap-1">
           <SignedOut>
             <SignInButton>
