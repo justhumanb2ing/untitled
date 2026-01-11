@@ -56,11 +56,11 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   return (
     <main>
       {/* Header */}
-      <header className="flex items-center justify-between gap-1 mx-auto max-w-7xl py-4 pl-4 sm:px-4">
+      <header className="flex items-center justify-between gap-1 mx-auto max-w-7xl py-4 px-4">
         <div>
           <LocalizedLink
             to={"/"}
-            className="font-medium tracking-tighter text-lg sm:text-3xl"
+            className="font-medium tracking-tighter text-xl sm:text-3xl"
           >
             beyondthewave
           </LocalizedLink>
@@ -71,7 +71,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               <Button
                 variant={"brand"}
                 size={"lg"}
-                className={"rounded-xl h-10 px-4 text-sm"}
+                className={"text-sm md:rounded-xl md:h-10 md:px-4"}
                 {...getUmamiEventAttributes(UMAMI_EVENTS.auth.signIn.start, {
                   [UMAMI_PROP_KEYS.ctx.source]: "home_cta",
                 })}
@@ -90,7 +90,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             }
           />
           <nav className="flex items-center justify-end gap-1">
-            <ThemeToggle />
             <LocaleSwitcher />
           </nav>
         </aside>
