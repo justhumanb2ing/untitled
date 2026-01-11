@@ -2,6 +2,8 @@ import type { MouseEvent } from "react";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 import type { PageGridBrickType } from "../../../service/pages/page-grid";
+import { getUmamiEventAttributes } from "@/lib/analytics/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
 
 export type ResizeOption = { w: number; h: number; label?: string };
 
@@ -59,6 +61,10 @@ export default function BlockResizeController({
             title={label}
             aria-pressed={isActive}
             onClick={(event) => handleClick(event, size)}
+            {...getUmamiEventAttributes(UMAMI_EVENTS.feature.brick.resize, {
+              [UMAMI_PROP_KEYS.ctx.brickType]: brickType ?? "unknown",
+              [UMAMI_PROP_KEYS.ctx.action]: label,
+            })}
             className={cn(
               "group relative flex flex-row items-center justify-center p-0.5 rounded-lg transition-all",
               isActive

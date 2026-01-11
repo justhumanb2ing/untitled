@@ -59,6 +59,8 @@ import {
 import DeleteAccountButton from "../account/delete-account-button";
 import { SETTING_TAB_LIST } from "constants/setting-tab";
 import { Activity } from "@/components/motion/activity";
+import { getUmamiEventAttributes, trackUmamiEvent } from "@/lib/analytics/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
 
 type SettingTabValue = (typeof SETTING_TAB_LIST)[number]["value"];
 
@@ -227,6 +229,16 @@ export function SettingDrawer({
   const handleTabSelect = (value: SettingTabValue) => {
     setActivityDirection(1);
     setActiveTab(value);
+    trackUmamiEvent(
+      UMAMI_EVENTS.feature.settings.tab,
+      {
+        [UMAMI_PROP_KEYS.ctx.tab]: value,
+      },
+      {
+        dedupeKey: `settings-tab:${value}`,
+        ttlMs: 2000,
+      }
+    );
   };
 
   const handleBackToList = () => {
@@ -242,7 +254,16 @@ export function SettingDrawer({
             render={
               <DialogTrigger
                 render={
-                  <Button variant={"ghost"} size={"icon-lg"}>
+                  <Button
+                    variant={"ghost"}
+                    size={"icon-lg"}
+                    {...getUmamiEventAttributes(
+                      UMAMI_EVENTS.feature.settings.open,
+                      {
+                        [UMAMI_PROP_KEYS.ctx.source]: "settings_button",
+                      }
+                    )}
+                  >
                     <GearSixIcon weight="regular" className="size-4" />
                   </Button>
                 }
@@ -303,6 +324,12 @@ export function SettingDrawer({
                         className={
                           "w-full shadow-none px-4 py-4 h-10! font-normal"
                         }
+                        {...getUmamiEventAttributes(
+                          UMAMI_EVENTS.feature.settings.tab,
+                          {
+                            [UMAMI_PROP_KEYS.ctx.tab]: tab.value,
+                          }
+                        )}
                       >
                         {tab.label}
                       </TabsTab>
@@ -348,7 +375,13 @@ export function SettingDrawer({
         <TooltipTrigger
           render={
             <DrawerTrigger asChild>
-              <Button variant={"ghost"} size={"icon-lg"}>
+              <Button
+                variant={"ghost"}
+                size={"icon-lg"}
+                {...getUmamiEventAttributes(UMAMI_EVENTS.feature.settings.open, {
+                  [UMAMI_PROP_KEYS.ctx.source]: "settings_button",
+                })}
+              >
                 <GearSixIcon weight="regular" className="size-4" />
               </Button>
             </DrawerTrigger>

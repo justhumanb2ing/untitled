@@ -6,4 +6,10 @@ declare global {
       onboardingComplete?: boolean;
     };
   }
+
+  interface Window {
+    umami?: {
+      track: (...args: unknown[]) => void;
+    };
+  }
 }

@@ -15,6 +15,11 @@ import { toastManager } from "@/components/ui/toast";
 import type { GridBreakpoint } from "@/config/grid-rule";
 import type { BrickLinkRow, BrickMapRow } from "types/brick";
 import {
+  createUmamiAttemptId,
+  trackUmamiEvent,
+} from "@/lib/analytics/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
+import {
   applyLayoutToBricks,
   createPageGridBrick,
   createPageGridBrickId,
@@ -465,7 +470,19 @@ export function PageGridProvider({
       }
 
       const id = createPageGridBrickId();
+      const attemptId = createUmamiAttemptId("media");
       dispatch({ type: "ADD_MEDIA_PLACEHOLDER", id, mediaType });
+      trackUmamiEvent(
+        UMAMI_EVENTS.feature.media.upload,
+        {
+          [UMAMI_PROP_KEYS.ctx.attemptId]: attemptId,
+          [UMAMI_PROP_KEYS.ctx.mediaType]: mediaType,
+        },
+        {
+          dedupeKey: `media-upload:${attemptId}`,
+          once: true,
+        }
+      );
 
       void (async () => {
         try {
@@ -476,6 +493,17 @@ export function PageGridProvider({
           });
 
           dispatch({ type: "COMPLETE_MEDIA_UPLOAD", id, publicUrl });
+          trackUmamiEvent(
+            UMAMI_EVENTS.feature.media.success,
+            {
+              [UMAMI_PROP_KEYS.ctx.attemptId]: attemptId,
+              [UMAMI_PROP_KEYS.ctx.mediaType]: mediaType,
+            },
+            {
+              dedupeKey: `media-success:${attemptId}`,
+              once: true,
+            }
+          );
         } catch (error) {
           dispatch({ type: "REMOVE_BRICK", id });
           toastManager.add({
@@ -484,6 +512,18 @@ export function PageGridProvider({
             description:
               error instanceof Error ? error.message : "Please try again.",
           });
+          trackUmamiEvent(
+            UMAMI_EVENTS.feature.media.error,
+            {
+              [UMAMI_PROP_KEYS.ctx.attemptId]: attemptId,
+              [UMAMI_PROP_KEYS.ctx.mediaType]: mediaType,
+              [UMAMI_PROP_KEYS.ctx.errorCode]: "upload_failed",
+            },
+            {
+              dedupeKey: `media-error:${attemptId}`,
+              once: true,
+            }
+          );
         }
       })();
     },

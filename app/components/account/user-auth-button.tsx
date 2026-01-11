@@ -4,6 +4,8 @@ import { useLocation } from "react-router";
 import { Button } from "../ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { Spinner } from "../ui/spinner";
+import { getUmamiEventAttributes } from "@/lib/analytics/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
 
 export default function UserAuthButton() {
   const { isSignedIn, isLoaded } = useUser();
@@ -24,6 +26,9 @@ export default function UserAuthButton() {
                 variant={"ghost"}
                 size={"lg"}
                 className={"text-xs text-muted-foreground"}
+                {...getUmamiEventAttributes(UMAMI_EVENTS.auth.signOut.click, {
+                  [UMAMI_PROP_KEYS.ctx.source]: "bottom_action_bar",
+                })}
               >
                 {signOutLabel.value}
               </Button>
@@ -36,6 +41,9 @@ export default function UserAuthButton() {
                 variant={"ghost"}
                 size={"lg"}
                 className={"text-xs text-muted-foreground"}
+                {...getUmamiEventAttributes(UMAMI_EVENTS.auth.signIn.start, {
+                  [UMAMI_PROP_KEYS.ctx.source]: "bottom_action_bar",
+                })}
               >
                 {signInLabel.value}
               </Button>

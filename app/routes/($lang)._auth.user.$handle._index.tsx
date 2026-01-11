@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import BottomActionBar from "@/components/layout/bottom-action-bar";
 import type { Route } from "./+types/($lang)._auth.user.$handle._index";
 import { getAuth } from "@clerk/react-router/server";
@@ -8,13 +8,13 @@ import ProfileHeaderEditor from "@/components/profile/profile-header-editor";
 import { cn } from "@/lib/utils";
 import LayoutToggle from "@/components/layout/layout-toggle";
 import { PageAutoSaveController } from "@/components/page/page-auto-save-controller";
+import { useUmamiPageView } from "@/hooks/use-umami-page-view";
 import {
   fetchUmamiVisits,
   getTodayRange,
   resolveUmamiConfig,
   UMAMI_TIMEZONE,
   UMAMI_UNIT,
-  UMAMI_WEBSITE_ID,
   type UmamiResponse,
 } from "../../service/umami/umami";
 import AppToolbar from "@/components/layout/app-toolbar";
@@ -27,6 +27,7 @@ import {
   MobileBadgeView,
 } from "@/components/profile/profile-badge-view";
 import { OwnerGate } from "@/components/account/owner-gate";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
 
 type PreviewLayout = "desktop" | "mobile";
 
@@ -85,7 +86,7 @@ export async function loader(args: Route.LoaderArgs) {
       const { startAt, endAt } = getTodayRange(UMAMI_TIMEZONE);
       umamiResult = await fetchUmamiVisits({
         ...umamiConfig,
-        websiteId: UMAMI_WEBSITE_ID,
+        websiteId: umamiConfig.websiteId,
         startAt,
         endAt,
         unit: UMAMI_UNIT,
@@ -133,18 +134,22 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
     () => parsePageLayoutSnapshot(pageLayout),
     [pageLayout]
   );
+  const pageViewProps = useMemo(
+    () => ({
+      [UMAMI_PROP_KEYS.ctx.pageId]: id,
+      [UMAMI_PROP_KEYS.ctx.pageKind]: "user_profile",
+      [UMAMI_PROP_KEYS.ctx.role]: isOwner ? "owner" : "viewer",
+    }),
+    [id, isOwner]
+  );
 
-  useEffect(() => {
-    if (!id) return;
-
-    umami.track((props) => ({
-      ...props,
-      website: UMAMI_WEBSITE_ID,
-      url: `/user/${id}`,
-      title: `${handle} Page`,
-      page_id: id,
-    }));
-  }, [id, handle]);
+  useUmamiPageView({
+    url: id ? `/user/${id}` : undefined,
+    title: "User Page",
+    props: pageViewProps,
+    eventName: UMAMI_EVENTS.page.userProfileView,
+    dedupeKey: id ? `user:${id}` : undefined,
+  });
 
   return (
     <PageAutoSaveController

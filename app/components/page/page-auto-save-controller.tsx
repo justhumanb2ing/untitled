@@ -11,6 +11,8 @@ import { debounce, isEqual } from "es-toolkit";
 import { getStrictContext } from "@/lib/get-strict-context";
 import { usePageSaver } from "@/hooks/use-page-saver";
 import type { PageSnapshot } from "../../../service/pages/save-page";
+import { trackUmamiEvent } from "@/lib/analytics/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
 
 type AutoSaveStatus = "idle" | "dirty" | "saving" | "synced" | "error";
 
@@ -148,6 +150,17 @@ export function PageAutoSaveController({
 
       syncedSnapshotRef.current = snapshot;
       dispatch({ type: "MARK_SYNCED" });
+      trackUmamiEvent(
+        UMAMI_EVENTS.feature.pageSave.success,
+        {
+          [UMAMI_PROP_KEYS.ctx.pageId]: pageIdRef.current,
+          [UMAMI_PROP_KEYS.ctx.action]: "auto",
+        },
+        {
+          dedupeKey: `page-save-success:${pageIdRef.current}`,
+          ttlMs: 30000,
+        }
+      );
     } catch (error) {
       if (!mountedRef.current || requestId !== requestIdRef.current) {
         return;
@@ -156,6 +169,18 @@ export function PageAutoSaveController({
       const message =
         error instanceof Error ? error.message : statusLabels.error;
       dispatch({ type: "MARK_ERROR", message });
+      trackUmamiEvent(
+        UMAMI_EVENTS.feature.pageSave.error,
+        {
+          [UMAMI_PROP_KEYS.ctx.pageId]: pageIdRef.current,
+          [UMAMI_PROP_KEYS.ctx.action]: "auto",
+          [UMAMI_PROP_KEYS.ctx.errorCode]: "save_failed",
+        },
+        {
+          dedupeKey: `page-save-error:${pageIdRef.current}`,
+          ttlMs: 30000,
+        }
+      );
     }
   }, []);
 

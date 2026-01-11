@@ -8,6 +8,9 @@ import { getAuth } from "@clerk/react-router/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import UserButton from "@/components/account/user-button";
 import { useIntlayer } from "react-intlayer";
+import { useUmamiPageView } from "@/hooks/use-umami-page-view";
+import { getUmamiEventAttributes } from "@/lib/analytics/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -41,6 +44,13 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const { primaryHandle } = loaderData;
   const { startForFree } = useIntlayer("home");
 
+  useUmamiPageView({
+    eventName: UMAMI_EVENTS.page.homeView,
+    props: {
+      [UMAMI_PROP_KEYS.ctx.pageKind]: "home",
+    },
+  });
+
   return (
     <main>
       <header className="flex items-center justify-end mx-auto max-w-7xl py-4 gap-2 px-2">
@@ -50,6 +60,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               variant={"brand"}
               size={"lg"}
               className={"rounded-xl h-10 px-4 text-sm"}
+              {...getUmamiEventAttributes(UMAMI_EVENTS.auth.signIn.start, {
+                [UMAMI_PROP_KEYS.ctx.source]: "home_cta",
+              })}
             >
               {startForFree.value}
             </Button>

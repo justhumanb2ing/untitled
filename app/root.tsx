@@ -117,17 +117,23 @@ export const loader = (args: Route.LoaderArgs) =>
 export function Layout({ children }: { children: React.ReactNode }) {
   const navigation = useNavigation();
   const isNavigating = Boolean(navigation.location);
+  const umamiWebsiteId = import.meta.env.VITE_UMAMI_WEBSITE_ID;
+  const umamiScriptUrl =
+    import.meta.env.VITE_UMAMI_SCRIPT_URL ?? "https://cloud.umami.is/script.js";
 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script
-          defer
-          src="https://cloud.umami.is/script.js"
-          data-website-id="913b402f-ffb7-4247-8407-98b91b9ec264"
-        />
+        {umamiWebsiteId ? (
+          <script
+            defer
+            src={umamiScriptUrl}
+            data-website-id={umamiWebsiteId}
+            data-auto-track="false"
+          />
+        ) : null}
         <Meta />
         <Links />
       </head>

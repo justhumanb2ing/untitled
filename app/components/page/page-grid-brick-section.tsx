@@ -46,6 +46,8 @@ import {
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Popover, PopoverPanel, PopoverTrigger } from "../ui/popover";
+import { getUmamiEventAttributes } from "@/lib/analytics/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
 
 const resizeRatioConstraint: LayoutConstraint = {
   name: "resizeRatioConstraint",
@@ -563,6 +565,12 @@ export default function PageGridBrickSection({
                             event.stopPropagation();
                             handleBlockRemove(brick.id);
                           }}
+                          {...getUmamiEventAttributes(
+                            UMAMI_EVENTS.feature.brick.remove,
+                            {
+                              [UMAMI_PROP_KEYS.ctx.brickType]: brick.type,
+                            }
+                          )}
                         >
                           <StackMinusIcon
                             weight="bold"

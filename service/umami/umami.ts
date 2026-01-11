@@ -12,9 +12,9 @@ export type UmamiResponse = {
 type UmamiConfig = {
   apiEndpoint: string;
   apiKey: string;
+  websiteId: string;
 };
 
-export const UMAMI_WEBSITE_ID = "913b402f-ffb7-4247-8407-98b91b9ec264";
 export const UMAMI_TIMEZONE = "Asia/Seoul";
 export const UMAMI_UNIT = "day";
 
@@ -71,12 +71,14 @@ export function getTodayRange(timeZone: string) {
 export function resolveUmamiConfig(): UmamiConfig | null {
   const apiKey = process.env.UMAMI_API_KEY;
   const apiEndpoint = process.env.UMAMI_API_CLIENT_ENDPOINT;
+  const websiteId =
+    process.env.UMAMI_WEBSITE_ID ?? process.env.VITE_UMAMI_WEBSITE_ID;
 
-  if (!apiKey || !apiEndpoint) {
+  if (!apiKey || !apiEndpoint || !websiteId) {
     return null;
   }
 
-  return { apiEndpoint, apiKey };
+  return { apiEndpoint, apiKey, websiteId };
 }
 
 function getVisitsFromPayload(payload: unknown) {

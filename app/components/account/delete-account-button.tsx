@@ -4,6 +4,12 @@ import { useClerk, useUser } from "@clerk/react-router";
 import { Button } from "@/components/ui/button";
 import { toastManager } from "@/components/ui/toast";
 import {
+  createUmamiAttemptId,
+  getUmamiEventAttributes,
+  trackUmamiEvent,
+} from "@/lib/analytics/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -70,6 +76,18 @@ export default function DeleteAccountButton() {
     }
 
     setIsDeleting(true);
+    const attemptId = createUmamiAttemptId("delete-account");
+    trackUmamiEvent(
+      UMAMI_EVENTS.feature.accountDelete.confirm,
+      {
+        [UMAMI_PROP_KEYS.ctx.attemptId]: attemptId,
+        [UMAMI_PROP_KEYS.ctx.source]: "settings",
+      },
+      {
+        dedupeKey: `account-delete-confirm:${attemptId}`,
+        once: true,
+      }
+    );
     const deletePromise = requestDeleteAccount();
 
     toastManager.promise(deletePromise, {
@@ -88,7 +106,31 @@ export default function DeleteAccountButton() {
 
     try {
       await deletePromise;
+      trackUmamiEvent(
+        UMAMI_EVENTS.feature.accountDelete.success,
+        {
+          [UMAMI_PROP_KEYS.ctx.attemptId]: attemptId,
+          [UMAMI_PROP_KEYS.ctx.source]: "settings",
+        },
+        {
+          dedupeKey: `account-delete-success:${attemptId}`,
+          once: true,
+        }
+      );
       await clerk.signOut({ redirectUrl: "/" });
+    } catch (error) {
+      trackUmamiEvent(
+        UMAMI_EVENTS.feature.accountDelete.error,
+        {
+          [UMAMI_PROP_KEYS.ctx.attemptId]: attemptId,
+          [UMAMI_PROP_KEYS.ctx.source]: "settings",
+          [UMAMI_PROP_KEYS.ctx.errorCode]: "delete_failed",
+        },
+        {
+          dedupeKey: `account-delete-error:${attemptId}`,
+          once: true,
+        }
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -103,15 +145,21 @@ export default function DeleteAccountButton() {
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger
         render={
-          <Button
-            type="button"
-            size={"lg"}
-            variant="ghost"
-            disabled={isDisabled}
-            className={
-              "text-sm text-destructive font-normal hover:text-destructive hover:bg-transparent px-0"
+        <Button
+          type="button"
+          size={"lg"}
+          variant="ghost"
+          disabled={isDisabled}
+          className={
+            "text-sm text-destructive font-normal hover:text-destructive hover:bg-transparent px-0"
+          }
+          {...getUmamiEventAttributes(
+            UMAMI_EVENTS.feature.accountDelete.open,
+            {
+              [UMAMI_PROP_KEYS.ctx.source]: "settings",
             }
-          >
+          )}
+        >
             {isDeleting ? "Deleting..." : "Delete account"}
           </Button>
         }

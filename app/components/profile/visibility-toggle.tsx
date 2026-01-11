@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from "motion/react";
 
 import { getSupabaseClient } from "@/lib/supabase";
 import { Button } from "../ui/button";
+import { getUmamiEventAttributes, trackUmamiEvent } from "@/lib/analytics/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
 
 interface VisibilityToggleProps {
   pageId: string;
@@ -43,7 +45,32 @@ export default function VisibilityToggle({
       if (error) {
         setIsPublic(!nextIsPublic);
         isPublicRef.current = !nextIsPublic;
+        trackUmamiEvent(
+          UMAMI_EVENTS.feature.profileVisibility.error,
+          {
+            [UMAMI_PROP_KEYS.ctx.pageId]: pageId,
+            [UMAMI_PROP_KEYS.ctx.action]: nextIsPublic ? "public" : "private",
+            [UMAMI_PROP_KEYS.ctx.errorCode]: "update_failed",
+          },
+          {
+            dedupeKey: `visibility-error:${pageId}`,
+            ttlMs: 2000,
+          }
+        );
+        return;
       }
+
+      trackUmamiEvent(
+        UMAMI_EVENTS.feature.profileVisibility.success,
+        {
+          [UMAMI_PROP_KEYS.ctx.pageId]: pageId,
+          [UMAMI_PROP_KEYS.ctx.action]: nextIsPublic ? "public" : "private",
+        },
+        {
+          dedupeKey: `visibility-success:${pageId}:${nextIsPublic}`,
+          ttlMs: 2000,
+        }
+      );
     } finally {
       setIsSaving(false);
     }
@@ -102,6 +129,10 @@ export default function VisibilityToggle({
       aria-pressed={isPublic}
       aria-busy={isSaving}
       className={"w-full justify-start gap-2 text-sm py-6 rounded-lg"}
+      {...getUmamiEventAttributes(UMAMI_EVENTS.feature.profileVisibility.toggle, {
+        [UMAMI_PROP_KEYS.ctx.pageId]: pageId,
+        [UMAMI_PROP_KEYS.ctx.action]: isPublic ? "make_private" : "make_public",
+      })}
     >
       {isPublic ? (
         <div className="w-full flex flex-col gap-1 items-start">

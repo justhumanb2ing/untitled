@@ -29,6 +29,12 @@ import { metadataConfig } from "@/config/metadata";
 import { useLocalizedNavigate } from "@/hooks/use-localized-navigate";
 import { getSupabaseClient } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import {
+  createUmamiAttemptId,
+  getUmamiEventAttributes,
+  trackUmamiEvent,
+} from "@/lib/analytics/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
 
 const handleSchema = z.object({
   handle: z
@@ -138,8 +144,33 @@ export default function ChangeHandleFormPopover({
       return;
     }
 
+    const attemptId = createUmamiAttemptId("handle");
+    trackUmamiEvent(
+      UMAMI_EVENTS.feature.handle.submit,
+      {
+        [UMAMI_PROP_KEYS.ctx.attemptId]: attemptId,
+        [UMAMI_PROP_KEYS.ctx.source]: "change_handle",
+      },
+      {
+        dedupeKey: `handle-submit:${attemptId}`,
+        once: true,
+      }
+    );
+
     const isAvailable = await checkHandleAvailability();
     if (!isAvailable) {
+      trackUmamiEvent(
+        UMAMI_EVENTS.feature.handle.error,
+        {
+          [UMAMI_PROP_KEYS.ctx.attemptId]: attemptId,
+          [UMAMI_PROP_KEYS.ctx.source]: "change_handle",
+          [UMAMI_PROP_KEYS.ctx.errorCode]: "validation",
+        },
+        {
+          dedupeKey: `handle-error:${attemptId}`,
+          once: true,
+        }
+      );
       return;
     }
 
@@ -159,11 +190,34 @@ export default function ChangeHandleFormPopover({
           type: "server",
           message: error.message,
         });
+        trackUmamiEvent(
+          UMAMI_EVENTS.feature.handle.error,
+          {
+            [UMAMI_PROP_KEYS.ctx.attemptId]: attemptId,
+            [UMAMI_PROP_KEYS.ctx.source]: "change_handle",
+            [UMAMI_PROP_KEYS.ctx.errorCode]: "update_failed",
+          },
+          {
+            dedupeKey: `handle-error:${attemptId}`,
+            once: true,
+          }
+        );
         return;
       }
 
       setIsHandlePopoverOpen(false);
       localizedNavigate(`/user/@${sanitizedHandle}`);
+      trackUmamiEvent(
+        UMAMI_EVENTS.feature.handle.success,
+        {
+          [UMAMI_PROP_KEYS.ctx.attemptId]: attemptId,
+          [UMAMI_PROP_KEYS.ctx.source]: "change_handle",
+        },
+        {
+          dedupeKey: `handle-success:${attemptId}`,
+          once: true,
+        }
+      );
     } finally {
       setIsUpdatingHandle(false);
     }
@@ -197,6 +251,9 @@ export default function ChangeHandleFormPopover({
                   size={"icon-lg"}
                   aria-label="Change Handle"
                   disabled={!canChangeHandle}
+                  {...getUmamiEventAttributes(UMAMI_EVENTS.feature.handle.open, {
+                    [UMAMI_PROP_KEYS.ctx.source]: "bottom_action_bar",
+                  })}
                 >
                   <ArrowsLeftRightIcon weight="regular" className="size-4" />
                 </Button>

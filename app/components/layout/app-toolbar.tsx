@@ -17,6 +17,12 @@ import { useAuth } from "@clerk/react-router";
 import { resolveExternalHref } from "@/utils/resolve-external-href";
 import type { OgCrawlResponse } from "types/link-crawl";
 import { isMobileWeb } from "@toss/utils";
+import {
+  createUmamiAttemptId,
+  getUmamiEventAttributes,
+  trackUmamiEvent,
+} from "@/lib/analytics/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
 
 interface AppToolbarProps {
   isMobilePreview: boolean;
@@ -59,6 +65,18 @@ export default function AppToolbar({ isMobilePreview }: AppToolbarProps) {
     }
 
     const placeholderId = addLinkBrick(normalizedUrl);
+    const attemptId = createUmamiAttemptId("link");
+    trackUmamiEvent(
+      UMAMI_EVENTS.feature.link.submit,
+      {
+        [UMAMI_PROP_KEYS.ctx.attemptId]: attemptId,
+        [UMAMI_PROP_KEYS.ctx.source]: "toolbar",
+      },
+      {
+        dedupeKey: `link-submit:${attemptId}`,
+        once: true,
+      }
+    );
     setIsLinkSubmitting(true);
 
     try {
@@ -100,6 +118,17 @@ export default function AppToolbar({ isMobilePreview }: AppToolbarProps) {
 
       setLinkInputValue("");
       inputRef.current?.focus();
+      trackUmamiEvent(
+        UMAMI_EVENTS.feature.link.success,
+        {
+          [UMAMI_PROP_KEYS.ctx.attemptId]: attemptId,
+          [UMAMI_PROP_KEYS.ctx.source]: "toolbar",
+        },
+        {
+          dedupeKey: `link-success:${attemptId}`,
+          once: true,
+        }
+      );
     } catch (error) {
       removeBrick(placeholderId);
       toastManager.add({
@@ -108,6 +137,18 @@ export default function AppToolbar({ isMobilePreview }: AppToolbarProps) {
         description:
           error instanceof Error ? error.message : "Please try again.",
       });
+      trackUmamiEvent(
+        UMAMI_EVENTS.feature.link.error,
+        {
+          [UMAMI_PROP_KEYS.ctx.attemptId]: attemptId,
+          [UMAMI_PROP_KEYS.ctx.source]: "toolbar",
+          [UMAMI_PROP_KEYS.ctx.errorCode]: "fetch_failed",
+        },
+        {
+          dedupeKey: `link-error:${attemptId}`,
+          once: true,
+        }
+      );
     } finally {
       setIsLinkSubmitting(false);
     }
@@ -190,6 +231,13 @@ export default function AppToolbar({ isMobilePreview }: AppToolbarProps) {
                             variant={"ghost"}
                             className={"size-8 p-1"}
                             type="button"
+                            {...getUmamiEventAttributes(
+                              UMAMI_EVENTS.feature.brick.add,
+                              {
+                                [UMAMI_PROP_KEYS.ctx.brickType]: "link",
+                                [UMAMI_PROP_KEYS.ctx.source]: "toolbar",
+                              }
+                            )}
                           >
                             <img
                               src="/link.svg"
@@ -260,6 +308,13 @@ export default function AppToolbar({ isMobilePreview }: AppToolbarProps) {
                       onClick={handleTextClick}
                       disabled={!isEditable}
                       aria-disabled={!isEditable}
+                      {...getUmamiEventAttributes(
+                        UMAMI_EVENTS.feature.brick.add,
+                        {
+                          [UMAMI_PROP_KEYS.ctx.brickType]: "text",
+                          [UMAMI_PROP_KEYS.ctx.source]: "toolbar",
+                        }
+                      )}
                     >
                       <img
                         src="/note.svg"
@@ -288,6 +343,13 @@ export default function AppToolbar({ isMobilePreview }: AppToolbarProps) {
                       onClick={handleMediaClick}
                       disabled={!isEditable}
                       aria-disabled={!isEditable}
+                      {...getUmamiEventAttributes(
+                        UMAMI_EVENTS.feature.brick.add,
+                        {
+                          [UMAMI_PROP_KEYS.ctx.brickType]: "media",
+                          [UMAMI_PROP_KEYS.ctx.source]: "toolbar",
+                        }
+                      )}
                     >
                       <img
                         src="/photo.svg"
@@ -316,6 +378,13 @@ export default function AppToolbar({ isMobilePreview }: AppToolbarProps) {
                       onClick={handleMapClick}
                       disabled={!isEditable}
                       aria-disabled={!isEditable}
+                      {...getUmamiEventAttributes(
+                        UMAMI_EVENTS.feature.brick.add,
+                        {
+                          [UMAMI_PROP_KEYS.ctx.brickType]: "map",
+                          [UMAMI_PROP_KEYS.ctx.source]: "toolbar",
+                        }
+                      )}
                     >
                       <img
                         src="/map.svg"

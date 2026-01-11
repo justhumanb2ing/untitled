@@ -1,5 +1,5 @@
 import { clerkClient, getAuth } from "@clerk/react-router/server";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Form as RouterForm,
   redirect,
@@ -40,6 +40,12 @@ import { metadataConfig } from "@/config/metadata";
 import { getSupabaseClient, getSupabaseServerClient } from "@/lib/supabase";
 import { getLocalizedPath } from "@/lib/localized-path";
 import { Activity } from "@/components/motion/activity";
+import { useUmamiPageView } from "@/hooks/use-umami-page-view";
+import {
+  createUmamiAttemptId,
+  trackUmamiEvent,
+} from "@/lib/analytics/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
 
 const onboardingSchema = z.object({
   handle: z
@@ -135,8 +141,18 @@ export default function OnboardingRoute() {
   const [completedHandle, setCompletedHandle] = useState<string | null>(null);
   const [isCheckingHandle, setIsCheckingHandle] = useState(false);
   const [direction, setDirection] = useState<1 | -1>(1);
+  const signupAttemptIdRef = useRef(createUmamiAttemptId("signup"));
+  const signupStartedRef = useRef(false);
+  const lastSubmitAttemptRef = useRef<string | null>(null);
 
   const supabase = getSupabaseClient();
+
+  useUmamiPageView({
+    eventName: UMAMI_EVENTS.auth.signup.view,
+    props: {
+      [UMAMI_PROP_KEYS.ctx.pageKind]: "onboarding",
+    },
+  });
 
   const form = useForm<OnboardingFormValues>({
     resolver: zodResolver(onboardingSchema),
@@ -152,6 +168,41 @@ export default function OnboardingRoute() {
     title.trim().length > 0 && description.trim().length > 0;
   const rootError = form.formState.errors.root?.message;
 
+  const trackSignupStart = useCallback((currentStep: Step) => {
+    if (signupStartedRef.current) {
+      return;
+    }
+
+    signupStartedRef.current = true;
+    trackUmamiEvent(
+      UMAMI_EVENTS.auth.signup.start,
+      {
+        [UMAMI_PROP_KEYS.ctx.attemptId]: signupAttemptIdRef.current,
+        [UMAMI_PROP_KEYS.ctx.step]: currentStep,
+      },
+      {
+        dedupeKey: `signup-start:${signupAttemptIdRef.current}`,
+        once: true,
+      }
+    );
+  }, []);
+
+  const trackSignupSubmit = useCallback((currentStep: Step) => {
+    const attemptId = createUmamiAttemptId("signup-submit");
+    lastSubmitAttemptRef.current = attemptId;
+    trackUmamiEvent(
+      UMAMI_EVENTS.auth.signup.submit,
+      {
+        [UMAMI_PROP_KEYS.ctx.attemptId]: attemptId,
+        [UMAMI_PROP_KEYS.ctx.step]: currentStep,
+      },
+      {
+        dedupeKey: `signup-submit:${attemptId}`,
+        once: true,
+      }
+    );
+  }, []);
+
   useEffect(() => {
     if (!actionData) {
       return;
@@ -161,6 +212,18 @@ export default function OnboardingRoute() {
       setCompletedHandle(actionData.handle);
       setDirection(1);
       setStep("complete");
+      trackUmamiEvent(
+        UMAMI_EVENTS.auth.signup.success,
+        {
+          [UMAMI_PROP_KEYS.ctx.attemptId]:
+            lastSubmitAttemptRef.current ?? signupAttemptIdRef.current,
+          [UMAMI_PROP_KEYS.ctx.step]: "complete",
+        },
+        {
+          dedupeKey: `signup-success:${actionData.handle}`,
+          once: true,
+        }
+      );
       return;
     }
 
@@ -196,7 +259,25 @@ export default function OnboardingRoute() {
         message: actionData.formError,
       });
     }
-  }, [actionData, form]);
+
+    if (actionData.formError || actionData.fieldErrors) {
+      trackUmamiEvent(
+        UMAMI_EVENTS.auth.signup.error,
+        {
+          [UMAMI_PROP_KEYS.ctx.attemptId]:
+            lastSubmitAttemptRef.current ?? signupAttemptIdRef.current,
+          [UMAMI_PROP_KEYS.ctx.step]: step,
+          [UMAMI_PROP_KEYS.ctx.errorCode]: actionData.formError
+            ? "server"
+            : "validation",
+        },
+        {
+          dedupeKey: `signup-error:${lastSubmitAttemptRef.current ?? "unknown"}`,
+          once: true,
+        }
+      );
+    }
+  }, [actionData, form, step]);
 
   useEffect(() => {
     if (step === "handle") {
@@ -262,6 +343,7 @@ export default function OnboardingRoute() {
   };
 
   const submitForm = form.handleSubmit(() => {
+    trackSignupSubmit(step);
     if (!formRef.current) {
       return;
     }
@@ -373,6 +455,7 @@ export default function OnboardingRoute() {
                                     field.onChange(event.target.value);
                                     form.clearErrors("handle");
                                     form.clearErrors("root");
+                                    trackSignupStart("handle");
                                   }}
                                   className={cn(
                                     "peer ps-28.5 border-none h-12 text-base! rounded-xl"
@@ -431,6 +514,7 @@ export default function OnboardingRoute() {
                                 onChange={(event) => {
                                   field.onChange(event);
                                   form.clearErrors("root");
+                                  trackSignupStart("details");
                                 }}
                                 className="px-3 pb-2 ps-4 h-12 text-base! rounded-xl bg-transparent border-none focus-visible:ring-0 aria-invalid:ring-0 dark:aria-invalid:ring-0"
                               />
@@ -456,6 +540,7 @@ export default function OnboardingRoute() {
                                 onChange={(event) => {
                                   field.onChange(event);
                                   form.clearErrors("root");
+                                  trackSignupStart("details");
                                 }}
                                 className="h-24 text-base! rounded-xl ps-4 bg-transparent border-none focus-visible:ring-0"
                               />

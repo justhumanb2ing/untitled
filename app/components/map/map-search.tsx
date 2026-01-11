@@ -5,6 +5,11 @@ import { Popover, PopoverPanel, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { MagnifyingGlassIcon, XIcon } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import {
+  getUmamiEventAttributes,
+  trackUmamiEvent,
+} from "@/lib/analytics/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
 
 type SearchResult = {
   id: string;
@@ -41,6 +46,13 @@ export function MapSearch({ onSelect, isOpen, onOpenChange }: Props) {
     setQuery(placeName);
     setResults([]);
     onOpenChange(false);
+    trackUmamiEvent(
+      UMAMI_EVENTS.feature.map.select,
+      {
+        [UMAMI_PROP_KEYS.ctx.mapSource]: "search",
+      },
+      { dedupeKey: `map-select:${center[0]}:${center[1]}`, ttlMs: 2000 }
+    );
   };
 
   useEffect(() => {
@@ -90,6 +102,9 @@ export function MapSearch({ onSelect, isOpen, onOpenChange }: Props) {
               isOpen ? "text-white" : "hover:bg-white/10"
             )}
             aria-pressed={isOpen}
+            {...getUmamiEventAttributes(UMAMI_EVENTS.feature.map.search, {
+              [UMAMI_PROP_KEYS.ctx.mapSource]: "search",
+            })}
           >
             <motion.p whileTap={{ scale: 0.8 }}>
               <MagnifyingGlassIcon

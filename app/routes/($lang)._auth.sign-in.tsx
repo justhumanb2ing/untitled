@@ -2,12 +2,21 @@ import { Button } from "@/components/ui/button";
 import { SignIn } from "@clerk/react-router";
 import { XIcon } from "@phosphor-icons/react";
 import { useNavigate, useParams } from "react-router";
+import { useUmamiPageView } from "@/hooks/use-umami-page-view";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
 
 export default function SignInRoute() {
   const { lang } = useParams();
   const signInPath = lang ? `/${lang}/sign-in` : "/sign-in";
   const signUpUrl = lang ? `/${lang}/sign-up` : "/sign-up";
   const navigate = useNavigate();
+
+  useUmamiPageView({
+    eventName: UMAMI_EVENTS.page.signInView,
+    props: {
+      [UMAMI_PROP_KEYS.ctx.pageKind]: "sign_in",
+    },
+  });
 
   return (
     <main className="grow flex flex-col justify-center h-full relative">

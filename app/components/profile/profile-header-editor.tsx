@@ -27,6 +27,12 @@ import VisibilityToggle from "./visibility-toggle";
 import { toastManager } from "@/components/ui/toast";
 import { getMediaValidationError } from "../../../service/pages/page-grid";
 import { Separator } from "../ui/separator";
+import {
+  createUmamiAttemptId,
+  getUmamiEventAttributes,
+  trackUmamiEvent,
+} from "@/lib/analytics/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
 
 const profileHeaderSchema = z.object({
   image_url: z
@@ -147,6 +153,7 @@ export default function ProfileHeaderEditor({
 
     let cancelled = false;
     let objectUrl: string | null = null;
+    let attemptId: string | null = null;
     const requestId = (uploadRequestIdRef.current += 1);
 
     const runUpload = async () => {
@@ -154,6 +161,20 @@ export default function ProfileHeaderEditor({
       if (!isValid || cancelled || requestId !== uploadRequestIdRef.current) {
         return;
       }
+
+      attemptId = createUmamiAttemptId("profile-image");
+      trackUmamiEvent(
+        UMAMI_EVENTS.feature.profileImage.upload,
+        {
+          [UMAMI_PROP_KEYS.ctx.attemptId]: attemptId,
+          [UMAMI_PROP_KEYS.ctx.pageId]: pageId,
+          [UMAMI_PROP_KEYS.ctx.action]: "start",
+        },
+        {
+          dedupeKey: `profile-image-upload:${attemptId}`,
+          once: true,
+        }
+      );
 
       objectUrl = URL.createObjectURL(imageValue);
       setPreviewUrl(objectUrl);
@@ -178,6 +199,19 @@ export default function ProfileHeaderEditor({
 
         setPreviewUrl(publicUrl);
         updateDraft({ image_url: publicUrl });
+        if (attemptId) {
+          trackUmamiEvent(
+            UMAMI_EVENTS.feature.profileImage.success,
+            {
+              [UMAMI_PROP_KEYS.ctx.attemptId]: attemptId,
+              [UMAMI_PROP_KEYS.ctx.pageId]: pageId,
+            },
+            {
+              dedupeKey: `profile-image-success:${attemptId}`,
+              once: true,
+            }
+          );
+        }
       } catch (error) {
         if (!cancelled && requestId === uploadRequestIdRef.current) {
           if (objectUrl) {
@@ -186,6 +220,20 @@ export default function ProfileHeaderEditor({
           }
           setPreviewUrl(null);
           markError();
+          if (attemptId) {
+            trackUmamiEvent(
+              UMAMI_EVENTS.feature.profileImage.error,
+              {
+                [UMAMI_PROP_KEYS.ctx.attemptId]: attemptId,
+                [UMAMI_PROP_KEYS.ctx.pageId]: pageId,
+                [UMAMI_PROP_KEYS.ctx.errorCode]: "upload_failed",
+              },
+              {
+                dedupeKey: `profile-image-error:${attemptId}`,
+                once: true,
+              }
+            );
+          }
         }
       }
     };
@@ -594,6 +642,14 @@ function ProfileHeaderCardForm({
                                 variant="ghost"
                                 className="w-full justify-start gap-2 text-sm py-4.5 rounded-lg"
                                 onClick={handleUploadClick}
+                                {...getUmamiEventAttributes(
+                                  UMAMI_EVENTS.feature.profileImage.upload,
+                                  {
+                                    [UMAMI_PROP_KEYS.ctx.pageId]: pageId,
+                                    [UMAMI_PROP_KEYS.ctx.action]: "click",
+                                    [UMAMI_PROP_KEYS.ctx.source]: "profile_menu",
+                                  }
+                                )}
                               >
                                 Upload
                               </Button>
@@ -603,6 +659,15 @@ function ProfileHeaderCardForm({
                                   variant="ghost"
                                   className="w-full justify-start gap-2 text-sm py-4.5 rounded-lg"
                                   onClick={handleRemoveClick}
+                                  {...getUmamiEventAttributes(
+                                    UMAMI_EVENTS.feature.profileImage.remove,
+                                    {
+                                      [UMAMI_PROP_KEYS.ctx.pageId]: pageId,
+                                      [UMAMI_PROP_KEYS.ctx.action]: "click",
+                                      [UMAMI_PROP_KEYS.ctx.source]:
+                                        "profile_menu",
+                                    }
+                                  )}
                                 >
                                   Remove
                                 </Button>
