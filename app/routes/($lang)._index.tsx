@@ -12,12 +12,15 @@ import { getUmamiEventAttributes } from "@/lib/analytics/umami";
 import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
 import { Link } from "react-router";
 import Logo from "@/components/layout/logo";
+import { buildMeta } from "@/lib/metadata";
+import { metadataConfig } from "@/config/metadata";
 
-export function meta({}: Route.MetaArgs) {
-  return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
-  ];
+export function meta({ location }: Route.MetaArgs) {
+  return buildMeta({
+    title: metadataConfig.title,
+    description: metadataConfig.description,
+    path: location.pathname,
+  });
 }
 
 export async function loader(args: Route.LoaderArgs) {

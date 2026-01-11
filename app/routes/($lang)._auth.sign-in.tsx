@@ -11,8 +11,7 @@ export function meta({ location }: Route.MetaArgs) {
   return buildMeta({
     title: "Sign in",
     description: "Access your account and manage your page.",
-    path: `${location.pathname}${location.search}`,
-    noIndex: true,
+    path: location.pathname,
   });
 }
 

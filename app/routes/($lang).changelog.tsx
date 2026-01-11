@@ -5,6 +5,16 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
+import type { Route } from "./+types/($lang).changelog";
+import { buildMeta } from "@/lib/metadata";
+
+export function meta({ location }: Route.MetaArgs) {
+  return buildMeta({
+    title: "Changelog",
+    description: "Product updates, releases, and notable changes.",
+    path: location.pathname,
+  });
+}
 
 export default function ChangeLogRoute() {
   return (

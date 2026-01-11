@@ -28,6 +28,21 @@ import {
 } from "@/components/profile/profile-badge-view";
 import { OwnerGate } from "@/components/account/owner-gate";
 import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
+import { buildMeta } from "@/lib/metadata";
+
+export function meta({ loaderData, location, params }: Route.MetaArgs) {
+  const page = loaderData?.page;
+  const handle = loaderData?.handle ?? params.handle;
+  const title = page?.title ?? handle ?? "User Page";
+
+  return buildMeta({
+    title,
+    description: page?.description,
+    image: page?.image_url,
+    path: location.pathname,
+    type: "profile",
+  });
+}
 
 type PreviewLayout = "desktop" | "mobile";
 

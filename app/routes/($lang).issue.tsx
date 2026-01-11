@@ -1,4 +1,14 @@
 import Logo from "@/components/layout/logo";
+import type { Route } from "./+types/($lang).issue";
+import { buildMeta } from "@/lib/metadata";
+
+export function meta({ location }: Route.MetaArgs) {
+  return buildMeta({
+    title: "Issue",
+    description: "Report an issue or share product feedback.",
+    path: location.pathname,
+  });
+}
 
 export default function IssueRoute() {
   return (

@@ -1,6 +1,43 @@
 export const metadataConfig = {
   url: "https://untitled.me",
   handle: "untitled.me",
-  title: "",
-  description: "",
+  title: "beyondthewave",
+  description: "A Link in bio, simple but fancy",
+  titleTemplate: "%s | beyondthewave",
+  applicationName: "beyondthewave",
+  generator: "React Router",
+  locale: "ko",
+  locales: ["ko", "en"],
+  keywords: [
+    "beyondthewave",
+    "link in bio",
+    "profile page",
+    "creator page",
+    "personal site",
+    "chizizik",
+    "chzzk",
+    "digital card",
+    "digital profile",
+    "creative profile",
+    "치지직",
+    "linktree",
+    "링크바이오",
+    "프로필카드",
+    "링크트리",
+  ],
+  author: {
+    name: "Justhumanbeing",
+    url: "https://www.buymeacoffee.com/justhumanb2ing",
+  },
+  verification: {
+    google: "",
+    naver: "",
+    googleAdsense: "",
+  },
+  defaultImage: "/link.svg", // 기본 OG/Twitter 미리보기 이미지
+  defaultImageAlt: "beyondthewave",
+  ogType: "website",
+  twitterCard: "summary_large_image",
+  twitterSite: "", // 서비스/브랜드 공식 계정
+  twitterCreator: "", // 콘텐츠 작성자 계정
 };
