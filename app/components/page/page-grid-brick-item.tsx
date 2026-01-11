@@ -59,7 +59,9 @@ const BRICK_RENDERERS: BrickRendererMap = {
     />
   ),
   link: ({ brick, grid }) => renderLinkBrick(brick, grid),
-  map: ({ brick, mapOverrides }) => renderMapBrick(brick, mapOverrides),
+  map: ({ brick, mapOverrides }) => (
+    <MapBrickContent brick={brick} mapOverrides={mapOverrides} />
+  ),
   image: ({ brick }) =>
     renderMediaFrame(
       brick,
@@ -140,10 +142,107 @@ function renderBrick<T extends PageGridBrickType>(
   });
 }
 
-function renderMapBrick(
-  brick: PageGridBrick<"map">,
-  mapOverrides?: MapControlsOverrides
-) {
+type MapBrickContentProps = {
+  brick: PageGridBrick<"map">;
+  mapOverrides?: MapControlsOverrides;
+};
+
+function MapBrickContent({ brick, mapOverrides }: MapBrickContentProps) {
+  const { updateMapBrick, isEditable } = usePageGridActions();
+  const [captionDraft, setCaptionDraft] = useState(brick.data.caption ?? "");
+  const captionDraftRef = useRef(captionDraft);
+  const isEditingRef = useRef(false);
+  const hasPendingChangeRef = useRef(false);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSavedCaptionRef = useRef(normalizeMapCaption(brick.data.caption));
+
+  useEffect(() => {
+    if (isEditingRef.current || hasPendingChangeRef.current) {
+      return;
+    }
+
+    const nextCaption = brick.data.caption ?? "";
+    captionDraftRef.current = nextCaption;
+    setCaptionDraft(nextCaption);
+    lastSavedCaptionRef.current = normalizeMapCaption(brick.data.caption);
+  }, [brick.data.caption]);
+
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+    };
+  }, []);
+
+  const commitCaption = useCallback(
+    (nextValue: string) => {
+      if (!isEditable || !hasPendingChangeRef.current) {
+        return;
+      }
+
+      const normalizedCaption = normalizeMapCaption(nextValue);
+      if (normalizedCaption === lastSavedCaptionRef.current) {
+        hasPendingChangeRef.current = false;
+        return;
+      }
+
+      updateMapBrick({
+        id: brick.id,
+        data: { caption: normalizedCaption },
+      });
+      lastSavedCaptionRef.current = normalizedCaption;
+      hasPendingChangeRef.current = false;
+    },
+    [brick.id, isEditable, updateMapBrick]
+  );
+
+  const scheduleCaptionSave = useCallback(
+    (nextValue: string) => {
+      if (!isEditable) {
+        return;
+      }
+
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+
+      saveTimerRef.current = setTimeout(() => {
+        saveTimerRef.current = null;
+        commitCaption(nextValue);
+      }, 650);
+    },
+    [commitCaption, isEditable]
+  );
+
+  const handleCaptionChange = useCallback(
+    (value: string) => {
+      if (!isEditable) {
+        return;
+      }
+
+      captionDraftRef.current = value;
+      setCaptionDraft(value);
+      hasPendingChangeRef.current = true;
+      scheduleCaptionSave(value);
+    },
+    [isEditable, scheduleCaptionSave]
+  );
+
+  const handleCaptionBlur = useCallback(() => {
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
+
+    commitCaption(captionDraftRef.current);
+    isEditingRef.current = false;
+  }, [commitCaption]);
+
+  const handleCaptionFocus = useCallback(() => {
+    isEditingRef.current = true;
+  }, []);
+
   const hasCoordinates = brick.data.lng !== null && brick.data.lat !== null;
   const center = hasCoordinates
     ? ([brick.data.lng, brick.data.lat] as [number, number])
@@ -158,7 +257,11 @@ function renderMapBrick(
         showCenterIndicator
         showLocationLabel
         showGeolocateControl={false}
-        locationLabel={brick.data.caption}
+        locationLabel={captionDraft}
+        locationLabelEditable={isEditable}
+        onLocationLabelChange={handleCaptionChange}
+        onLocationLabelBlur={handleCaptionBlur}
+        onLocationLabelFocus={handleCaptionFocus}
         href={brick.data.href}
         onControlsChange={mapOverrides?.onControlsChange}
         onViewportChange={mapOverrides?.onViewportChange}
@@ -481,6 +584,15 @@ function resolveTitleClampClass(lines: number) {
 }
 
 function normalizeLinkTitle(value: string | null | undefined) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function normalizeMapCaption(value: string | null | undefined) {
   if (value === null || value === undefined) {
     return null;
   }

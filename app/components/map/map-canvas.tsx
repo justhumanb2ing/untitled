@@ -4,6 +4,8 @@ import {
   useMemo,
   useRef,
   useState,
+  type KeyboardEvent,
+  type RefObject,
   type SyntheticEvent,
 } from "react";
 import mapboxgl from "mapbox-gl";
@@ -19,6 +21,7 @@ import {
 } from "@phosphor-icons/react";
 import { MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM } from "../../../constants/map";
 import { cn } from "@/lib/utils";
+import EditableParagraph from "@/components/profile/editable-paragraph";
 
 type Props = {
   center?: [number, number];
@@ -30,6 +33,10 @@ type Props = {
   showLocationLabel?: boolean;
   showGeolocateControl?: boolean;
   locationLabel?: string | null;
+  locationLabelEditable?: boolean;
+  onLocationLabelChange?: (value: string) => void;
+  onLocationLabelBlur?: () => void;
+  onLocationLabelFocus?: () => void;
   href: string;
 };
 
@@ -56,14 +63,22 @@ export function MapCanvas({
   showLocationLabel = true,
   showGeolocateControl = true,
   locationLabel = null,
+  locationLabelEditable = false,
+  onLocationLabelChange,
+  onLocationLabelBlur,
+  onLocationLabelFocus,
   href,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const geolocateRef = useRef<mapboxgl.GeolocateControl | null>(null);
+  const locationLabelRef = useRef<HTMLParagraphElement | null>(null);
   const [canMove, setCanMove] = useState(false);
   const viewportChangeRef = useRef(onViewportChange);
   const lastViewportRef = useRef<MapCanvasViewport | null>(null);
+  const canEditLocationLabel = Boolean(
+    locationLabelEditable && onLocationLabelChange
+  );
   const handleInteractionStart = useCallback(
     (event: SyntheticEvent<HTMLDivElement>) => {
       if (!canMove) {
@@ -252,6 +267,38 @@ export function MapCanvas({
     };
   }, [onControlsChange]);
 
+  const handleLocationLabelChange = useCallback(
+    (value: string) => {
+      onLocationLabelChange?.(value);
+    },
+    [onLocationLabelChange]
+  );
+
+  const handleLocationLabelBlur = useCallback(() => {
+    onLocationLabelBlur?.();
+  }, [onLocationLabelBlur]);
+
+  const handleLocationLabelFocus = useCallback(() => {
+    onLocationLabelFocus?.();
+  }, [onLocationLabelFocus]);
+
+  const handleLocationLabelKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLParagraphElement>) => {
+      if (!canEditLocationLabel) {
+        return;
+      }
+
+      if (event.key !== "Enter") {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      locationLabelRef.current?.blur();
+    },
+    [canEditLocationLabel]
+  );
+
   const controlsReady = Boolean(mapRef.current);
 
   return (
@@ -273,20 +320,22 @@ export function MapCanvas({
       )}
       <div className="absolute bottom-3 left-0 px-3 flex items-center justify-between w-full">
         {showLocationLabel && (
-          <div
-            role="textbox"
-            contentEditable
-            suppressContentEditableWarning
-            data-placeholder="Location"
-            data-empty={!locationLabel}
+          <EditableParagraph
+            elementRef={locationLabelRef as RefObject<HTMLParagraphElement>}
+            value={locationLabel}
+            onValueChange={handleLocationLabelChange}
+            onValueBlur={handleLocationLabelBlur}
+            onFocus={handleLocationLabelFocus}
+            onKeyDown={handleLocationLabelKeyDown}
+            readOnly={!canEditLocationLabel}
+            placeholder="Location"
+            ariaLabel="Location label"
             className={cn(
-              "relative non-drag cursor-text",
-              "min-w-24 bg-background border rounded-lg p-2 py-2 w-fit focus:outline-none text-base",
-              "data-[empty=true]:before:absolute  data-[empty=true]:before:content-[attr(data-placeholder)] data-[empty=true]:before:left-3 data-[empty=true]:before:right-3 data-[empty=true]:before:top-1/2 data-[empty=true]:before:-translate-y-1/2 data-[empty=true]:before:flex data-[empty=true]:before:items-center data-[empty=true]:before:text-muted-foreground"
+              "non-drag",
+              "min-w-24 w-fit bg-background border rounded-lg px-3 py-2 text-base",
+              "data-[empty=true]:before:inset-auto data-[empty=true]:before:left-3 data-[empty=true]:before:right-3 data-[empty=true]:before:top-1/2 data-[empty=true]:before:-translate-y-1/2 data-[empty=true]:before:items-center"
             )}
-          >
-            {locationLabel}
-          </div>
+          />
         )}
         {href && (
           <a
