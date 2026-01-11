@@ -12,7 +12,7 @@ export default function ChangeLogRoute() {
       <header>
         <Logo />
       </header>
-      <section className="grow rounded-lg border-2 border-dotted">
+      <section className="grow rounded-lg">
         <Empty className="h-full">
           <EmptyHeader>
             <EmptyTitle>Changelog</EmptyTitle>

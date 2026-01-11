@@ -214,9 +214,9 @@ export default function App({ loaderData }: Route.ComponentProps) {
         },
       }}
     >
-      <main className="h-dvh flex flex-col">
+      <main className="h-dvh">
         <Providers>
-          <main className="grow">
+          <main className="h-full">
             <Outlet />
           </main>
         </Providers>

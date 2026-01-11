@@ -4,6 +4,17 @@ import { XIcon } from "@phosphor-icons/react";
 import { useNavigate, useParams } from "react-router";
 import { useUmamiPageView } from "@/hooks/use-umami-page-view";
 import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
+import type { Route } from "./+types/($lang)._auth.sign-in";
+import { buildMeta } from "@/lib/metadata";
+
+export function meta({ location }: Route.MetaArgs) {
+  return buildMeta({
+    title: "Sign in",
+    description: "Access your account and manage your page.",
+    path: `${location.pathname}${location.search}`,
+    noIndex: true,
+  });
+}
 
 export default function SignInRoute() {
   const { lang } = useParams();
@@ -37,10 +48,10 @@ export default function SignInRoute() {
 
         <aside className="h-full flex-5 hidden lg:block">
           <div className="relative h-full">
-            <div
+            {/* <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-y-0 left-0 w-20 bg-linear-to-r from-black/60 to-transparent"
-            />
+            /> */}
             <img
               src="https://images.unsplash.com/photo-1766963031469-0f52e1ab417a?q=80&w=1587&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
               alt="sign-in-page"

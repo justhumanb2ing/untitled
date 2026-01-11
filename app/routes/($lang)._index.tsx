@@ -93,8 +93,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       </section>
 
       {/* Footer */}
-      <footer className="h-[400px] my-20 text-muted-foreground flex flex-col justify-center items-center gap-20">
-        <div>
+      <footer className="h-[400px] my-20 pb-32 text-muted-foreground flex flex-col justify-center items-center gap-20">
+        <div className="space-y-4">
           <div className="flex justify-center font-medium text-3xl tracking-tighter">
             beyondthewave
           </div>
