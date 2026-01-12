@@ -48,6 +48,7 @@
     "react-hook-form": "^7.69.0",
     "react-intlayer": "^7.5.7",
     "react-router": "7.10.1",
+    "resend": "^6.7.0",
     "shadcn": "^3.6.2",
     "tailwind-merge": "^3.4.0",
     "vaul": "^1.1.2",

@@ -112,7 +112,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               <Link to={"/changelog"}>Changelog</Link>
             </li>
             <li className="hover:underline underline-offset-2">
-              <Link to={"/issue"}>Issue</Link>
+              <Link to={"/feedback"}>Feedback</Link>
             </li>
           </ul>
         </div>
