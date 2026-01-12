@@ -1,6 +1,6 @@
 export const metadataConfig = {
-  url: "https://untitled.me",
-  handle: "untitled.me",
+  url: "https://beyondthewave.vercel.app",
+  handle: "beyondthewave.vercel.app",
   title: "beyondthewave",
   description: "A Link in bio, simple but fancy",
   titleTemplate: "%s | beyondthewave",

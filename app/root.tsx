@@ -27,6 +27,8 @@ import { HouseSimpleIcon } from "@phosphor-icons/react";
 
 import { shadcn } from "@clerk/themes";
 import { buildAlternateLinks } from "@/lib/metadata";
+import JsonLd from "@/components/seo/json-ld";
+import { buildJsonLd } from "@/lib/json-ld";
 
 const clerkLocalization = {
   signIn: {
@@ -121,6 +123,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const isNavigating = Boolean(navigation.location);
   const location = useLocation();
   const alternateLinks = buildAlternateLinks({ path: location.pathname });
+  const jsonLdData = buildJsonLd({ path: location.pathname });
   const umamiWebsiteId = import.meta.env.VITE_UMAMI_WEBSITE_ID;
   const umamiScriptUrl =
     import.meta.env.VITE_UMAMI_SCRIPT_URL ?? "https://cloud.umami.is/script.js";
@@ -147,6 +150,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           />
         ))}
         <Meta />
+        <JsonLd data={jsonLdData} />
         <Links />
       </head>
       <body className="relative">
