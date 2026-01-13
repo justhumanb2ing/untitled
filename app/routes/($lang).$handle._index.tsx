@@ -321,15 +321,13 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
             {/* Action bar */}
             <aside
               className={cn(
-                "static h-28 py-6 pb-10 flex items-center justify-center xl:fixed xl:bottom-10 xl:left-10 xl:px-0 xl:mb-0 xl:py-0 xl:h-fit xl:border-none"
+                "rounded bg-background static h-28 py-6 pb-10 flex items-center justify-center xl:fixed xl:bottom-10 xl:right-48 xl:px-2 xl:mb-0 xl:py-2 xl:h-fit xl:border"
               )}
             >
-              <div className={cn("flex")}>
-                <BottomActionBar
-                  isOwner={isOwner}
-                  isMobilePreview={isMobilePreview}
-                />
-              </div>
+              <BottomActionBar
+                isOwner={isOwner}
+                isMobilePreview={isMobilePreview}
+              />
             </aside>
           </div>
 
@@ -343,7 +341,14 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
             </div> */}
           </OwnerGate>
 
-          <AppToolbar isMobilePreview={isMobilePreview} />
+          <aside
+            className={cn(
+              "fixed bottom-28 right-48",
+              isMobilePreview ? "hidden" : "hidden xl:block"
+            )}
+          >
+            <AppToolbar isMobilePreview={isMobilePreview} />
+          </aside>
         </div>
       </PageGridProvider>
     </PageAutoSaveController>

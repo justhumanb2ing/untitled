@@ -12,7 +12,13 @@ import { Popover, PopoverPanel, PopoverTrigger } from "../ui/popover";
 import { toastManager } from "@/components/ui/toast";
 import { usePageGridActions } from "@/components/page/page-grid-context";
 import { getMediaValidationError } from "../../../service/pages/page-grid";
-import { XIcon } from "@phosphor-icons/react";
+import {
+  GlobeHemisphereEastIcon,
+  ImageSquareIcon,
+  LinkSimpleIcon,
+  QuotesIcon,
+  XIcon,
+} from "@phosphor-icons/react";
 import { useAuth } from "@clerk/react-router";
 import { resolveExternalHref } from "@/utils/resolve-external-href";
 import type { OgCrawlResponse } from "types/link-crawl";
@@ -210,12 +216,7 @@ export default function AppToolbar({ isMobilePreview }: AppToolbarProps) {
   }
 
   return (
-    <aside
-      className={cn(
-        "fixed bottom-10 right-48",
-        isMobilePreview ? "hidden" : "hidden xl:block"
-      )}
-    >
+    <>
       <ToolbarRoot className={"toolbar-shadow border-0 px-3 py-2"}>
         <ToolbarGroup className={"gap-2"}>
           <Popover open={isLinkPopoverOpen} onOpenChange={setIsLinkPopoverOpen}>
@@ -239,11 +240,7 @@ export default function AppToolbar({ isMobilePreview }: AppToolbarProps) {
                               }
                             )}
                           >
-                            <img
-                              src="/link.svg"
-                              alt="link"
-                              className="w-full h-full object-cover"
-                            />
+                            <LinkSimpleIcon />
                           </Button>
                         }
                       />
@@ -316,11 +313,7 @@ export default function AppToolbar({ isMobilePreview }: AppToolbarProps) {
                         }
                       )}
                     >
-                      <img
-                        src="/note.svg"
-                        alt="text"
-                        className="w-full h-full object-cover"
-                      />
+                      <QuotesIcon />
                     </Button>
                   }
                 />
@@ -351,11 +344,7 @@ export default function AppToolbar({ isMobilePreview }: AppToolbarProps) {
                         }
                       )}
                     >
-                      <img
-                        src="/photo.svg"
-                        alt="image&video"
-                        className="w-full h-full object-cover"
-                      />
+                      <ImageSquareIcon />
                     </Button>
                   }
                 />
@@ -386,11 +375,7 @@ export default function AppToolbar({ isMobilePreview }: AppToolbarProps) {
                         }
                       )}
                     >
-                      <img
-                        src="/map.svg"
-                        alt="map"
-                        className="w-full h-full object-cover"
-                      />
+                      <GlobeHemisphereEastIcon />
                     </Button>
                   }
                 />
@@ -411,6 +396,6 @@ export default function AppToolbar({ isMobilePreview }: AppToolbarProps) {
         disabled={!isEditable}
         aria-disabled={!isEditable}
       />
-    </aside>
+    </>
   );
 }
