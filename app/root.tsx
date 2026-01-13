@@ -6,7 +6,6 @@ import {
   Scripts,
   ScrollRestoration,
   redirect,
-  useLocation,
   useNavigation,
 } from "react-router";
 
@@ -25,9 +24,6 @@ import { Button } from "./components/ui/button";
 import { HouseSimpleIcon } from "@phosphor-icons/react";
 
 import { shadcn } from "@clerk/themes";
-import { buildAlternateLinks } from "@/lib/metadata";
-import JsonLd from "@/components/seo/json-ld";
-import { buildJsonLd } from "@/lib/json-ld";
 import { LocalizedLink } from "@/components/i18n/localized-link";
 
 const clerkLocalization = {
@@ -121,9 +117,6 @@ export const loader = (args: Route.LoaderArgs) =>
 export function Layout({ children }: { children: React.ReactNode }) {
   const navigation = useNavigation();
   const isNavigating = Boolean(navigation.location);
-  const location = useLocation();
-  const alternateLinks = buildAlternateLinks({ path: location.pathname });
-  const jsonLdData = buildJsonLd({ path: location.pathname });
   const umamiWebsiteId = import.meta.env.VITE_UMAMI_WEBSITE_ID;
   const umamiScriptUrl =
     import.meta.env.VITE_UMAMI_SCRIPT_URL ?? "https://cloud.umami.is/script.js";
@@ -141,16 +134,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             data-auto-track="false"
           />
         ) : null}
-        {alternateLinks.map((link) => (
-          <link
-            key={`${link.rel}-${link.hrefLang ?? "canonical"}`}
-            rel={link.rel}
-            href={link.href}
-            hrefLang={link.hrefLang}
-          />
-        ))}
         <Meta />
-        <JsonLd data={jsonLdData} />
         <Links />
       </head>
       <body className="relative">

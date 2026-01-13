@@ -25,7 +25,6 @@ import {
 } from "../ui/popover";
 import { Spinner } from "../ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
-import { metadataConfig } from "@/config/metadata";
 import { useLocalizedNavigate } from "@/hooks/use-localized-navigate";
 import { getSupabaseClient } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
@@ -305,7 +304,7 @@ export default function ChangeHandleFormPopover({
                       />
                     </FormControl>
                     <span className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground text-base! peer-disabled:opacity-50">
-                      {metadataConfig.handle}/@
+                      @
                     </span>
                   </div>
                   <FormMessage className="text-xs" />

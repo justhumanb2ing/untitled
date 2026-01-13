@@ -13,16 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
-import { buildMeta } from "@/lib/metadata";
 import type { Route } from "./+types/($lang).feedback";
-
-export function meta({ location }: Route.MetaArgs) {
-  return buildMeta({
-    title: "Feedback",
-    description: "Report an issue or share product feedback.",
-    path: location.pathname,
-  });
-}
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 

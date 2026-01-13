@@ -4,16 +4,6 @@ import { XIcon } from "@phosphor-icons/react";
 import { useNavigate, useParams } from "react-router";
 import { useUmamiPageView } from "@/hooks/use-umami-page-view";
 import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
-import type { Route } from "./+types/($lang)._auth.sign-in";
-import { buildMeta } from "@/lib/metadata";
-
-export function meta({ location }: Route.MetaArgs) {
-  return buildMeta({
-    title: "Sign in",
-    description: "Access your account and manage your page.",
-    path: location.pathname,
-  });
-}
 
 export default function SignInRoute() {
   const { lang } = useParams();

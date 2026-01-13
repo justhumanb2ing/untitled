@@ -36,7 +36,6 @@ import {
 } from "@/components/ui/stepper";
 import { FieldSet } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
-import { metadataConfig } from "@/config/metadata";
 import { getSupabaseClient, getSupabaseServerClient } from "@/lib/supabase";
 import { getLocalizedPath } from "@/lib/localized-path";
 import { Activity } from "@/components/motion/activity";
@@ -463,7 +462,7 @@ export default function OnboardingRoute() {
                                 />
                               </FormControl>
                               <span className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground text-base! peer-disabled:opacity-50">
-                                {metadataConfig.handle}/@
+                                @
                               </span>
                             </div>
 
