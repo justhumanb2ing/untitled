@@ -1,9 +1,8 @@
 import { useMemo, useState } from "react";
 import BottomActionBar from "@/components/layout/bottom-action-bar";
-import type { Route } from "./+types/($lang)._auth.user.$handle._index";
+import type { Route } from "./+types/($lang).$handle._index";
 import { getAuth } from "@clerk/react-router/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
-import { LightningIcon } from "@phosphor-icons/react";
 import ProfileHeaderEditor from "@/components/profile/profile-header-editor";
 import { cn } from "@/lib/utils";
 import LayoutToggle from "@/components/layout/layout-toggle";
@@ -29,6 +28,14 @@ import {
 import { OwnerGate } from "@/components/account/owner-gate";
 import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
 import { buildMeta } from "@/lib/metadata";
+import SavingStatusIndicator from "@/components/page/saving-status-indicator";
+import { Separator } from "@/components/ui/separator";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty";
 
 export function meta({ loaderData, location, params }: Route.MetaArgs) {
   const page = loaderData?.page;
@@ -149,6 +156,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
     () => parsePageLayoutSnapshot(pageLayout),
     [pageLayout]
   );
+
   const pageViewProps = useMemo(
     () => ({
       [UMAMI_PROP_KEYS.ctx.pageId]: id,
@@ -181,45 +189,49 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
         <div
           className={cn(
             `flex flex-col gap-4 transition-all ease-in-out duration-700 bg-background relative`,
+            "max-w-full w-full h-full my-0 min-h-dvh",
+            // !isMobilePreview && "xl:h-dvh xl:overflow-hidden",
+            // isMobilePreview && "rounded-3xl"
             isMobilePreview
-              ? "self-start border rounded-[36px] shadow-lg max-w-lg mx-auto container my-6 h-[calc(100dvh-12rem)] overflow-hidden"
+              ? "self-start border rounded-[36px] shadow-lg max-w-lg mx-auto container h-[calc(100dvh-12rem)] overflow-hidden"
               : "max-w-full w-full h-full my-0 min-h-dvh xl:h-dvh xl:overflow-hidden"
           )}
         >
           <div
             className={cn(
               "relative flex flex-col gap-4 grow min-h-0",
-              isMobilePreview &&
-                "overflow-y-auto overscroll-contain scrollbar-hide"
+              isMobilePreview
+                ? "overflow-y-auto overscroll-contain scrollbar-hide"
+                : "mx-auto container max-w-lg xl:max-w-full"
             )}
           >
             {/* Desktop Badge View */}
-            <DesktopBadgeView
+            {/* <DesktopBadgeView
               isOwner={isOwner}
               umamiResult={umamiResult}
               isMobilePreview={isMobilePreview}
-            />
+            /> */}
 
             <div
               className={cn(
-                "flex flex-col gap-4 grow max-w-lg relative",
-                isMobilePreview
-                  ? "flex-col! mx-0 gap-4"
-                  : " mx-auto container xl:flex-row xl:justify-center xl:max-w-11/12 xl:gap-12 xl:flex-1 xl:min-h-0"
+                "flex flex-col gap-4 grow relative",
+                !isMobilePreview &&
+                  "mx-auto container xl:mx-0 xl:flex-row xl:min-h-0 max-w-full xl:justify-between"
               )}
             >
               {/* Mobile Badge View */}
-              <MobileBadgeView
+              {/* <MobileBadgeView
                 isOwner={isOwner}
                 umamiResult={umamiResult}
                 isMobilePreview={isMobilePreview}
-              />
+              /> */}
 
               {/* Page Information Section */}
               <section
                 className={cn(
-                  "max-w-2xl shrink relative",
-                  isMobilePreview ? "py-0" : "xl:py-24 xl:flex-5 xl:mt-4"
+                  "shrink sticky top-0 z-0 h-dvh",
+                  !isMobilePreview &&
+                    "xl:flex xl:w-1/3 xl:static xl:h-auto xl:py-0"
                 )}
               >
                 <ProfileHeaderEditor
@@ -233,48 +245,83 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
                   isMobilePreview={isMobilePreview}
                   isPublic={is_public}
                 />
-                <div className="flex justify-center mb-4">
-                  <p className="flex items-center gap-1 text-center text-primary/40 font-medium">
-                    <LightningIcon weight="fill" />
-                    Powered by Untitled
-                  </p>
-                </div>
               </section>
 
-              {/* Page Brick Section */}
-              <section
+              {/* Page Brick Section - Mobile App Style Bottom Sheet */}
+              <div
                 className={cn(
-                  "px-4 pb-8 grow shrink-0 scrollbar-hide",
-                  isMobilePreview
-                    ? "max-w-full py-0 px-8 pb-8 pt-10"
-                    : "xl:px-0 xl:pt-24 xl:pb-0 xl:flex-14 xl:w-full xl:max-w-[880px] xl:min-h-0 xl:overflow-y-auto"
+                  isMobilePreview ? "" : "xl:grow xl:flex xl:justify-center"
                 )}
               >
-                <ScrollArea
+                <section
                   className={cn(
-                    "w-full h-full",
-                    isMobilePreview ? "" : "xl:w-[880px]"
+                    "shrink-0 sticky z-10",
+                    "bg-background rounded-t-3xl",
+                    !isMobilePreview &&
+                      "xl:static xl:z-0 xl:w-full xl:max-w-[880px] xl:rounded-t-[32px] xl:top-32 xl:overflow-hidden"
                   )}
-                  scrollFade
-                  scrollbarGutter
-                  scrollbarHidden
                 >
+                  {/* Drag Handle Indicator */}
                   <div
                     className={cn(
-                      "w-full",
-                      isMobilePreview ? "pb-50" : "pb-32"
+                      "sticky top-0 z-20 flex justify-center pt-3 pb-2 bg-background rounded-t-3xl",
+                      isMobilePreview
+                        ? "rounded-t-3xl"
+                        : "xl:hidden xl:rounded-none"
                     )}
                   >
-                    <PageGridBrickSection isMobilePreview={isMobilePreview} />
+                    <div
+                      className={cn(
+                        "w-9 h-1 rounded-full bg-muted-foreground/25",
+                        "transition-colors duration-200"
+                      )}
+                      aria-hidden="true"
+                    />
                   </div>
-                </ScrollArea>
-              </section>
+
+                  {initialBricks.length === 0 && (
+                    <Empty className="h-full">
+                      <EmptyHeader>
+                        <EmptyTitle className="text-lg">Empty</EmptyTitle>
+                        <EmptyDescription className="text-sm/relaxed">
+                          Everything remains the same for the time being.
+                        </EmptyDescription>
+                      </EmptyHeader>
+                    </Empty>
+                  )}
+                  <ScrollArea
+                    className={cn(
+                      "w-full h-[calc(100%-20px)]",
+                      !isMobilePreview && "xl:w-[880px]"
+                    )}
+                    scrollFade
+                    scrollbarGutter
+                    scrollbarHidden
+                  >
+                    <div
+                      className={cn(
+                        "w-full px-3 pb-32 pt-4",
+                        !isMobilePreview && "xl:px-0"
+                      )}
+                    >
+                      <PageGridBrickSection isMobilePreview={isMobilePreview} />
+                    </div>
+                  </ScrollArea>
+                </section>
+              </div>
             </div>
 
+            <Separator
+              className={cn(
+                "block xl:hidden data-[orientation=horizontal]:bg-muted data-[orientation=horizontal]:h-2"
+              )}
+            />
+
+            {/* TODO: xl 이상일 때 위치 변경 */}
             {/* Action bar */}
             <aside
               className={cn(
-                "static h-28 py-12 border-t flex items-center justify-center xl:fixed xl:bottom-10 xl:left-10 xl:px-0 xl:mb-0 xl:py-0 xl:h-fit xl:border-none"
+                "static h-28 py-6 pb-10 flex items-center justify-center xl:fixed xl:bottom-10 xl:left-10 xl:px-0 xl:mb-0 xl:py-0 xl:h-fit xl:border-none"
               )}
             >
               <div className={cn("flex")}>
@@ -291,6 +338,9 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
               isDesktop={!isMobilePreview}
               onToggle={setPreviewLayout}
             />
+            {/* <div className="flex items-center gap-1">
+              <SavingStatusIndicator />
+            </div> */}
           </OwnerGate>
 
           <AppToolbar isMobilePreview={isMobilePreview} />

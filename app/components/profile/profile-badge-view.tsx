@@ -29,7 +29,7 @@ function BadgeContent({
 }: BadgeContentProps) {
   return (
     <div className="flex items-center gap-2 justify-end shrink-0">
-      <OwnerGate isOwner={isOwner}>
+      {/* <OwnerGate isOwner={isOwner}>
         <div className="flex items-center gap-1">
           <SavingStatusIndicator />
         </div>
@@ -39,14 +39,15 @@ function BadgeContent({
             "my-1 rounded-full data-[orientation=vertical]:bg-[#e5e5e5] data-[orientation=vertical]:w-0.5 dark:data-[orientation=vertical]:bg-[#505050]"
           }
         />
-      </OwnerGate>
+      </OwnerGate> */}
       {umamiResult && umamiResult.ok ? (
         <p className="text-xs">
+          +
           <NumberTicker
             value={umamiResult.data!.visits || 0}
             className="text-foreground dark:text-foreground"
           />{" "}
-          View
+          Viewer
         </p>
       ) : (
         <p className={errorTextClassName}>Error</p>
@@ -70,7 +71,7 @@ function BadgeView({
     >
       <Badge
         variant={"secondary"}
-        className="px-3 py-3.5 rounded-sm! bg-secondary/50 backdrop-blur-sm"
+        // className="px-3 py-3.5 rounded-sm! bg-secondary/70 backdrop-blur-sm"
       >
         <BadgeContent
           isOwner={isOwner}

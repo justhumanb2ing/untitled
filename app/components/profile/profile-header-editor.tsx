@@ -33,6 +33,7 @@ import {
   trackUmamiEvent,
 } from "@/lib/analytics/umami";
 import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
+import ProfileImageOptionDrawer from "./profile-image-option-drawer";
 
 const profileHeaderSchema = z.object({
   image_url: z
@@ -506,220 +507,145 @@ function ProfileHeaderCardForm({
   handleRemoveImage,
   onSubmit,
 }: ProfileHeaderFormProps) {
-  const [isImagePopoverOpen, setIsImagePopoverOpen] = useState(false);
-  const handleUploadClick = () => {
-    setIsImagePopoverOpen(false);
-    handleSelectImage();
-  };
-  const handleRemoveClick = () => {
-    setIsImagePopoverOpen(false);
-    handleRemoveImage();
-  };
-
-  const handleSelectImage = () => imageInputRef.current?.click();
-
   return (
-    <div>
-      <Form {...form}>
-        <form
-          className={cn(
-            "flex w-full flex-col items-center gap-6",
-            isMobilePreview ? "gap-6" : "xl:items-start xl:gap-8"
-          )}
-          onSubmit={onSubmit}
-        >
-          <FormField
-            control={form.control}
-            name="image_url"
-            render={({ field }) => (
-              <FormItem className="w-full">
-                <div className={cn("relative w-full mx-auto max-w-lg")}>
-                  <div
-                    className={cn(
-                      "relative overflow-hidden xl:rounded-t-[28px] bg-neutral-900/10",
-                      isMobilePreview ? "aspect-4/5" : "aspect-5/6"
-                    )}
-                  >
-                    {!hasImage && (
-                      <div className="absolute inset-0 bg-linear-to-br from-neutral-900 via-neutral-700/70 to-neutral-950" />
-                    )}
-                    {hasImage && (
-                      <img
-                        src={resolvedImageUrl}
-                        alt={title ?? handle ?? "Profile image"}
-                        className="absolute inset-0 h-full w-full object-cover grayscale-12 contrast-110"
-                      />
-                    )}
-                    {/* bottom fade */}
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-background via-60% to-transparent" />
-                    <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 px-6 pb-8 text-center text-white">
-                      <FormField
-                        control={form.control}
-                        name="title"
-                        render={({ field: titleField }) => (
-                          <FormItem className="w-full">
-                            <FormControl>
-                              <EditableParagraph
-                                value={titleField.value}
-                                onValueChange={titleField.onChange}
-                                onValueBlur={titleField.onBlur}
-                                readOnly={isReadOnly}
-                                placeholder={titlePlaceholder}
-                                ariaLabel="Profile title"
-                                className={cn(
-                                  "text-foreground text-2xl font-semibold tracking-tight data-[empty=true]:before:text-background/50 data-[empty=true]:before:justify-center",
-                                  isMobilePreview ? "text-2xl" : "xl:text-3xl",
-                                  isReadOnly && "truncate"
-                                )}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="description"
-                        render={({ field: descriptionField }) => (
-                          <FormItem className="w-full">
-                            <FormControl>
-                              <EditableParagraph
-                                value={descriptionField.value}
-                                onValueChange={descriptionField.onChange}
-                                onValueBlur={descriptionField.onBlur}
-                                readOnly={isReadOnly}
-                                placeholder={descriptionPlaceholder}
-                                ariaLabel="Profile description"
-                                multiline
-                                className={cn(
-                                  "text-base font-light leading-relaxed text-foreground/80 line-clamp-3 data-[empty=true]:before:text-background/50 data-[empty=true]:before:justify-center",
-                                  isMobilePreview ? "text-base" : "xl:text-lg",
-                                  isReadOnly && "truncate"
-                                )}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-                  {!isReadOnly && (
-                    <div className="absolute right-4 top-4">
-                      <Popover
-                        open={isImagePopoverOpen}
-                        onOpenChange={setIsImagePopoverOpen}
-                      >
-                        <PopoverTrigger
-                          render={
-                            <Button
-                              type="button"
-                              variant="secondary"
-                              size="lg"
-                              className={cn(
-                                "rounded-lg shadow-[0_10px_25px_-15px_rgba(0,0,0,0.7)] hover:bg-background px-4 text-sm",
-                                isMobilePreview
-                                  ? ""
-                                  : "xl:h-10 xl:px-4 xl:text-base"
-                              )}
-                              aria-label="Profile image actions"
-                            >
-                              {/* <DotsThreeIcon className="size-5" weight="bold" /> */}
-                              Edit
-                            </Button>
-                          }
-                        />
-                        <PopoverPanel
-                          side="bottom"
-                          align="end"
-                          sideOffset={12}
-                          className="w-60 p-2 rounded-2xl"
-                        >
-                          <div className="flex flex-col">
-                            <div className="flex flex-col gap-1">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                className="w-full justify-start gap-2 text-sm py-4.5 rounded-lg"
-                                onClick={handleUploadClick}
-                                {...getUmamiEventAttributes(
-                                  UMAMI_EVENTS.feature.profileImage.upload,
-                                  {
-                                    [UMAMI_PROP_KEYS.ctx.pageId]: pageId,
-                                    [UMAMI_PROP_KEYS.ctx.action]: "click",
-                                    [UMAMI_PROP_KEYS.ctx.source]: "profile_menu",
-                                  }
-                                )}
-                              >
-                                Upload
-                              </Button>
-                              {hasImage && (
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  className="w-full justify-start gap-2 text-sm py-4.5 rounded-lg"
-                                  onClick={handleRemoveClick}
-                                  {...getUmamiEventAttributes(
-                                    UMAMI_EVENTS.feature.profileImage.remove,
-                                    {
-                                      [UMAMI_PROP_KEYS.ctx.pageId]: pageId,
-                                      [UMAMI_PROP_KEYS.ctx.action]: "click",
-                                      [UMAMI_PROP_KEYS.ctx.source]:
-                                        "profile_menu",
-                                    }
-                                  )}
-                                >
-                                  Remove
-                                </Button>
-                              )}
-                            </div>
-                            <Separator
-                              className={
-                                "rounded-full data-[orientation=horizontal]:bg-muted data-[orientation=horizontal]:h-0.5 my-1"
-                              }
-                            />
-                            <VisibilityToggle
-                              pageId={pageId}
-                              isPublic={isPublic}
-                            />
-                          </div>
-                        </PopoverPanel>
-                      </Popover>
-                    </div>
-                  )}
-                  {/* {!isReadOnly && (
-                    <div
-                      className={cn(
-                        "absolute top-4 right-16",
-                        isMobilePreview ? "block" : ""
-                      )}
-                    >
-                      <VisibilityToggle pageId={pageId} isPublic={isPublic} />
-                    </div>
-                  )} */}
-                </div>
-                <FormControl>
-                  <input
-                    ref={imageInputRef}
-                    type="file"
-                    accept="image/*"
-                    name={field.name}
-                    onBlur={field.onBlur}
-                    className="sr-only"
-                    onChange={(event) =>
-                      handleProfileImageInputChange(event, field.onChange)
-                    }
-                    disabled={isReadOnly}
-                    aria-disabled={isReadOnly}
+    <Form {...form}>
+      <form
+        className={cn(
+          "w-full items-center gap-6 h-full max-h-full relative",
+          !isMobilePreview && "xl:items-start xl:gap-8 xl:h-full"
+        )}
+        onSubmit={onSubmit}
+      >
+        <FormField
+          control={form.control}
+          name="image_url"
+          render={({ field }) => (
+            <FormItem
+              className={cn(
+                "w-full h-full max-h-full",
+                !isMobilePreview && "xl:h-full xl:max-h-full"
+              )}
+            >
+              {/* Image */}
+              <div
+                className={cn(
+                  "relative overflow-hidden bg-neutral-900/10 h-full"
+                )}
+              >
+                {hasImage ? (
+                  <img
+                    src={resolvedImageUrl}
+                    alt={title ?? handle ?? "Profile image"}
+                    className="w-full h-full object-cover transition-transform duration-700 hover:scale-[1.02]"
                   />
-                </FormControl>
-                <FormMessage className="text-center" />
-              </FormItem>
-            )}
-          />
-        </form>
-      </Form>
-    </div>
+                ) : (
+                  <div className="absolute inset-0 bg-linear-to-br from-neutral-900 via-neutral-700/70 to-neutral-950" />
+                )}
+
+                {/* Multi-layer gradient overlay - refined for mobile app feel */}
+                <div
+                  className={cn(
+                    "pointer-events-none absolute inset-0",
+                    "bg-[linear-gradient(to_top,rgba(0,0,0,0.85)_0%,rgba(0,0,0,0.4)_40%,rgba(0,0,0,0.1)_70%,transparent_100%)]"
+                  )}
+                />
+
+                <div className="pointer-events-none absolute right-0 inset-y-0 bottom-0 h-full w-1/7 dark:bg-linear-to-l dark:from-background dark:via-70% dark:to-transparent" />
+
+                {!isReadOnly && (
+                  <div className="absolute right-4 top-4">
+                    <ProfileImageOptionDrawer
+                      imageRef={imageInputRef}
+                      pageId={pageId}
+                      isVisible={isPublic}
+                      hasImage={hasImage}
+                      onRemoveImage={handleRemoveImage}
+                    />
+                  </div>
+                )}
+              </div>
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                name={field.name}
+                onBlur={field.onBlur}
+                className="sr-only hidden"
+                onChange={(event) =>
+                  handleProfileImageInputChange(event, field.onChange)
+                }
+                disabled={isReadOnly}
+                aria-disabled={isReadOnly}
+              />
+            </FormItem>
+          )}
+        />
+        {/* Text container - bold typography like reference image */}
+        <div
+          className={cn(
+            "absolute inset-x-0 bottom-0 flex flex-col gap-1 px-5 pb-6",
+            !isMobilePreview && "xl:px-6 xl:pb-8"
+          )}
+        >
+          <div className="relative z-10 w-full flex flex-col gap-1.5">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field: titleField }) => (
+                <FormItem className="w-full text-left">
+                  <FormControl>
+                    <EditableParagraph
+                      value={titleField.value}
+                      onValueChange={titleField.onChange}
+                      onValueBlur={titleField.onBlur}
+                      readOnly={isReadOnly}
+                      placeholder={titlePlaceholder}
+                      ariaLabel="Profile title"
+                      className={cn(
+                        "font-semibold tracking-[-0.02em] leading-[1.1] text-white",
+                        "drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]",
+                        "data-[empty=true]:before:text-white/40",
+                        "text-3xl",
+                        !isMobilePreview && "xl:text-4xl",
+                        isReadOnly && "truncate"
+                      )}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field: descriptionField }) => (
+                <FormItem className="w-full text-left">
+                  <FormControl>
+                    <EditableParagraph
+                      value={descriptionField.value}
+                      onValueChange={descriptionField.onChange}
+                      onValueBlur={descriptionField.onBlur}
+                      readOnly={isReadOnly}
+                      placeholder={descriptionPlaceholder}
+                      ariaLabel="Profile description"
+                      multiline
+                      className={cn(
+                        "font-light tracking-wide leading-relaxed text-white/85 line-clamp-2",
+                        "data-[empty=true]:before:text-white/40",
+                        "text-sm",
+                        !isMobilePreview && "xl:text-base",
+                        isReadOnly && "truncate"
+                      )}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+      </form>
+    </Form>
   );
 }
 

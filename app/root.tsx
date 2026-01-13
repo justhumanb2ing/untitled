@@ -8,7 +8,6 @@ import {
   redirect,
   useLocation,
   useNavigation,
-  Link,
 } from "react-router";
 
 import type { Route } from "./+types/root";
@@ -29,6 +28,7 @@ import { shadcn } from "@clerk/themes";
 import { buildAlternateLinks } from "@/lib/metadata";
 import JsonLd from "@/components/seo/json-ld";
 import { buildJsonLd } from "@/lib/json-ld";
+import { LocalizedLink } from "@/components/i18n/localized-link";
 
 const clerkLocalization = {
   signIn: {
@@ -279,10 +279,10 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
                 size={"lg"}
                 className={"h-10 px-4 text-sm rounded-xl"}
                 render={
-                  <Link to={"/"}>
+                  <LocalizedLink to={"/"}>
                     <HouseSimpleIcon weight="fill" className="size-6" />
                     Go to home
-                  </Link>
+                  </LocalizedLink>
                 }
               />
             </div>

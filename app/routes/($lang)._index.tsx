@@ -10,7 +10,7 @@ import { useIntlayer } from "react-intlayer";
 import { useUmamiPageView } from "@/hooks/use-umami-page-view";
 import { getUmamiEventAttributes } from "@/lib/analytics/umami";
 import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
-import { Link } from "react-router";
+import { LocalizedLink } from "@/components/i18n/localized-link";
 import Logo from "@/components/layout/logo";
 import { buildMeta } from "@/lib/metadata";
 import { metadataConfig } from "@/config/metadata";
@@ -62,18 +62,20 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         <Logo />
         <aside className="flex items-center gap-1">
           <SignedOut>
-            <SignInButton>
-              <Button
-                variant={"brand"}
-                size={"lg"}
-                className={"text-sm md:rounded-xl md:h-10 md:px-4"}
-                {...getUmamiEventAttributes(UMAMI_EVENTS.auth.signIn.start, {
-                  [UMAMI_PROP_KEYS.ctx.source]: "home_cta",
-                })}
-              >
+            {/* <SignInButton> */}
+            <Button
+              variant={"brand"}
+              size={"lg"}
+              className={"text-sm md:rounded-xl md:h-10 md:px-4"}
+              {...getUmamiEventAttributes(UMAMI_EVENTS.auth.signIn.start, {
+                [UMAMI_PROP_KEYS.ctx.source]: "home_cta",
+              })}
+            >
+              <LocalizedLink to={"/sign-in"}>
                 {startForFree.value}
-              </Button>
-            </SignInButton>
+              </LocalizedLink>
+            </Button>
+            {/* </SignInButton> */}
           </SignedOut>
           <SignedIn>
             <UserButton primaryHandle={primaryHandle} />
@@ -106,13 +108,13 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         <div>
           <ul className="flex flex-col items-center gap-6 sm:flex-row sm:gap-8">
             <li className="hover:underline underline-offset-2">
-              <Link to={"/sign-in"}>Sign In</Link>
+              <LocalizedLink to={"/sign-in"}>Sign In</LocalizedLink>
             </li>
             <li className="hover:underline underline-offset-2">
-              <Link to={"/changelog"}>Changelog</Link>
+              <LocalizedLink to={"/changelog"}>Changelog</LocalizedLink>
             </li>
             <li className="hover:underline underline-offset-2">
-              <Link to={"/feedback"}>Feedback</Link>
+              <LocalizedLink to={"/feedback"}>Feedback</LocalizedLink>
             </li>
           </ul>
         </div>

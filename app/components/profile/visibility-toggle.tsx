@@ -4,7 +4,10 @@ import { AnimatePresence, motion } from "motion/react";
 
 import { getSupabaseClient } from "@/lib/supabase";
 import { Button } from "../ui/button";
-import { getUmamiEventAttributes, trackUmamiEvent } from "@/lib/analytics/umami";
+import {
+  getUmamiEventAttributes,
+  trackUmamiEvent,
+} from "@/lib/analytics/umami";
 import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
 
 interface VisibilityToggleProps {
@@ -128,11 +131,16 @@ export default function VisibilityToggle({
       disabled={isSaving}
       aria-pressed={isPublic}
       aria-busy={isSaving}
-      className={"w-full justify-start gap-2 text-sm py-6 rounded-lg"}
-      {...getUmamiEventAttributes(UMAMI_EVENTS.feature.profileVisibility.toggle, {
-        [UMAMI_PROP_KEYS.ctx.pageId]: pageId,
-        [UMAMI_PROP_KEYS.ctx.action]: isPublic ? "make_private" : "make_public",
-      })}
+      className={"w-full justify-start gap-2 text-base py-6 rounded-lg"}
+      {...getUmamiEventAttributes(
+        UMAMI_EVENTS.feature.profileVisibility.toggle,
+        {
+          [UMAMI_PROP_KEYS.ctx.pageId]: pageId,
+          [UMAMI_PROP_KEYS.ctx.action]: isPublic
+            ? "make_private"
+            : "make_public",
+        }
+      )}
     >
       {isPublic ? (
         <div className="w-full flex flex-col gap-1 items-start">

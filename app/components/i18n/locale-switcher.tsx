@@ -1,7 +1,6 @@
 import { getLocaleName, getLocalizedUrl, getPathWithoutLocale } from "intlayer";
 import { useIntlayer, useLocale } from "react-intlayer";
 import { useLocation, useNavigate } from "react-router";
-import { TranslateIcon } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "motion/react";
 import { Button } from "../ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
@@ -11,7 +10,9 @@ export default function LocaleSwitcher() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
-  const { availableLocales, locale, setLocale } = useLocale();
+  const { availableLocales, locale, setLocale } = useLocale({
+    isCookieEnabled: false,
+  });
 
   const pathWithoutLocale = getPathWithoutLocale(pathname);
   const fallbackLocale = availableLocales[0];
@@ -19,6 +20,7 @@ export default function LocaleSwitcher() {
   const currentLabel = currentLocale
     ? getLocaleName(currentLocale)
     : localeLabel.value;
+
   const nextLocale =
     availableLocales.find((localeItem) => localeItem !== currentLocale) ??
     currentLocale;

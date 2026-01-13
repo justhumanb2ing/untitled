@@ -11,21 +11,15 @@ function isPublicAuthPath(pathname: string) {
   return authSegmentPattern.test(normalizedPathname);
 }
 
-function isPublicUserProfilePath(pathname: string) {
-  const normalizedPathname = pathname.replace(/\/+$/, "");
-  const userProfilePattern = /(^|\/)user\/[^/]+$/;
-
-  return userProfilePattern.test(normalizedPathname);
-}
-
 export async function loader(args: Route.LoaderArgs) {
   const { pathname } = new URL(args.request.url);
-  if (isPublicAuthPath(pathname) || isPublicUserProfilePath(pathname)) {
+  const auth = await getAuth(args);
+
+  if (isPublicAuthPath(pathname)) {
     return null;
   }
 
-  const auth = await getAuth(args);
-
+  // auth 섹션은 로그인 필요 (전역 정책은 root loader에서 처리)
   if (!auth.userId) {
     throw redirect(getLocalizedPath(args.params.lang, "/sign-in"));
   }

@@ -212,8 +212,8 @@ export default function AppToolbar({ isMobilePreview }: AppToolbarProps) {
   return (
     <aside
       className={cn(
-        "fixed bottom-10 left-1/2 -translate-x-1/2 ",
-        isMobilePreview ? "" : "hidden xl:block"
+        "fixed bottom-10 right-48",
+        isMobilePreview ? "hidden" : "hidden xl:block"
       )}
     >
       <ToolbarRoot className={"toolbar-shadow border-0 px-3 py-2"}>

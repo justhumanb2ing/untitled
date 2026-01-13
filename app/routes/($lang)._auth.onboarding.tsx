@@ -14,7 +14,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
-import type { Route } from "./+types/($lang)._auth.onboarding";
+import type { Route } from "./+types/$lang._auth.onboarding";
 import { Button } from "@/components/ui/button";
 import {
   Form as RhfForm,
@@ -594,7 +594,7 @@ export default function OnboardingRoute() {
                             return;
                           }
                           navigate(
-                            getLocalizedPath(lang, `/user/${completedHandle}`)
+                            getLocalizedPath(lang, `/${completedHandle}`)
                           );
                         }}
                         disabled={!completedHandle}

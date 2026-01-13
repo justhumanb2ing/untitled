@@ -25,7 +25,7 @@ export default function UserAuthButton() {
               <Button
                 variant={"ghost"}
                 size={"lg"}
-                className={"text-xs text-muted-foreground"}
+                className={"text-xs "}
                 {...getUmamiEventAttributes(UMAMI_EVENTS.auth.signOut.click, {
                   [UMAMI_PROP_KEYS.ctx.source]: "bottom_action_bar",
                 })}
@@ -40,7 +40,7 @@ export default function UserAuthButton() {
               <Button
                 variant={"ghost"}
                 size={"lg"}
-                className={"text-xs text-muted-foreground"}
+                className={"text-xs "}
                 {...getUmamiEventAttributes(UMAMI_EVENTS.auth.signIn.start, {
                   [UMAMI_PROP_KEYS.ctx.source]: "bottom_action_bar",
                 })}

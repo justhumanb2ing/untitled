@@ -206,7 +206,7 @@ export default function ChangeHandleFormPopover({
       }
 
       setIsHandlePopoverOpen(false);
-      localizedNavigate(`/user/@${sanitizedHandle}`);
+      localizedNavigate(`/@${sanitizedHandle}`);
       trackUmamiEvent(
         UMAMI_EVENTS.feature.handle.success,
         {
