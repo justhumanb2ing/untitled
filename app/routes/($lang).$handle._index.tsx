@@ -35,8 +35,55 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { generateMeta } from "@forge42/seo-tools/remix/metadata";
+import { breadcrumbs } from "@forge42/seo-tools/structured-data/breadcrumb";
+import { profile } from "@forge42/seo-tools/structured-data/profile";
+import { metadataConfig } from "@/config/metadata";
+import { getLocalizedPath } from "@/lib/localized-path";
 
 type PreviewLayout = "desktop" | "mobile";
+
+const buildUrl = (lang: string | undefined, pathname: string) =>
+  new URL(getLocalizedPath(lang, pathname), metadataConfig.url).toString();
+
+const defaultImageUrl = new URL(
+  metadataConfig.defaultImage,
+  metadataConfig.url
+).toString();
+
+export const meta = ({ loaderData, params }: Route.MetaArgs) => {
+  const handle = params.handle ?? "user";
+  const url = buildUrl(params.lang, `/${handle}`);
+  const title = loaderData?.page?.title ?? handle;
+  const description =
+    loaderData?.page?.description ?? "Personal profile page on beyondthewave.";
+  const imageUrl = loaderData?.page?.image_url ?? defaultImageUrl;
+
+  return generateMeta(
+    {
+      title,
+      description,
+      url,
+      image: imageUrl,
+      siteName: metadataConfig.title,
+      twitterCard: metadataConfig.twitterCard,
+    },
+    [
+      {
+        "script:ld+json": breadcrumbs(url, ["Home", title]),
+      },
+      {
+        "script:ld+json": profile({
+          "@type": "ProfilePage",
+          name: title,
+          description,
+          image: imageUrl,
+          url,
+        }),
+      },
+    ]
+  );
+};
 
 export async function loader(args: Route.LoaderArgs) {
   const { userId } = await getAuth(args);

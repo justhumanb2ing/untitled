@@ -12,6 +12,48 @@ import { getUmamiEventAttributes } from "@/lib/analytics/umami";
 import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
 import { LocalizedLink } from "@/components/i18n/localized-link";
 import Logo from "@/components/layout/logo";
+import { generateMeta } from "@forge42/seo-tools/remix/metadata";
+import { breadcrumbs } from "@forge42/seo-tools/structured-data/breadcrumb";
+import { organization } from "@forge42/seo-tools/structured-data/organization";
+import type { MetaFunction } from "react-router";
+import { metadataConfig } from "@/config/metadata";
+import { getLocalizedPath } from "@/lib/localized-path";
+
+const buildUrl = (lang: string | undefined, pathname: string) =>
+  new URL(getLocalizedPath(lang, pathname), metadataConfig.url).toString();
+
+const defaultImageUrl = new URL(
+  metadataConfig.defaultImage,
+  metadataConfig.url
+).toString();
+
+export const meta: MetaFunction = ({ params }) => {
+  const url = buildUrl(params.lang, "/");
+
+  return generateMeta(
+    {
+      title: metadataConfig.title,
+      description: metadataConfig.description,
+      url,
+      image: defaultImageUrl,
+      siteName: metadataConfig.title,
+      twitterCard: metadataConfig.twitterCard,
+    },
+    [
+      {
+        "script:ld+json": breadcrumbs(url, ["Home"]),
+      },
+      {
+        "script:ld+json": organization({
+          "@type": "Organization",
+          name: metadataConfig.title,
+          url,
+          logo: defaultImageUrl,
+        }),
+      },
+    ]
+  );
+};
 
 export async function loader(args: Route.LoaderArgs) {
   const { userId } = await getAuth(args);

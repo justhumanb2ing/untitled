@@ -14,6 +14,40 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import type { Route } from "./+types/($lang).feedback";
+import { generateMeta } from "@forge42/seo-tools/remix/metadata";
+import { breadcrumbs } from "@forge42/seo-tools/structured-data/breadcrumb";
+import type { MetaFunction } from "react-router";
+import { metadataConfig } from "@/config/metadata";
+import { getLocalizedPath } from "@/lib/localized-path";
+
+const buildUrl = (lang: string | undefined, pathname: string) =>
+  new URL(getLocalizedPath(lang, pathname), metadataConfig.url).toString();
+
+const defaultImageUrl = new URL(
+  metadataConfig.defaultImage,
+  metadataConfig.url
+).toString();
+
+export const meta: MetaFunction = ({ params }) => {
+  const homeUrl = buildUrl(params.lang, "/");
+  const feedbackUrl = buildUrl(params.lang, "/feedback");
+
+  return generateMeta(
+    {
+      title: "Feedback",
+      description: "Share feedback or report issues.",
+      url: feedbackUrl,
+      image: defaultImageUrl,
+      siteName: metadataConfig.title,
+      twitterCard: metadataConfig.twitterCard,
+    },
+    [
+      {
+        "script:ld+json": breadcrumbs(feedbackUrl, ["Home", "Feedback"]),
+      },
+    ]
+  );
+};
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 

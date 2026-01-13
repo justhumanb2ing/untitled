@@ -5,6 +5,40 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { generateMeta } from "@forge42/seo-tools/remix/metadata";
+import { breadcrumbs } from "@forge42/seo-tools/structured-data/breadcrumb";
+import type { MetaFunction } from "react-router";
+import { metadataConfig } from "@/config/metadata";
+import { getLocalizedPath } from "@/lib/localized-path";
+
+const buildUrl = (lang: string | undefined, pathname: string) =>
+  new URL(getLocalizedPath(lang, pathname), metadataConfig.url).toString();
+
+const defaultImageUrl = new URL(
+  metadataConfig.defaultImage,
+  metadataConfig.url
+).toString();
+
+export const meta: MetaFunction = ({ params }) => {
+  const homeUrl = buildUrl(params.lang, "/");
+  const changelogUrl = buildUrl(params.lang, "/changelog");
+
+  return generateMeta(
+    {
+      title: "Changelog",
+      description: "Product updates and release notes.",
+      url: changelogUrl,
+      image: defaultImageUrl,
+      siteName: metadataConfig.title,
+      twitterCard: metadataConfig.twitterCard,
+    },
+    [
+      {
+        "script:ld+json": breadcrumbs(changelogUrl, ["Home", "Changelog"]),
+      },
+    ]
+  );
+};
 
 export default function ChangeLogRoute() {
   return (
