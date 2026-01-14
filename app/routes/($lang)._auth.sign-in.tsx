@@ -71,10 +71,6 @@ export default function SignInRoute() {
 
         <aside className="h-full flex-5 hidden lg:block">
           <div className="relative h-full">
-            {/* <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-y-0 left-0 w-20 bg-linear-to-r from-black/60 to-transparent"
-            /> */}
             <img
               src="https://images.unsplash.com/photo-1766963031469-0f52e1ab417a?q=80&w=1587&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
               alt="sign-in-page"
