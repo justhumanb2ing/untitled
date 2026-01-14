@@ -1,23 +1,18 @@
-import LocaleSwitcher from "@/components/i18n/locale-switcher";
 import type { Route } from "./+types/($lang)._index";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/react-router";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { getAuth } from "@clerk/react-router/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
-import UserButton from "@/components/account/user-button";
 import { useIntlayer } from "react-intlayer";
 import { useUmamiPageView } from "@/hooks/use-umami-page-view";
-import { getUmamiEventAttributes } from "@/lib/analytics/umami";
 import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
-import { LocalizedLink } from "@/components/i18n/localized-link";
-import Logo from "@/components/layout/logo";
 import { generateMeta } from "@forge42/seo-tools/remix/metadata";
 import { breadcrumbs } from "@forge42/seo-tools/structured-data/breadcrumb";
 import { organization } from "@forge42/seo-tools/structured-data/organization";
 import type { MetaFunction } from "react-router";
 import { metadataConfig } from "@/config/metadata";
 import { getLocalizedPath } from "@/lib/localized-path";
+import HomeHeader from "./home/_home-header";
+import HomeHero from "./home/_home-hero";
+import HomeFooter from "./home/_home-footer";
 
 const buildUrl = (lang: string | undefined, pathname: string) =>
   new URL(getLocalizedPath(lang, pathname), metadataConfig.url).toString();
@@ -90,76 +85,16 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   return (
     <main>
       {/* Header */}
-      <header className="flex items-center justify-between gap-1 mx-auto max-w-7xl py-4 px-4">
-        <Logo />
-        <aside className="flex items-center gap-1">
-          <SignedOut>
-            {/* <SignInButton> */}
-            <Button
-              variant={"brand"}
-              size={"lg"}
-              className={"text-sm md:rounded-xl md:h-10 md:px-4"}
-              {...getUmamiEventAttributes(UMAMI_EVENTS.auth.signIn.start, {
-                [UMAMI_PROP_KEYS.ctx.source]: "home_cta",
-              })}
-            >
-              <LocalizedLink to={"/sign-in"}>
-                {startForFree.value}
-              </LocalizedLink>
-            </Button>
-            {/* </SignInButton> */}
-          </SignedOut>
-          <SignedIn>
-            <UserButton primaryHandle={primaryHandle} />
-          </SignedIn>
-          <Separator
-            orientation="vertical"
-            className={
-              "my-1.5 rounded-full data-[orientation=vertical]:bg-muted data-[orientation=vertical]:w-0.5"
-            }
-          />
-          <nav className="flex items-center justify-end gap-1">
-            <LocaleSwitcher />
-          </nav>
-        </aside>
-      </header>
+      <HomeHeader
+        primaryHandle={primaryHandle}
+        startForFreeLabel={startForFree.value}
+      />
 
       {/* Landing Page Main Section */}
-      <section className="h-dvh flex flex-col justify-center items-center gap-4 from-muted/50 to-background bg-linear-to-b from-30% text-muted-foreground text-sm">
-        Landing Section
-      </section>
+      <HomeHero />
 
       {/* Footer */}
-      <footer className="h-[400px] my-20 pb-32 text-muted-foreground flex flex-col justify-center items-center gap-20">
-        <div className="space-y-4">
-          <div className="flex justify-center font-medium text-3xl tracking-tighter">
-            beyondthewave
-          </div>
-          <div className="text-sm text-center">Designed by Justhumanbeing</div>
-        </div>
-        <div>
-          <ul className="flex flex-col items-center gap-6 sm:flex-row sm:gap-8">
-            <li className="hover:underline underline-offset-2">
-              <LocalizedLink to={"/sign-in"}>Sign In</LocalizedLink>
-            </li>
-            <li className="hover:underline underline-offset-2">
-              <LocalizedLink to={"/changelog"}>Changelog</LocalizedLink>
-            </li>
-            <li className="hover:underline underline-offset-2">
-              <LocalizedLink to={"/feedback"}>Feedback</LocalizedLink>
-            </li>
-          </ul>
-        </div>
-        <div>
-          <a
-            href="https://www.buymeacoffee.com/justhumanb2ing"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=justhumanb2ing&button_colour=FFDD00&font_colour=000000&font_family=Comic&outline_colour=000000&coffee_colour=ffffff" />
-          </a>
-        </div>
-      </footer>
+      <HomeFooter />
     </main>
   );
 }
