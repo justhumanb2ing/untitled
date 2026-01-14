@@ -1,131 +1,66 @@
-import { clerkClient, getAuth } from "@clerk/react-router/server";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Form as RouterForm,
-  redirect,
-  useActionData,
+  useFetcher,
   useNavigation,
   useNavigate,
   useParams,
-  useSubmit,
 } from "react-router";
-import { CaretLeftIcon, CheckIcon } from "@phosphor-icons/react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { CaretLeftIcon } from "@phosphor-icons/react";
 
-import type { Route } from "./+types/($lang)._auth.onboarding";
+import { action, type ActionData } from "@/service/onboarding.action";
 import { Button } from "@/components/ui/button";
-import {
-  Form as RhfForm,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Spinner } from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
+import { FieldSet } from "@/components/ui/field";
 import {
   Stepper,
   StepperIndicator,
   StepperItem,
   StepperTrigger,
 } from "@/components/ui/stepper";
-import { FieldSet } from "@/components/ui/field";
-import { cn } from "@/lib/utils";
-import { getSupabaseClient, getSupabaseServerClient } from "@/lib/supabase";
 import { getLocalizedPath } from "@/utils/localized-path";
 import { Activity } from "@/components/motion/activity";
 import { useUmamiPageView } from "@/hooks/use-umami-page-view";
-import {
-  createUmamiAttemptId,
-  trackUmamiEvent,
-} from "@/lib/umami";
+import { useHandleValidation } from "@/hooks/use-handle-validation";
+import { useOnboardingTracking } from "@/hooks/onboarding/use-onboarding-tracking";
 import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/umami-events";
+import type { OnboardingFormState } from "@/hooks/onboarding/onboarding-errors";
+import {
+  mapOnboardingActionErrors,
+  useOnboardingErrors,
+} from "@/hooks/onboarding/use-onboarding-errors";
+import {
+  CompleteStep,
+  DetailsStep,
+  HandleStep,
+} from "@/routes/onboarding/onboarding-steps";
 
-const onboardingSchema = z.object({
-  handle: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .regex(/^[a-z0-9]+$/, "Only lowercase letters and numbers are allowed."),
-  title: z.string().trim().min(1, "Title is required."),
-  description: z.string().trim().nullable(),
-});
+type StepId<T extends string = string> = T;
+type Step = StepId<"handle" | "details" | "complete">;
+type StepItem = { id: Step; label: string; value: number };
 
-type OnboardingFormValues = z.infer<typeof onboardingSchema>;
+function getStepMeta(steps: Array<StepItem>, step: Step) {
+  const activeStep = step === "handle" ? 1 : 2;
+  const activeStepItem = steps.find((item) => item.id === step);
+  const isCompleteStep = step === "complete";
 
-type ActionData = {
-  formError?: string;
-  fieldErrors?: Partial<Record<keyof OnboardingFormValues, string>>;
-  success?: boolean;
-  handle?: string;
-};
-
-export async function action(args: Route.ActionArgs) {
-  const auth = await getAuth(args);
-  if (!auth.userId) {
-    throw redirect(getLocalizedPath(args.params.lang, "/sign-in"));
-  }
-
-  const formData = await args.request.formData();
-  const parsed = onboardingSchema.safeParse({
-    handle: formData.get("handle"),
-    title: formData.get("title"),
-    description: formData.get("description"),
-  });
-
-  if (!parsed.success) {
-    const fieldErrors = parsed.error.flatten().fieldErrors;
-    return {
-      fieldErrors: {
-        handle: fieldErrors.handle?.[0],
-        title: fieldErrors.title?.[0],
-        description: fieldErrors.description?.[0],
-      },
-    } satisfies ActionData;
-  }
-
-  const { handle, title, description } = parsed.data;
-
-  const supabase = await getSupabaseServerClient(args);
-  const { error } = await supabase.rpc("create_page", {
-    p_handle: `@${handle}`,
-    p_title: title,
-    p_description: description ?? undefined,
-  });
-
-  if (error) {
-    return { formError: error.message };
-  }
-
-  const clerk = clerkClient(args);
-
-  await clerk.users.updateUser(auth.userId, {
-    publicMetadata: {
-      onboardingComplete: true,
-    },
-  });
-
-  return {
-    success: true,
-    handle: `@${handle}`,
-  } satisfies ActionData;
+  return { activeStep, activeStepItem, isCompleteStep };
 }
 
 export default function OnboardingRoute() {
   const navigation = useNavigation();
   const navigate = useNavigate();
   const { lang } = useParams();
-  const submit = useSubmit();
+  const fetcher = useFetcher<ActionData>();
   const formRef = useRef<HTMLFormElement>(null);
-  const isSubmitting = navigation.state !== "idle";
-  const actionData = useActionData<ActionData>();
-  type Step = "handle" | "details" | "complete";
-  const steps: Array<{ id: Step; label: string; value: number }> = [
+  const isSubmitting = navigation.state !== "idle" || fetcher.state !== "idle";
+  const actionData = fetcher.data;
+
+  const defaultFormValues: OnboardingFormState = {
+    handle: "",
+    title: "",
+    description: "",
+  };
+
+  const steps: Array<StepItem> = [
     {
       id: "handle",
       label: "Choose a unique handle",
@@ -134,17 +69,22 @@ export default function OnboardingRoute() {
     { id: "details", label: "Fill out details", value: 2 },
   ];
   const [step, setStep] = useState<Step>("handle");
-  const activeStep = step === "handle" ? 1 : 2;
-  const activeStepItem = steps.find((item) => item.id === step);
-  const isCompleteStep = step === "complete";
+  const { activeStep, activeStepItem, isCompleteStep } = getStepMeta(
+    steps,
+    step
+  );
   const [completedHandle, setCompletedHandle] = useState<string | null>(null);
-  const [isCheckingHandle, setIsCheckingHandle] = useState(false);
   const [direction, setDirection] = useState<1 | -1>(1);
-  const signupAttemptIdRef = useRef(createUmamiAttemptId("signup"));
-  const signupStartedRef = useRef(false);
-  const lastSubmitAttemptRef = useRef<string | null>(null);
 
-  const supabase = getSupabaseClient();
+  const { checkHandleAvailability, isChecking: isCheckingHandle } =
+    useHandleValidation();
+
+  const {
+    trackSignupStart,
+    trackSignupSubmit,
+    trackSignupSuccess,
+    trackSignupError,
+  } = useOnboardingTracking();
 
   useUmamiPageView({
     eventName: UMAMI_EVENTS.auth.signup.view,
@@ -153,187 +93,113 @@ export default function OnboardingRoute() {
     },
   });
 
-  const form = useForm<OnboardingFormValues>({
-    resolver: zodResolver(onboardingSchema),
-    defaultValues: { handle: "", title: "", description: "" },
-    mode: "onChange",
-    reValidateMode: "onChange",
-  });
+  const [formValues, setFormValues] =
+    useState<OnboardingFormState>(defaultFormValues);
+  const { formErrors, setFieldError, clearFieldError } = useOnboardingErrors();
+  const { handle: handleValue, title, description } = formValues;
+  const isDetailsComplete = title.trim().length > 0;
+  const canSubmit = !!handleValue && isDetailsComplete;
+  const rootError = formErrors.root;
 
-  const handleValue = form.watch("handle") ?? "";
-  const title = form.watch("title") ?? "";
-  const description = form.watch("description") ?? "";
-  const isDetailsComplete =
-    title.trim().length > 0 && description.trim().length > 0;
-  const rootError = form.formState.errors.root?.message;
-
-  const trackSignupStart = useCallback((currentStep: Step) => {
-    if (signupStartedRef.current) {
-      return;
+  const getHandleError = useCallback((value: string) => {
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) {
+      return "Only lowercase letters and numbers are allowed.";
     }
-
-    signupStartedRef.current = true;
-    trackUmamiEvent(
-      UMAMI_EVENTS.auth.signup.start,
-      {
-        [UMAMI_PROP_KEYS.ctx.attemptId]: signupAttemptIdRef.current,
-        [UMAMI_PROP_KEYS.ctx.step]: currentStep,
-      },
-      {
-        dedupeKey: `signup-start:${signupAttemptIdRef.current}`,
-        once: true,
-      }
-    );
+    if (!/^[a-z0-9]+$/.test(normalized)) {
+      return "Only lowercase letters and numbers are allowed.";
+    }
+    return undefined;
   }, []);
 
-  const trackSignupSubmit = useCallback((currentStep: Step) => {
-    const attemptId = createUmamiAttemptId("signup-submit");
-    lastSubmitAttemptRef.current = attemptId;
-    trackUmamiEvent(
-      UMAMI_EVENTS.auth.signup.submit,
-      {
-        [UMAMI_PROP_KEYS.ctx.attemptId]: attemptId,
-        [UMAMI_PROP_KEYS.ctx.step]: currentStep,
-      },
-      {
-        dedupeKey: `signup-submit:${attemptId}`,
-        once: true,
-      }
-    );
+  const getTitleError = useCallback((value: string) => {
+    return value.trim().length > 0 ? undefined : "Title is required.";
   }, []);
+
+  const ensureHandleAvailable = useCallback(
+    async (rawHandle: string) => {
+      const result = await checkHandleAvailability(rawHandle.trim());
+
+      if (!result.available) {
+        setFieldError("handle", result.error ?? "Handle is not available.");
+        return false;
+      }
+
+      return true;
+    },
+    [checkHandleAvailability, setFieldError]
+  );
+
+  const applyActionDataEffects = useCallback(
+    (data: ActionData | undefined) => {
+      if (!data) {
+        return;
+      }
+
+      if (data.success && data.handle) {
+        setCompletedHandle(data.handle);
+        setDirection(1);
+        setStep("complete");
+        trackSignupSuccess(data.handle);
+        return;
+      }
+
+      const mappedErrors = mapOnboardingActionErrors(data);
+
+      if (mappedErrors.handle) {
+        setFieldError("handle", mappedErrors.handle);
+        setStep("handle");
+      }
+
+      if (mappedErrors.title) {
+        setFieldError("title", mappedErrors.title);
+      }
+
+      if (mappedErrors.description) {
+        setFieldError("description", mappedErrors.description);
+      }
+
+      if (mappedErrors.title || mappedErrors.description) {
+        setStep("details");
+      }
+
+      if (mappedErrors.root) {
+        setFieldError("root", mappedErrors.root);
+      }
+
+      if (data.formError || data.fieldErrors) {
+        trackSignupError(step, data.formError ? "server" : "validation");
+      }
+    },
+    [setFieldError, step, trackSignupError, trackSignupSuccess]
+  );
 
   useEffect(() => {
-    if (!actionData) {
-      return;
-    }
-
-    if (actionData.success && actionData.handle) {
-      setCompletedHandle(actionData.handle);
-      setDirection(1);
-      setStep("complete");
-      trackUmamiEvent(
-        UMAMI_EVENTS.auth.signup.success,
-        {
-          [UMAMI_PROP_KEYS.ctx.attemptId]:
-            lastSubmitAttemptRef.current ?? signupAttemptIdRef.current,
-          [UMAMI_PROP_KEYS.ctx.step]: "complete",
-        },
-        {
-          dedupeKey: `signup-success:${actionData.handle}`,
-          once: true,
-        }
-      );
-      return;
-    }
-
-    if (actionData.fieldErrors?.handle) {
-      form.setError("handle", {
-        type: "server",
-        message: actionData.fieldErrors.handle,
-      });
-      setStep("handle");
-    }
-
-    if (actionData.fieldErrors?.title) {
-      form.setError("title", {
-        type: "server",
-        message: actionData.fieldErrors.title,
-      });
-    }
-
-    if (actionData.fieldErrors?.description) {
-      form.setError("description", {
-        type: "server",
-        message: actionData.fieldErrors.description,
-      });
-    }
-
-    if (actionData.fieldErrors?.title || actionData.fieldErrors?.description) {
-      setStep("details");
-    }
-
-    if (actionData.formError) {
-      form.setError("root", {
-        type: "server",
-        message: actionData.formError,
-      });
-    }
-
-    if (actionData.formError || actionData.fieldErrors) {
-      trackUmamiEvent(
-        UMAMI_EVENTS.auth.signup.error,
-        {
-          [UMAMI_PROP_KEYS.ctx.attemptId]:
-            lastSubmitAttemptRef.current ?? signupAttemptIdRef.current,
-          [UMAMI_PROP_KEYS.ctx.step]: step,
-          [UMAMI_PROP_KEYS.ctx.errorCode]: actionData.formError
-            ? "server"
-            : "validation",
-        },
-        {
-          dedupeKey: `signup-error:${lastSubmitAttemptRef.current ?? "unknown"}`,
-          once: true,
-        }
-      );
-    }
-  }, [actionData, form, step]);
+    applyActionDataEffects(actionData);
+  }, [actionData, applyActionDataEffects]);
 
   useEffect(() => {
     if (step === "handle") {
-      form.clearErrors("root");
+      clearFieldError("root");
     }
-  }, [form, step]);
+  }, [clearFieldError, step]);
 
   const handleAdvanceToDetails = async () => {
     if (isCheckingHandle) {
       return;
     }
 
-    const isHandleValid = await form.trigger("handle");
-    if (!isHandleValid) {
+    const nextHandle = formValues.handle;
+    const handleError = getHandleError(nextHandle);
+    if (handleError) {
+      setFieldError("handle", handleError);
       return;
     }
 
-    if (!supabase) {
-      form.setError("handle", {
-        type: "manual",
-        message: "Handle validation is unavailable.",
-      });
-      return;
-    }
+    clearFieldError("handle");
 
-    setIsCheckingHandle(true);
-    form.clearErrors("handle");
-
-    let data: { id: string } | null = null;
-    let error: { message: string } | null = null;
-    const sanitizedHandle = form.getValues("handle");
-
-    try {
-      const result = await (await supabase)
-        .from("pages")
-        .select("id")
-        .eq("handle", `@${sanitizedHandle}`)
-        .maybeSingle();
-      data = result.data;
-      error = result.error;
-    } finally {
-      setIsCheckingHandle(false);
-    }
-
-    if (error) {
-      form.setError("handle", {
-        type: "manual",
-        message: error.message,
-      });
-      return;
-    }
-
-    if (data) {
-      form.setError("handle", {
-        type: "manual",
-        message: "Handle already exists.",
-      });
+    const isAvailable = await ensureHandleAvailable(nextHandle);
+    if (!isAvailable) {
       return;
     }
 
@@ -341,16 +207,66 @@ export default function OnboardingRoute() {
     setStep("details");
   };
 
-  const submitForm = form.handleSubmit(() => {
+  const submitForm = () => {
+    if (!canSubmit) {
+      return;
+    }
     trackSignupSubmit(step);
     if (!formRef.current) {
       return;
     }
-    submit(formRef.current, { method: "post" });
-  });
+    fetcher.submit(formRef.current, { method: "post" });
+  };
+
+  const handleInputChange = (nextValue: string) => {
+    setFormValues((prev) => ({
+      ...prev,
+      handle: nextValue,
+    }));
+    const nextError = getHandleError(nextValue);
+    if (nextError) {
+      setFieldError("handle", nextError);
+    } else {
+      clearFieldError("handle");
+    }
+    clearFieldError("root");
+    trackSignupStart("handle");
+  };
+
+  const titleInputChange = (nextValue: string) => {
+    setFormValues((prev) => ({
+      ...prev,
+      title: nextValue,
+    }));
+    const nextError = getTitleError(nextValue);
+    if (nextError) {
+      setFieldError("title", nextError);
+    } else {
+      clearFieldError("title");
+    }
+    clearFieldError("root");
+    trackSignupStart("details");
+  };
+
+  const descriptionInputChange = (nextValue: string) => {
+    setFormValues((prev) => ({
+      ...prev,
+      description: nextValue,
+    }));
+    clearFieldError("description");
+    clearFieldError("root");
+    trackSignupStart("details");
+  };
+
+  const handleGoToPage = () => {
+    if (!completedHandle) {
+      return;
+    }
+    navigate(getLocalizedPath(lang, `/${completedHandle}`));
+  };
 
   return (
-    <main className="w-md">
+    <main className="grow container max-w-lg mx-auto px-8">
       <section className="h-80 space-y-4">
         {isCompleteStep ? null : (
           <Stepper
@@ -406,208 +322,68 @@ export default function OnboardingRoute() {
               <CaretLeftIcon weight="bold" className="size-7" />
             </Button>
           )}
-          <RhfForm {...form}>
-            <RouterForm
-              ref={formRef}
-              className="grow"
-              method="post"
-              onSubmit={(event) => {
-                if (step === "handle") {
-                  event.preventDefault();
-                  void handleAdvanceToDetails();
-                  return;
-                }
-                void submitForm(event);
-              }}
-            >
-              <input type="hidden" name="handle" value={handleValue} />
-              {isCompleteStep ? null : (
-                <aside className="mb-4">
-                  <div className="font-medium text-muted-foreground tabular-nums">
-                    Step {activeStep} of {steps.length}
-                  </div>
-                  <div className="text-foreground font-medium">
-                    {activeStepItem?.label}
-                  </div>
-                </aside>
-              )}
-              <FieldSet>
-                <Activity activeKey={step} direction={direction}>
-                  {step === "handle" ? (
-                    <div className="flex flex-col gap-4">
-                      <FormField
-                        control={form.control}
-                        name="handle"
-                        render={({ field }) => (
-                          <FormItem className="mt-4 space-y-2">
-                            <FormLabel className="sr-only">Handle</FormLabel>
-                            <div className="relative">
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  autoCapitalize="none"
-                                  autoComplete="off"
-                                  autoFocus={step === "handle"}
-                                  placeholder="Your handle"
-                                  value={field.value ?? ""}
-                                  onChange={(event) => {
-                                    field.onChange(event.target.value);
-                                    form.clearErrors("handle");
-                                    form.clearErrors("root");
-                                    trackSignupStart("handle");
-                                  }}
-                                  className={cn(
-                                    "peer ps-28.5 border-none h-12 text-base! rounded-xl"
-                                  )}
-                                />
-                              </FormControl>
-                              <span className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground text-base! peer-disabled:opacity-50">
-                                @
-                              </span>
-                            </div>
-
-                            <FormDescription className="flex items-center gap-1">
-                              <CheckIcon />
-                              <span>
-                                Only lowercase letters and numbers are allowed.
-                              </span>
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button
-                        type="button"
-                        size="lg"
-                        variant={"brand"}
-                        className={"h-11 text-base rounded-xl"}
-                        onClick={() => void handleAdvanceToDetails()}
-                        disabled={
-                          !handleValue ||
-                          isCheckingHandle ||
-                          !!form.formState.errors.handle
-                        }
-                        aria-busy={isCheckingHandle}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  ) : step === "details" ? (
-                    <div className="flex flex-col gap-4">
-                      <FormField
-                        control={form.control}
-                        name="title"
-                        render={({ field }) => (
-                          <FormItem className="mt-4 relative rounded-xl border border-input bg-input/20 outline-none transition-[color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 has-disabled:pointer-events-none has-disabled:cursor-not-allowed has-aria-invalid:border-destructive has-disabled:opacity-50 has-aria-invalid:ring-destructive/20 has-[input:is(:disabled)]:*:pointer-events-none dark:has-aria-invalid:ring-destructive/40">
-                            <FormLabel className="block px-3 pt-2 text-sm text-foreground font-medium">
-                              Title
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                autoCapitalize="sentences"
-                                autoFocus={step === "details"}
-                                autoComplete="off"
-                                placeholder="Your page title"
-                                value={field.value ?? ""}
-                                onChange={(event) => {
-                                  field.onChange(event);
-                                  form.clearErrors("root");
-                                  trackSignupStart("details");
-                                }}
-                                className="px-3 pb-2 ps-4 h-12 text-base! rounded-xl bg-transparent border-none focus-visible:ring-0 aria-invalid:ring-0 dark:aria-invalid:ring-0"
-                              />
-                            </FormControl>
-                            <FormMessage className="ml-4 mb-2"/>
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem className="mt-4 relative rounded-xl border border-input bg-input/20 outline-none transition-[color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 has-disabled:pointer-events-none has-disabled:cursor-not-allowed has-aria-invalid:border-destructive has-disabled:opacity-50 has-aria-invalid:ring-destructive/20 has-[input:is(:disabled)]:*:pointer-events-none dark:has-aria-invalid:ring-destructive/40">
-                            <FormLabel className="block px-3 pt-2 text-sm text-foreground font-medium">
-                              Bio
-                            </FormLabel>
-                            <FormControl>
-                              <Textarea
-                                {...field}
-                                autoComplete="off"
-                                placeholder="Tell people about your page"
-                                value={field.value ?? ""}
-                                onChange={(event) => {
-                                  field.onChange(event);
-                                  form.clearErrors("root");
-                                  trackSignupStart("details");
-                                }}
-                                className="h-24 text-base! rounded-xl ps-4 bg-transparent border-none focus-visible:ring-0"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      {rootError ? (
-                        <p className="text-destructive text-sm" role="alert">
-                          {rootError}
-                        </p>
-                      ) : null}
-                      <div className="flex items-center gap-2">
-                        <Button
-                          className={"w-full h-11 text-base rounded-xl"}
-                          size={"lg"}
-                          type="submit"
-                          variant={"brand"}
-                          disabled={
-                            isSubmitting || !handleValue || !isDetailsComplete
-                          }
-                          aria-busy={isSubmitting}
-                          data-icon={isSubmitting ? "inline-start" : undefined}
-                        >
-                          {isSubmitting ? (
-                            <>
-                              <Spinner />
-                            </>
-                          ) : (
-                            "Complete"
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-4">
-                      <div className="text-3xl font-semibold">
-                        You&apos;re all set.
-                      </div>
-                      <p className="ml-1 text-base text-muted-foreground mb-4">
-                        Your page is ready. You can visit it now.
-                      </p>
-                      <Button
-                        type="button"
-                        size="lg"
-                        variant="brand"
-                        className="h-11 text-base rounded-xl"
-                        onClick={() => {
-                          if (!completedHandle) {
-                            return;
-                          }
-                          navigate(
-                            getLocalizedPath(lang, `/${completedHandle}`)
-                          );
-                        }}
-                        disabled={!completedHandle}
-                      >
-                        Go to Page
-                      </Button>
-                    </div>
-                  )}
-                </Activity>
-              </FieldSet>
-            </RouterForm>
-          </RhfForm>
+          <fetcher.Form
+            ref={formRef}
+            className="grow"
+            method="post"
+            onSubmit={(event) => {
+              if (step === "handle") {
+                event.preventDefault();
+                void handleAdvanceToDetails();
+                return;
+              }
+              event.preventDefault();
+              void submitForm();
+            }}
+          >
+            <input type="hidden" name="handle" value={handleValue} />
+            {isCompleteStep ? null : (
+              <aside className="mb-4">
+                <div className="font-medium text-muted-foreground tabular-nums">
+                  Step {activeStep} of {steps.length}
+                </div>
+                <div className="text-foreground font-medium">
+                  {activeStepItem?.label}
+                </div>
+              </aside>
+            )}
+            <FieldSet>
+              <Activity activeKey={step} direction={direction}>
+                {step === "handle" ? (
+                  <HandleStep
+                    handleValue={handleValue}
+                    errors={{ handle: formErrors.handle }}
+                    isCheckingHandle={isCheckingHandle}
+                    onHandleChange={handleInputChange}
+                    onNext={() => void handleAdvanceToDetails()}
+                  />
+                ) : step === "details" ? (
+                  <DetailsStep
+                    title={title}
+                    description={description ?? undefined}
+                    errors={{
+                      title: formErrors.title,
+                      description: formErrors.description,
+                      root: rootError,
+                    }}
+                    isSubmitting={isSubmitting}
+                    canSubmit={canSubmit}
+                    onTitleChange={titleInputChange}
+                    onDescriptionChange={descriptionInputChange}
+                  />
+                ) : (
+                  <CompleteStep
+                    completedHandle={completedHandle}
+                    onGoToPage={handleGoToPage}
+                  />
+                )}
+              </Activity>
+            </FieldSet>
+          </fetcher.Form>
         </div>
       </section>
     </main>
   );
 }
+
+export { action };
