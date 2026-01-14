@@ -3,12 +3,12 @@ import { SignIn } from "@clerk/react-router";
 import { XIcon } from "@phosphor-icons/react";
 import { useNavigate, useParams } from "react-router";
 import { useUmamiPageView } from "@/hooks/use-umami-page-view";
-import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/umami-events";
 import { generateMeta } from "@forge42/seo-tools/remix/metadata";
 import { breadcrumbs } from "@forge42/seo-tools/structured-data/breadcrumb";
 import type { MetaFunction } from "react-router";
 import { metadataConfig } from "@/config/metadata";
-import { getLocalizedPath } from "@/lib/localized-path";
+import { getLocalizedPath } from "@/utils/localized-path";
 
 const buildUrl = (lang: string | undefined, pathname: string) =>
   new URL(getLocalizedPath(lang, pathname), metadataConfig.url).toString();

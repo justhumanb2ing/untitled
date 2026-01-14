@@ -3,8 +3,8 @@ import { SignedIn, SignedOut } from "@clerk/react-router";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import UserButton from "@/components/account/user-button";
-import { getUmamiEventAttributes } from "@/lib/analytics/umami";
-import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
+import { getUmamiEventAttributes } from "@/lib/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/umami-events";
 import { LocalizedLink } from "@/components/i18n/localized-link";
 import Logo from "@/components/layout/logo";
 

@@ -2,8 +2,8 @@ import type { MouseEvent } from "react";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 import type { PageGridBrickType } from "../../../service/pages/page-grid";
-import { getUmamiEventAttributes } from "@/lib/analytics/umami";
-import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
+import { getUmamiEventAttributes } from "@/lib/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/umami-events";
 
 export type ResizeOption = { w: number; h: number; label?: string };
 

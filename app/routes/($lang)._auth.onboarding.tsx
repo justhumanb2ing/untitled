@@ -37,14 +37,14 @@ import {
 import { FieldSet } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 import { getSupabaseClient, getSupabaseServerClient } from "@/lib/supabase";
-import { getLocalizedPath } from "@/lib/localized-path";
+import { getLocalizedPath } from "@/utils/localized-path";
 import { Activity } from "@/components/motion/activity";
 import { useUmamiPageView } from "@/hooks/use-umami-page-view";
 import {
   createUmamiAttemptId,
   trackUmamiEvent,
-} from "@/lib/analytics/umami";
-import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
+} from "@/lib/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/umami-events";
 
 const onboardingSchema = z.object({
   handle: z

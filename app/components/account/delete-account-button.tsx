@@ -7,8 +7,8 @@ import {
   createUmamiAttemptId,
   getUmamiEventAttributes,
   trackUmamiEvent,
-} from "@/lib/analytics/umami";
-import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
+} from "@/lib/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/umami-events";
 import {
   AlertDialog,
   AlertDialogAction,

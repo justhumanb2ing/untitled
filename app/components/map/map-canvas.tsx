@@ -19,7 +19,7 @@ import {
   MinusIcon,
   PlusIcon,
 } from "@phosphor-icons/react";
-import { MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM } from "../../../constants/map";
+import { MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM } from "../../utils/map";
 import { cn } from "@/lib/utils";
 import EditableParagraph from "@/components/profile/editable-paragraph";
 

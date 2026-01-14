@@ -28,7 +28,7 @@ import {
   buildLayoutsFromBricks,
   type PageGridBrick,
 } from "../../../service/pages/page-grid";
-import { MAP_DEFAULT_ZOOM, buildGoogleMapsHref } from "../../../constants/map";
+import { MAP_DEFAULT_ZOOM, buildGoogleMapsHref } from "../../utils/map";
 import { motion } from "motion/react";
 import { MapSearch } from "@/components/map/map-search";
 import type {
@@ -46,8 +46,8 @@ import {
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Popover, PopoverPanel, PopoverTrigger } from "../ui/popover";
-import { getUmamiEventAttributes } from "@/lib/analytics/umami";
-import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
+import { getUmamiEventAttributes } from "@/lib/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/umami-events";
 
 const resizeRatioConstraint: LayoutConstraint = {
   name: "resizeRatioConstraint",

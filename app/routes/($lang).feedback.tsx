@@ -2,7 +2,7 @@ import { generateMeta } from "@forge42/seo-tools/remix/metadata";
 import { breadcrumbs } from "@forge42/seo-tools/structured-data/breadcrumb";
 import type { MetaFunction } from "react-router";
 import { metadataConfig } from "@/config/metadata";
-import { getLocalizedPath } from "@/lib/localized-path";
+import { getLocalizedPath } from "@/utils/localized-path";
 import { useFeedbackForm } from "@/hooks/feedback/use-feedback-form";
 import FeedbackForm from "./feedback/_feedback-form";
 export { action } from "@/service/feedback.action";

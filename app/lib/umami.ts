@@ -2,7 +2,7 @@ import {
   UMAMI_PROP_KEYS,
   type UmamiEventName,
   type UmamiPropKey,
-} from "@/lib/analytics/umami-events";
+} from "@/lib/umami-events";
 
 type UmamiEventValue = string | number | boolean;
 

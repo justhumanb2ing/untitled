@@ -57,10 +57,19 @@ import {
 } from "@/components/ui/empty";
 
 import DeleteAccountButton from "../account/delete-account-button";
-import { SETTING_TAB_LIST } from "constants/setting-tab";
 import { Activity } from "@/components/motion/activity";
-import { getUmamiEventAttributes, trackUmamiEvent } from "@/lib/analytics/umami";
-import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
+import {
+  getUmamiEventAttributes,
+  trackUmamiEvent,
+} from "@/lib/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/umami-events";
+
+export const SETTING_TAB_LIST = [
+  { value: "account", label: "Account" },
+  { value: "handle", label: "Handle" },
+  { value: "customization", label: "Customization" },
+  { value: "analytics", label: "Analytics" },
+];
 
 type SettingTabValue = (typeof SETTING_TAB_LIST)[number]["value"];
 
@@ -378,9 +387,12 @@ export function SettingDrawer({
               <Button
                 variant={"ghost"}
                 size={"icon-lg"}
-                {...getUmamiEventAttributes(UMAMI_EVENTS.feature.settings.open, {
-                  [UMAMI_PROP_KEYS.ctx.source]: "settings_button",
-                })}
+                {...getUmamiEventAttributes(
+                  UMAMI_EVENTS.feature.settings.open,
+                  {
+                    [UMAMI_PROP_KEYS.ctx.source]: "settings_button",
+                  }
+                )}
               >
                 <GearSixIcon weight="regular" className="size-4" />
               </Button>

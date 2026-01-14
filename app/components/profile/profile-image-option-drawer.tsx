@@ -19,8 +19,8 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "../ui/drawer";
-import { getUmamiEventAttributes } from "@/lib/analytics/umami";
-import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
+import { getUmamiEventAttributes } from "@/lib/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/umami-events";
 import { DotsThreeIcon } from "@phosphor-icons/react";
 import { Item, ItemContent } from "../ui/item";
 

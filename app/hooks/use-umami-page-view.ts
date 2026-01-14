@@ -5,8 +5,8 @@ import {
   trackUmamiEvent,
   trackUmamiPageView,
   type UmamiEventProps,
-} from "@/lib/analytics/umami";
-import type { UmamiEventName } from "@/lib/analytics/umami-events";
+} from "@/lib/umami";
+import type { UmamiEventName } from "@/lib/umami-events";
 
 type UseUmamiPageViewOptions = {
   url?: string;

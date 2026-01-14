@@ -26,7 +26,7 @@ import {
   MobileBadgeView,
 } from "@/components/profile/profile-badge-view";
 import { OwnerGate } from "@/components/account/owner-gate";
-import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/umami-events";
 import SavingStatusIndicator from "@/components/page/saving-status-indicator";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -39,7 +39,7 @@ import { generateMeta } from "@forge42/seo-tools/remix/metadata";
 import { breadcrumbs } from "@forge42/seo-tools/structured-data/breadcrumb";
 import { profile } from "@forge42/seo-tools/structured-data/profile";
 import { metadataConfig } from "@/config/metadata";
-import { getLocalizedPath } from "@/lib/localized-path";
+import { getLocalizedPath } from "@/utils/localized-path";
 
 type PreviewLayout = "desktop" | "mobile";
 

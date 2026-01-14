@@ -9,7 +9,7 @@ import { generateMeta } from "@forge42/seo-tools/remix/metadata";
 import { breadcrumbs } from "@forge42/seo-tools/structured-data/breadcrumb";
 import type { MetaFunction } from "react-router";
 import { metadataConfig } from "@/config/metadata";
-import { getLocalizedPath } from "@/lib/localized-path";
+import { getLocalizedPath } from "@/utils/localized-path";
 
 const buildUrl = (lang: string | undefined, pathname: string) =>
   new URL(getLocalizedPath(lang, pathname), metadataConfig.url).toString();

@@ -2,7 +2,7 @@ import { getAuth } from "@clerk/react-router/server";
 import { Outlet, redirect } from "react-router";
 
 import type { Route } from "./+types/($lang)._auth";
-import { getLocalizedPath } from "@/lib/localized-path";
+import { getLocalizedPath } from "@/utils/localized-path";
 
 function isPublicAuthPath(pathname: string) {
   const normalizedPathname = pathname.replace(/\/+$/, "");

@@ -7,8 +7,8 @@ import { Button } from "../ui/button";
 import {
   getUmamiEventAttributes,
   trackUmamiEvent,
-} from "@/lib/analytics/umami";
-import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
+} from "@/lib/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/umami-events";
 
 interface VisibilityToggleProps {
   pageId: string;

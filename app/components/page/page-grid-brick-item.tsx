@@ -21,7 +21,7 @@ import type { GridBreakpoint, GridSize } from "@/config/grid-rule";
 import { cn } from "@/lib/utils";
 import { resolveExternalHref } from "@/utils/resolve-external-href";
 import { usePageGridActions } from "@/components/page/page-grid-context";
-import { MAP_DEFAULT_ZOOM } from "../../../constants/map";
+import { MAP_DEFAULT_ZOOM } from "../../utils/map";
 import type {
   PageGridBrick,
   PageGridBrickType,

@@ -17,8 +17,8 @@ import type { BrickLinkRow, BrickMapRow } from "types/brick";
 import {
   createUmamiAttemptId,
   trackUmamiEvent,
-} from "@/lib/analytics/umami";
-import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
+} from "@/lib/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/umami-events";
 import {
   applyLayoutToBricks,
   createPageGridBrick,
@@ -39,7 +39,7 @@ import {
   MAP_DEFAULT_LNG,
   MAP_DEFAULT_ZOOM,
   buildGoogleMapsHref,
-} from "../../../constants/map";
+} from "../../utils/map";
 import type { Json } from "types/database.types";
 
 type PageGridState = {

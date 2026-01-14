@@ -4,8 +4,8 @@ import { useLocation } from "react-router";
 import { Button } from "../ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { Spinner } from "../ui/spinner";
-import { getUmamiEventAttributes } from "@/lib/analytics/umami";
-import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
+import { getUmamiEventAttributes } from "@/lib/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/umami-events";
 
 export default function UserAuthButton() {
   const { isSignedIn, isLoaded } = useUser();

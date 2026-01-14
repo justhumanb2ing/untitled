@@ -11,8 +11,8 @@ import { debounce, isEqual } from "es-toolkit";
 import { getStrictContext } from "@/lib/get-strict-context";
 import { usePageSaver } from "@/hooks/use-page-saver";
 import type { PageSnapshot } from "../../../service/pages/save-page";
-import { trackUmamiEvent } from "@/lib/analytics/umami";
-import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/analytics/umami-events";
+import { trackUmamiEvent } from "@/lib/umami";
+import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/umami-events";
 
 type AutoSaveStatus = "idle" | "dirty" | "saving" | "synced" | "error";
 
