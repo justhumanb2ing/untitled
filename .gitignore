@@ -9,3 +9,5 @@
 .env.*
 .intlayer
 /app/generated/prisma
+
+.claude/PROMPT.md

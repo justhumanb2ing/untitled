@@ -1,3 +1,4 @@
+// TODO: image 변경하기
 export const metadataConfig = {
   url: "https://beyondthewave.vercel.app",
   handle: "beyondthewave.vercel.app",
