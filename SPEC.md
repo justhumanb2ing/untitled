@@ -74,6 +74,41 @@
 - UI → Service → Lib
 - Service는 UI에 의존하지 않음
 
+### 3.3 Action 분리 기준
+React Router의 action 함수는 복잡도에 따라 위치를 결정합니다:
+
+#### 단순 CRUD (< 50줄)
+- **위치**: 해당 라우트 파일 내 (app/routes/xxx.tsx)
+- **기준**:
+  - 단순한 데이터 조작
+  - 단일 API 호출
+  - 최소한의 검증 로직
+  - 외부 라이브러리 의존성 최소
+- **예시**:
+  - `app/routes/api.delete-account.tsx` (47줄): 라우트 파일 내에 action 정의
+  - 인증 확인 + 단일 API 호출 + 기본 에러 처리
+
+#### 복잡한 비즈니스 로직 (≥ 50줄)
+- **위치**: service/ 디렉토리 (flat 구조)
+- **명명 규칙**: `service/{feature}.action.ts`
+- **기준**:
+  - 복잡한 검증 로직 (Zod 스키마 등)
+  - 여러 단계의 데이터 처리
+  - 외부 API 통합 (Resend, Stripe 등)
+  - 다양한 에러 케이스 처리
+  - 타입 정의가 다른 파일에서도 재사용됨
+- **예시**:
+  - `service/feedback.action.ts` (77줄): service/ 디렉토리에 분리
+  - Zod 검증 + Resend API 호출 + 3가지 에러 케이스
+  - ActionData, FieldErrors 타입을 훅과 컴포넌트에서 재사용
+
+#### 장점
+- **테스트 용이성**: Service 레이어를 독립적으로 테스트 가능
+- **재사용성**: 다른 라우트에서 동일한 action import 가능
+- **타입 안전성**: 타입을 중앙에서 관리하여 일관성 확보
+- **의존성 격리**: 외부 라이브러리를 Service 레이어에만 의존
+- **가독성**: 라우트 파일이 과도하게 비대해지는 것을 방지
+
 ---
 
 ## 4. 핵심 기능 요구사항
