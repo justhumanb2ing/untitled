@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildLinkBrickViewModel,
   resolveLinkBrickVariant,
-} from "../../service/pages/link-brick-view-model";
+} from "../../app/service/pages/link-brick-view-model";
 import type { BrickLinkRow } from "../../types/brick";
 
 const baseData: BrickLinkRow = {

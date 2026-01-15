@@ -1,13 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
-
-import { useEditableField } from "@/hooks/use-editable-field";
+import { type ReactNode } from "react";
 
 import {
   MapCanvas,
@@ -17,23 +8,21 @@ import {
 import { Item } from "@/components/ui/item";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
-import EditableParagraph from "@/components/profile/editable-paragraph";
 import PageGridTextBrick from "@/components/page/page-grid-text-brick";
 import type { GridBreakpoint, GridSize } from "@/config/grid-rule";
 import { cn } from "@/lib/utils";
 import { resolveExternalHref } from "@/utils/resolve-external-href";
-import { usePageGridActions } from "@/components/page/page-grid-context";
 import { MAP_DEFAULT_ZOOM } from "../../utils/map";
 import type {
   PageGridBrick,
   PageGridBrickType,
 } from "../../../service/pages/page-grid";
-import {
-  buildLinkBrickViewModel,
-  type LinkBrickVariant,
-} from "../../../service/pages/link-brick-view-model";
-import { ArrowCircleUpRightIcon, LinkSimpleIcon } from "@phosphor-icons/react";
+import { ArrowCircleUpRightIcon } from "@phosphor-icons/react";
 import type { BrickImageRow, BrickVideoRow } from "types/brick";
+import { useLinkBrickState } from "./link-brick/use-link-brick-state";
+import { LinkBrickView } from "./link-brick/link-brick-view";
+import { usePageGridActions } from "./page-grid-context";
+import { useEditableField } from "@/hooks/use-editable-field";
 
 type MapControlsOverrides = {
   center?: [number, number] | null;
@@ -207,179 +196,29 @@ type LinkBrickContentProps = {
 };
 
 function LinkBrickContent({ brick, grid }: LinkBrickContentProps) {
-  const { updateLinkBrick, isEditable } = usePageGridActions();
-  const viewModel = useMemo(
-    () => buildLinkBrickViewModel(brick.data, grid),
-    [brick.data, grid]
-  );
-  const isUploading = brick.status === "uploading";
-  const titleClampClass = resolveTitleClampClass(viewModel.titleLines);
-
   const {
-    value: title,
-    handleChange: handleTitleChange,
-    handleBlur: handleTitleBlur,
-    handleFocus: handleTitleFocus,
-  } = useEditableField({
-    initialValue: viewModel.title,
-    onCommit: (nextValue) => {
-      const normalizedTitle = normalizeLinkTitle(nextValue);
-      updateLinkBrick({
-        id: brick.id,
-        data: { ...brick.data, title: normalizedTitle },
-      });
-    },
-    normalize: normalizeLinkTitle,
+    viewModel,
+    title,
+    titleClampClass,
+    isUploading,
     isEditable,
-  });
-
-  const renderTitle = (extraClass?: string) => (
-    <EditableParagraph
-      value={title}
-      onValueChange={handleTitleChange}
-      onValueBlur={handleTitleBlur}
-      onFocus={handleTitleFocus}
-      readOnly={!isEditable}
-      placeholder="Link title"
-      ariaLabel="Link title"
-      className={cn(
-        "non-drag min-w-0 font-light text-foreground hover:bg-muted p-1 rounded-sm focus:bg-muted py-2",
-        titleClampClass,
-        extraClass
-      )}
-    />
-  );
-
-  const renderIcon = (iconSize?: string) => {
-    return viewModel.showIcon ? (
-      <a
-        href={brick.data.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="w-fit link-icon"
-      >
-        {viewModel.iconUrl ? (
-          <img
-            src={viewModel.iconUrl}
-            alt=""
-            className={cn(
-              "size-7 shrink-0 rounded-lg object-cover xl:size-9",
-              iconSize
-            )}
-          />
-        ) : (
-          <span className="size-5 shrink-0 rounded-lg flex items-center justify-center xl:size-6">
-            <LinkSimpleIcon weight="bold" className="size-full" />
-          </span>
-        )}
-      </a>
-    ) : null;
-  };
-
-  const layoutElement = (layout: LinkBrickVariant) => {
-    switch (layout) {
-      case "compact":
-        return (
-          <div className="h-full flex items-center gap-4 min-w-0">
-            {renderIcon()}
-            {renderTitle("flex-1")}
-          </div>
-        );
-      case "standard":
-        return (
-          <div className="h-full flex flex-col justify-between min-w-0">
-            <div className="flex flex-col gap-2 min-w-0 xl:gap-4">
-              {renderIcon()}
-              {renderTitle("line-clamp-2 xl:line-clamp-3")}
-            </div>
-            <p className="text-muted-foreground text-xs">
-              {viewModel.siteLabel}
-            </p>
-          </div>
-        );
-      case "wide":
-        return (
-          <div className="h-full flex flex-row justify-between gap-8 min-w-0">
-            <div className="flex flex-col justify-between flex-3 min-w-0">
-              <div className="flex flex-col gap-2 min-w-0 xl:gap-4">
-                {renderIcon()}
-                {renderTitle("line-clamp-2 xl:line-clamp-3")}
-              </div>
-              <p className="text-muted-foreground text-xs">
-                {viewModel.siteLabel}
-              </p>
-            </div>
-
-            <div className="shrink-0 flex-2 overflow-hidden rounded-lg">
-              {viewModel.imageUrl ? (
-                <img
-                  src={viewModel.imageUrl}
-                  alt={viewModel.siteLabel ?? ""}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="h-full w-full bg-muted" />
-              )}
-            </div>
-          </div>
-        );
-      case "tall":
-        return (
-          <div className="h-full flex flex-col justify-between gap-8 min-w-0">
-            <div className="flex flex-col gap-4 flex-2 min-w-0">
-              {renderIcon()}
-              {renderTitle()}
-            </div>
-            <div className="shrink-0 flex-2 overflow-hidden rounded-lg">
-              {viewModel.imageUrl ? (
-                <img
-                  src={viewModel.imageUrl}
-                  alt={viewModel.siteLabel ?? ""}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="h-full w-full bg-muted" />
-              )}
-            </div>
-          </div>
-        );
-      case "rich":
-        return (
-          <div className="h-full flex flex-col justify-between gap-8 min-w-0">
-            <div className="flex flex-col gap-4 flex-2 min-w-0">
-              {renderIcon()}
-              {renderTitle()}
-            </div>
-            <div className="shrink-0 flex-3 overflow-hidden rounded-lg">
-              {viewModel.imageUrl ? (
-                <img
-                  src={viewModel.imageUrl}
-                  alt={viewModel.siteLabel ?? ""}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="h-full w-full bg-muted" />
-              )}
-            </div>
-          </div>
-        );
-    }
-  };
+    handleTitleChange,
+    handleTitleBlur,
+    handleTitleFocus,
+  } = useLinkBrickState({ brick, grid });
 
   return (
-    <div
-      className={cn(
-        "relative h-full w-full box-border rounded-xl p-4 text-sm overflow-hidden",
-        isUploading ? "bg-muted/60" : "bg-muted/30"
-      )}
-      aria-busy={isUploading}
-    >
-      {isUploading ? (
-        <Skeleton className="absolute inset-0" />
-      ) : (
-        <div className="h-full">{layoutElement(viewModel.variant)}</div>
-      )}
-    </div>
+    <LinkBrickView
+      viewModel={viewModel}
+      title={title}
+      titleClampClass={titleClampClass}
+      isUploading={isUploading}
+      isEditable={isEditable}
+      onTitleChange={handleTitleChange}
+      onTitleBlur={handleTitleBlur}
+      onTitleFocus={handleTitleFocus}
+      linkUrl={brick.data.url}
+    />
   );
 }
 
@@ -426,27 +265,6 @@ function UploadOverlay() {
   );
 }
 
-function resolveTitleClampClass(lines: number) {
-  switch (lines) {
-    case 1:
-      return "line-clamp-1 truncate";
-    case 3:
-      return "line-clamp-3";
-    case 5:
-      return "line-clamp-5";
-    default:
-      return "";
-  }
-}
-
-function normalizeLinkTitle(value: string | null | undefined) {
-  if (value === null || value === undefined) {
-    return null;
-  }
-
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
 
 function normalizeMapCaption(value: string | null | undefined) {
   if (value === null || value === undefined) {
