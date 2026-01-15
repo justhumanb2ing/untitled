@@ -1,13 +1,8 @@
 import { useMemo, useState } from "react";
-import BottomActionBar from "@/components/layout/bottom-action-bar";
 import type { Route } from "./+types/($lang).$handle._index";
 import { getAuth } from "@clerk/react-router/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
-import ProfileHeaderEditor from "@/components/profile/profile-header-editor";
-import { cn } from "@/lib/utils";
-import LayoutToggle from "@/components/layout/layout-toggle";
 import { PageAutoSaveController } from "@/components/page/page-auto-save-controller";
-import { useUmamiPageView } from "@/hooks/use-umami-page-view";
 import {
   fetchUmamiVisits,
   getTodayRange,
@@ -16,30 +11,15 @@ import {
   UMAMI_UNIT,
   type UmamiResponse,
 } from "../../service/umami/umami";
-import AppToolbar from "@/components/layout/app-toolbar";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import PageGridBrickSection from "@/components/page/page-grid-brick-section";
 import { PageGridProvider } from "@/components/page/page-grid-context";
 import { parsePageLayoutSnapshot } from "../../service/pages/page-grid";
-import {
-  DesktopBadgeView,
-  MobileBadgeView,
-} from "@/components/profile/profile-badge-view";
-import { OwnerGate } from "@/components/account/owner-gate";
-import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/umami-events";
-import SavingStatusIndicator from "@/components/page/saving-status-indicator";
-import { Separator } from "@/components/ui/separator";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import { generateMeta } from "@forge42/seo-tools/remix/metadata";
 import { breadcrumbs } from "@forge42/seo-tools/structured-data/breadcrumb";
 import { profile } from "@forge42/seo-tools/structured-data/profile";
 import { metadataConfig } from "@/config/metadata";
 import { getLocalizedPath } from "@/utils/localized-path";
+import { useUserProfilePageView } from "@/hooks/use-user-profile-pageview";
+import UserProfileLayout from "@/components/profile/user-profile-layout";
 
 type PreviewLayout = "desktop" | "mobile";
 
@@ -170,7 +150,6 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
     page: { id, owner_id, title, description, image_url, is_public },
     handle,
     isOwner,
-    umamiResult,
     pageLayout,
   } = loaderData;
   const [previewLayout, setPreviewLayout] = useState<PreviewLayout>("desktop");
@@ -189,22 +168,7 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
     [pageLayout]
   );
 
-  const pageViewProps = useMemo(
-    () => ({
-      [UMAMI_PROP_KEYS.ctx.pageId]: id,
-      [UMAMI_PROP_KEYS.ctx.pageKind]: "user_profile",
-      [UMAMI_PROP_KEYS.ctx.role]: isOwner ? "owner" : "viewer",
-    }),
-    [id, isOwner]
-  );
-
-  useUmamiPageView({
-    url: id ? `/user/${id}` : undefined,
-    title: "User Page",
-    props: pageViewProps,
-    eventName: UMAMI_EVENTS.page.userProfileView,
-    dedupeKey: id ? `user:${id}` : undefined,
-  });
+  useUserProfilePageView({ id, isOwner });
 
   return (
     <PageAutoSaveController
@@ -218,170 +182,19 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
         isOwner={isOwner}
         initialBricks={initialBricks}
       >
-        <div
-          className={cn(
-            `flex flex-col gap-4 transition-all ease-in-out duration-700 bg-background relative`,
-            "max-w-full w-full h-full my-0 min-h-dvh",
-            // !isMobilePreview && "xl:h-dvh xl:overflow-hidden",
-            // isMobilePreview && "rounded-3xl"
-            isMobilePreview
-              ? "self-start border rounded-[36px] shadow-lg max-w-lg mx-auto container h-[calc(100dvh-12rem)] overflow-hidden"
-              : "max-w-full w-full h-full my-0 min-h-dvh xl:h-dvh xl:overflow-hidden"
-          )}
-        >
-          <div
-            className={cn(
-              "relative flex flex-col gap-4 grow min-h-0",
-              isMobilePreview
-                ? "overflow-y-auto overscroll-contain scrollbar-hide"
-                : "mx-auto container max-w-lg xl:max-w-full"
-            )}
-          >
-            {/* Desktop Badge View */}
-            {/* <DesktopBadgeView
-              isOwner={isOwner}
-              umamiResult={umamiResult}
-              isMobilePreview={isMobilePreview}
-            /> */}
-
-            <div
-              className={cn(
-                "flex flex-col gap-4 grow relative",
-                !isMobilePreview &&
-                  "mx-auto container xl:mx-0 xl:flex-row xl:min-h-0 max-w-full xl:justify-between"
-              )}
-            >
-              {/* Mobile Badge View */}
-              {/* <MobileBadgeView
-                isOwner={isOwner}
-                umamiResult={umamiResult}
-                isMobilePreview={isMobilePreview}
-              /> */}
-
-              {/* Page Information Section */}
-              <section
-                className={cn(
-                  "shrink sticky top-0 z-0 h-dvh",
-                  !isMobilePreview &&
-                    "xl:flex xl:w-1/3 xl:static xl:h-auto xl:py-0"
-                )}
-              >
-                <ProfileHeaderEditor
-                  pageId={id}
-                  userId={owner_id}
-                  imageUrl={image_url}
-                  title={title}
-                  description={description}
-                  handle={handle}
-                  isOwner={isOwner}
-                  isMobilePreview={isMobilePreview}
-                  isPublic={is_public}
-                />
-              </section>
-
-              {/* Page Brick Section - Mobile App Style Bottom Sheet */}
-              <div
-                className={cn(
-                  isMobilePreview ? "" : "xl:grow xl:flex xl:justify-center"
-                )}
-              >
-                <section
-                  className={cn(
-                    "shrink-0 sticky z-10",
-                    "bg-background rounded-t-3xl",
-                    !isMobilePreview &&
-                      "xl:static xl:z-0 xl:w-full xl:max-w-[880px] xl:rounded-t-[32px] xl:top-32 xl:overflow-hidden"
-                  )}
-                >
-                  {/* Drag Handle Indicator */}
-                  <div
-                    className={cn(
-                      "sticky top-0 z-20 flex justify-center pt-3 pb-2 bg-background rounded-t-3xl",
-                      isMobilePreview
-                        ? "rounded-t-3xl"
-                        : "xl:hidden xl:rounded-none"
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        "w-9 h-1 rounded-full bg-muted-foreground/25",
-                        "transition-colors duration-200"
-                      )}
-                      aria-hidden="true"
-                    />
-                  </div>
-
-                  {initialBricks.length === 0 && (
-                    <Empty className="h-full">
-                      <EmptyHeader>
-                        <EmptyTitle className="text-lg">Empty</EmptyTitle>
-                        <EmptyDescription className="text-sm/relaxed">
-                          Everything remains the same for the time being.
-                        </EmptyDescription>
-                      </EmptyHeader>
-                    </Empty>
-                  )}
-                  <ScrollArea
-                    className={cn(
-                      "w-full h-[calc(100%-20px)]",
-                      !isMobilePreview && "xl:w-[880px]"
-                    )}
-                    scrollFade
-                    scrollbarGutter
-                    scrollbarHidden
-                  >
-                    <div
-                      className={cn(
-                        "w-full px-3 pb-32 pt-4",
-                        !isMobilePreview && "xl:px-0"
-                      )}
-                    >
-                      <PageGridBrickSection isMobilePreview={isMobilePreview} />
-                    </div>
-                  </ScrollArea>
-                </section>
-              </div>
-            </div>
-
-            <Separator
-              className={cn(
-                "block xl:hidden data-[orientation=horizontal]:bg-muted data-[orientation=horizontal]:h-2"
-              )}
-            />
-
-            {/* TODO: xl 이상일 때 위치 변경 */}
-            {/* Action bar */}
-            <aside
-              className={cn(
-                "rounded bg-background static h-28 py-6 pb-10 flex items-center justify-center xl:fixed xl:bottom-10 xl:right-48 xl:px-2 xl:mb-0 xl:py-2 xl:h-fit xl:border"
-              )}
-            >
-              <BottomActionBar
-                isOwner={isOwner}
-                isMobilePreview={isMobilePreview}
-              />
-            </aside>
-          </div>
-
-          <OwnerGate isOwner={isOwner}>
-            <LayoutToggle
-              isDesktop={!isMobilePreview}
-              onToggle={setPreviewLayout}
-            />
-            {/* <div className="flex items-center gap-1">
-              <SavingStatusIndicator />
-            </div> */}
-          </OwnerGate>
-
-          <aside
-            className={cn(
-              "fixed bottom-28 right-48",
-              isMobilePreview ? "hidden" : "hidden xl:block"
-            )}
-          >
-            <AppToolbar isMobilePreview={isMobilePreview} />
-          </aside>
-        </div>
+        <UserProfileLayout
+          pageId={id}
+          ownerId={owner_id}
+          title={title}
+          description={description}
+          imageUrl={image_url}
+          handle={handle}
+          isOwner={isOwner}
+          isPublic={is_public}
+          isMobilePreview={isMobilePreview}
+          onTogglePreview={setPreviewLayout}
+          isEmpty={initialBricks.length === 0}
+        />
       </PageGridProvider>
     </PageAutoSaveController>
   );
