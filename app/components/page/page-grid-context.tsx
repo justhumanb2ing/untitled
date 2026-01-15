@@ -9,28 +9,29 @@ import type { Layout } from "react-grid-layout";
 import { isMobileWeb } from "@toss/utils";
 
 import { getStrictContext } from "@/lib/get-strict-context";
-import { usePageAutoSaveActions } from "@/components/page/page-auto-save-controller";
-import { usePageMediaUploader } from "@/hooks/use-page-media-uploader";
-import { toastManager } from "@/components/ui/toast";
+import { usePageAutoSaveActions } from "@/hooks/page/use-page-auto-save-controller";
+import { useMediaBrickUpload } from "@/hooks/use-media-brick-upload";
+import { useEditableAction } from "@/hooks/use-editable-action";
+import {
+  handleAddMediaPlaceholder,
+  handleCompleteMediaUpload,
+  handleAddTextPlaceholder,
+  handleAddMapPlaceholder,
+  handleAddLinkPlaceholder,
+  handleUpdateTextBrick,
+  handleUpdateTextBrickRowSpanLocal,
+  handleRemoveBrick,
+  handleApplyLayout,
+  handleUpdateMapBrick,
+  handleUpdateLinkBrick,
+  handleUpdateMediaLink,
+  type PageGridState,
+} from "../../utils/page-grid-reducer-handlers";
 import type { GridBreakpoint } from "@/config/grid-rule";
 import type { BrickLinkRow, BrickMapRow } from "types/brick";
 import {
-  createUmamiAttemptId,
-  trackUmamiEvent,
-} from "@/lib/umami";
-import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/umami-events";
-import {
-  applyLayoutToBricks,
-  createPageGridBrick,
   createPageGridBrickId,
-  getMediaValidationError,
-  resolveMediaType,
-  resolveTextBrickStatus,
   serializePageLayout,
-  updateLinkBrickData,
-  updateMediaBrickLinkData,
-  updateMapBrickData,
-  updatePageGridBrick,
   type PageGridBrick,
   type PageGridMediaType,
 } from "../../../service/pages/page-grid";
@@ -41,11 +42,6 @@ import {
   buildGoogleMapsHref,
 } from "../../utils/map";
 import type { Json } from "types/database.types";
-
-type PageGridState = {
-  bricks: PageGridBrick[];
-  shouldPersistDraft: boolean;
-};
 
 type PageGridActions = {
   addMediaFile: (file: File) => void;
@@ -145,273 +141,30 @@ function pageGridReducer(
   action: PageGridAction
 ): PageGridState {
   switch (action.type) {
-    case "ADD_MEDIA_PLACEHOLDER": {
-      const brick = createPageGridBrick({
-        id: action.id,
-        type: action.mediaType,
-        status: "uploading",
-        bricks: state.bricks,
-      });
-
-      return {
-        bricks: [...state.bricks, brick],
-        shouldPersistDraft: true,
-      };
-    }
-    case "COMPLETE_MEDIA_UPLOAD": {
-      const timestamp = new Date().toISOString();
-
-      return {
-        bricks: state.bricks.map((brick) =>
-          brick.id === action.id
-            ? updatePageGridBrick(brick, {
-                url: action.publicUrl,
-                status: "ready",
-                timestamp,
-              })
-            : brick
-        ),
-        shouldPersistDraft: true,
-      };
-    }
-    case "ADD_TEXT_PLACEHOLDER": {
-      const brick = createPageGridBrick({
-        id: action.id,
-        type: "text",
-        status: "draft",
-        bricks: state.bricks,
-      });
-
-      return {
-        bricks: [...state.bricks, brick],
-        shouldPersistDraft: true,
-      };
-    }
-    case "ADD_MAP_PLACEHOLDER": {
-      const brick = createPageGridBrick({
-        id: action.id,
-        type: "map",
-        status: "ready",
-        bricks: state.bricks,
-        payload: {
-          lat: action.lat,
-          lng: action.lng,
-          zoom: action.zoom,
-          href: action.href,
-          caption: action.caption,
-        },
-      });
-
-      return {
-        bricks: [...state.bricks, brick],
-        shouldPersistDraft: true,
-      };
-    }
-    case "ADD_LINK_PLACEHOLDER": {
-      const brick = createPageGridBrick({
-        id: action.id,
-        type: "link",
-        status: "uploading",
-        bricks: state.bricks,
-        payload: {
-          url: action.url,
-        },
-      });
-
-      return {
-        bricks: [...state.bricks, brick],
-        shouldPersistDraft: true,
-      };
-    }
-    case "UPDATE_TEXT_BRICK": {
-      let didUpdate = false;
-      const nextBricks = state.bricks.map((brick) => {
-        if (brick.id !== action.id || brick.type !== "text") {
-          return brick;
-        }
-
-        const nextStatus = resolveTextBrickStatus(
-          action.text,
-          action.isEditing
-        );
-        const currentGrid = brick.style[action.breakpoint].grid;
-        const nextGrid = {
-          ...currentGrid,
-          h: action.rowSpan,
-        };
-        const shouldUpdate =
-          brick.data.text !== action.text ||
-          brick.status !== nextStatus ||
-          currentGrid.h !== action.rowSpan;
-
-        if (!shouldUpdate) {
-          return brick;
-        }
-
-        didUpdate = true;
-        return updatePageGridBrick(brick, {
-          text: action.text,
-          status: nextStatus,
-          grid: nextGrid,
-          breakpoint: action.breakpoint,
-        });
-      });
-
-      if (!didUpdate) {
-        return state;
-      }
-
-      return {
-        bricks: nextBricks,
-        shouldPersistDraft: action.persist ?? true,
-      };
-    }
-    case "UPDATE_TEXT_BRICK_ROWSPAN_LOCAL": {
-      let didUpdate = false;
-      const nextBricks = state.bricks.map((brick) => {
-        if (brick.id !== action.id || brick.type !== "text") {
-          return brick;
-        }
-
-        const currentGrid = brick.style[action.breakpoint].grid;
-        if (currentGrid.h === action.rowSpan) {
-          return brick;
-        }
-
-        didUpdate = true;
-        return {
-          ...brick,
-          style: {
-            ...brick.style,
-            [action.breakpoint]: {
-              grid: { ...currentGrid, h: action.rowSpan },
-            },
-          },
-        };
-      });
-
-      if (!didUpdate) {
-        return state;
-      }
-
-      return {
-        bricks: nextBricks,
-        shouldPersistDraft: false,
-      };
-    }
+    case "ADD_MEDIA_PLACEHOLDER":
+      return handleAddMediaPlaceholder(state, action);
+    case "COMPLETE_MEDIA_UPLOAD":
+      return handleCompleteMediaUpload(state, action);
+    case "ADD_TEXT_PLACEHOLDER":
+      return handleAddTextPlaceholder(state, action);
+    case "ADD_MAP_PLACEHOLDER":
+      return handleAddMapPlaceholder(state, action);
+    case "ADD_LINK_PLACEHOLDER":
+      return handleAddLinkPlaceholder(state, action);
+    case "UPDATE_TEXT_BRICK":
+      return handleUpdateTextBrick(state, action);
+    case "UPDATE_TEXT_BRICK_ROWSPAN_LOCAL":
+      return handleUpdateTextBrickRowSpanLocal(state, action);
     case "REMOVE_BRICK":
-      return {
-        bricks: state.bricks.filter((brick) => brick.id !== action.id),
-        shouldPersistDraft: true,
-      };
-    case "APPLY_LAYOUT": {
-      const nextBricks = applyLayoutToBricks(
-        state.bricks,
-        action.layout,
-        action.breakpoint
-      );
-
-      if (nextBricks === state.bricks) {
-        return state;
-      }
-
-      return {
-        bricks: nextBricks,
-        shouldPersistDraft: true,
-      };
-    }
-    case "UPDATE_MAP_BRICK": {
-      let didUpdate = false;
-      const nextBricks = state.bricks.map((brick) => {
-        if (brick.id !== action.id || brick.type !== "map") {
-          return brick;
-        }
-
-        const updatedBrick = updateMapBrickData(brick, action.data);
-        if (updatedBrick === brick) {
-          return brick;
-        }
-
-        didUpdate = true;
-        return updatedBrick;
-      });
-
-      if (!didUpdate) {
-        return state;
-      }
-
-      return {
-        bricks: nextBricks,
-        shouldPersistDraft: true,
-      };
-    }
-    case "UPDATE_LINK_BRICK": {
-      let didUpdate = false;
-      const timestamp = new Date().toISOString();
-      const nextBricks = state.bricks.map((brick) => {
-        if (brick.id !== action.id || brick.type !== "link") {
-          return brick;
-        }
-
-        const updatedBrick = updateLinkBrickData(
-          brick,
-          action.data,
-          timestamp
-        );
-        const nextBrick =
-          updatedBrick === brick && brick.status === "ready"
-            ? brick
-            : {
-                ...updatedBrick,
-                status: "ready",
-                updated_at: timestamp,
-              };
-
-        if (nextBrick === brick) {
-          return brick;
-        }
-
-        didUpdate = true;
-        return nextBrick;
-      });
-
-      if (!didUpdate) {
-        return state;
-      }
-
-      return {
-        bricks: nextBricks,
-        shouldPersistDraft: true,
-      };
-    }
-    case "UPDATE_MEDIA_LINK": {
-      let didUpdate = false;
-      const nextBricks = state.bricks.map((brick) => {
-        if (
-          brick.id !== action.id ||
-          (brick.type !== "image" && brick.type !== "video")
-        ) {
-          return brick;
-        }
-
-        const updatedBrick = updateMediaBrickLinkData(brick, action.linkUrl);
-        if (updatedBrick === brick) {
-          return brick;
-        }
-
-        didUpdate = true;
-        return updatedBrick;
-      });
-
-      if (!didUpdate) {
-        return state;
-      }
-
-      return {
-        bricks: nextBricks,
-        shouldPersistDraft: true,
-      };
-    }
+      return handleRemoveBrick(state, action);
+    case "APPLY_LAYOUT":
+      return handleApplyLayout(state, action);
+    case "UPDATE_MAP_BRICK":
+      return handleUpdateMapBrick(state, action);
+    case "UPDATE_LINK_BRICK":
+      return handleUpdateLinkBrick(state, action);
+    case "UPDATE_MEDIA_LINK":
+      return handleUpdateMediaLink(state, action);
     default:
       return state;
   }
@@ -440,8 +193,24 @@ export function PageGridProvider({
     bricks: initialBricks,
     shouldPersistDraft: true,
   });
-  const uploadPageMedia = usePageMediaUploader();
-  const { updateDraft } = usePageAutoSaveActions();
+  const updateDraft = usePageAutoSaveActions((actions) => actions.updateDraft);
+
+  const uploadHandlers = useMemo(
+    () => ({
+      onStart: (id: string, mediaType: PageGridMediaType) => {
+        dispatch({ type: "ADD_MEDIA_PLACEHOLDER", id, mediaType });
+      },
+      onComplete: (id: string, publicUrl: string) => {
+        dispatch({ type: "COMPLETE_MEDIA_UPLOAD", id, publicUrl });
+      },
+      onError: (id: string) => {
+        dispatch({ type: "REMOVE_BRICK", id });
+      },
+    }),
+    []
+  );
+
+  const uploadMedia = useMediaBrickUpload(pageId, ownerId, uploadHandlers);
 
   const addMediaFile = useCallback(
     (file: File) => {
@@ -449,101 +218,19 @@ export function PageGridProvider({
         return;
       }
 
-      const validationError = getMediaValidationError(file);
-      if (validationError) {
-        toastManager.add({
-          type: "error",
-          title: "Upload blocked",
-          description: validationError,
-        });
-        return;
-      }
-
-      const mediaType = resolveMediaType(file);
-      if (!mediaType) {
-        toastManager.add({
-          type: "error",
-          title: "Unsupported file",
-          description: "Only image or video files are supported.",
-        });
-        return;
-      }
-
-      const id = createPageGridBrickId();
-      const attemptId = createUmamiAttemptId("media");
-      dispatch({ type: "ADD_MEDIA_PLACEHOLDER", id, mediaType });
-      trackUmamiEvent(
-        UMAMI_EVENTS.feature.media.upload,
-        {
-          [UMAMI_PROP_KEYS.ctx.attemptId]: attemptId,
-          [UMAMI_PROP_KEYS.ctx.mediaType]: mediaType,
-        },
-        {
-          dedupeKey: `media-upload:${attemptId}`,
-          once: true,
-        }
-      );
-
-      void (async () => {
-        try {
-          const { publicUrl } = await uploadPageMedia({
-            pageId,
-            userId: ownerId,
-            file,
-          });
-
-          dispatch({ type: "COMPLETE_MEDIA_UPLOAD", id, publicUrl });
-          trackUmamiEvent(
-            UMAMI_EVENTS.feature.media.success,
-            {
-              [UMAMI_PROP_KEYS.ctx.attemptId]: attemptId,
-              [UMAMI_PROP_KEYS.ctx.mediaType]: mediaType,
-            },
-            {
-              dedupeKey: `media-success:${attemptId}`,
-              once: true,
-            }
-          );
-        } catch (error) {
-          dispatch({ type: "REMOVE_BRICK", id });
-          toastManager.add({
-            type: "error",
-            title: "Upload failed",
-            description:
-              error instanceof Error ? error.message : "Please try again.",
-          });
-          trackUmamiEvent(
-            UMAMI_EVENTS.feature.media.error,
-            {
-              [UMAMI_PROP_KEYS.ctx.attemptId]: attemptId,
-              [UMAMI_PROP_KEYS.ctx.mediaType]: mediaType,
-              [UMAMI_PROP_KEYS.ctx.errorCode]: "upload_failed",
-            },
-            {
-              dedupeKey: `media-error:${attemptId}`,
-              once: true,
-            }
-          );
-        }
-      })();
+      void uploadMedia(file);
     },
-    [isEditable, ownerId, pageId, uploadPageMedia]
+    [isEditable, uploadMedia]
   );
 
-  const addTextBrick = useCallback(() => {
-    if (!isEditable) {
-      return;
-    }
-
+  const addTextBrickImpl = useCallback(() => {
     const id = createPageGridBrickId();
     dispatch({ type: "ADD_TEXT_PLACEHOLDER", id });
-  }, [isEditable]);
+  }, []);
 
-  const addMapBrick = useCallback(() => {
-    if (!isEditable) {
-      return;
-    }
+  const addTextBrick = useEditableAction(isEditable, addTextBrickImpl);
 
+  const addMapBrickImpl = useCallback(() => {
     const id = createPageGridBrickId();
     dispatch({
       type: "ADD_MAP_PLACEHOLDER",
@@ -558,22 +245,19 @@ export function PageGridProvider({
       ),
       caption: null,
     });
-  }, [isEditable]);
+  }, []);
 
-  const addLinkBrick = useCallback(
-    (url: string) => {
-      if (!isEditable) {
-        return "";
-      }
+  const addMapBrick = useEditableAction(isEditable, addMapBrickImpl);
 
-      const id = createPageGridBrickId();
-      dispatch({ type: "ADD_LINK_PLACEHOLDER", id, url });
-      return id;
-    },
-    [isEditable]
-  );
+  const addLinkBrickImpl = useCallback((url: string) => {
+    const id = createPageGridBrickId();
+    dispatch({ type: "ADD_LINK_PLACEHOLDER", id, url });
+    return id;
+  }, []);
 
-  const updateTextBrick = useCallback(
+  const addLinkBrick = useEditableAction(isEditable, addLinkBrickImpl);
+
+  const updateTextBrickImpl = useCallback(
     ({
       id,
       text,
@@ -589,10 +273,6 @@ export function PageGridProvider({
       isEditing: boolean;
       persist?: boolean;
     }) => {
-      if (!isEditable) {
-        return;
-      }
-
       dispatch({
         type: "UPDATE_TEXT_BRICK",
         id,
@@ -603,8 +283,10 @@ export function PageGridProvider({
         persist,
       });
     },
-    [isEditable]
+    []
   );
+
+  const updateTextBrick = useEditableAction(isEditable, updateTextBrickImpl);
 
   const updateTextBrickRowSpanLocal = useCallback(
     ({
@@ -626,72 +308,62 @@ export function PageGridProvider({
     []
   );
 
-  const updateLayout = useCallback(
+  const updateLayoutImpl = useCallback(
     (layout: Layout, breakpoint: GridBreakpoint) => {
-      if (!isEditable) {
-        return;
-      }
-
       dispatch({ type: "APPLY_LAYOUT", layout, breakpoint });
     },
-    [isEditable]
+    []
   );
 
-  const removeBrick = useCallback(
-    (id: string) => {
-      if (!isEditable) {
-        return;
-      }
+  const updateLayout = useEditableAction(isEditable, updateLayoutImpl);
 
-      dispatch({ type: "REMOVE_BRICK", id });
-    },
-    [isEditable]
-  );
+  const removeBrickImpl = useCallback((id: string) => {
+    dispatch({ type: "REMOVE_BRICK", id });
+  }, []);
 
-  const updateMapBrick = useCallback(
+  const removeBrick = useEditableAction(isEditable, removeBrickImpl);
+
+  const updateMapBrickImpl = useCallback(
     (payload: { id: string; data: Partial<BrickMapRow> }) => {
-      if (!isEditable) {
-        return;
-      }
-
       dispatch({
         type: "UPDATE_MAP_BRICK",
         id: payload.id,
         data: payload.data,
       });
     },
-    [isEditable]
+    []
   );
 
-  const updateMediaBrickLink = useCallback(
-    (payload: { id: string; linkUrl: string | null }) => {
-      if (!isEditable) {
-        return;
-      }
+  const updateMapBrick = useEditableAction(isEditable, updateMapBrickImpl);
 
+  const updateMediaBrickLinkImpl = useCallback(
+    (payload: { id: string; linkUrl: string | null }) => {
       dispatch({
         type: "UPDATE_MEDIA_LINK",
         id: payload.id,
         linkUrl: payload.linkUrl,
       });
     },
-    [isEditable]
+    []
   );
 
-  const updateLinkBrick = useCallback(
-    (payload: { id: string; data: BrickLinkRow }) => {
-      if (!isEditable) {
-        return;
-      }
+  const updateMediaBrickLink = useEditableAction(
+    isEditable,
+    updateMediaBrickLinkImpl
+  );
 
+  const updateLinkBrickImpl = useCallback(
+    (payload: { id: string; data: BrickLinkRow }) => {
       dispatch({
         type: "UPDATE_LINK_BRICK",
         id: payload.id,
         data: payload.data,
       });
     },
-    [isEditable]
+    []
   );
+
+  const updateLinkBrick = useEditableAction(isEditable, updateLinkBrickImpl);
 
   const layoutSnapshot = useMemo(
     () => serializePageLayout(state.bricks),

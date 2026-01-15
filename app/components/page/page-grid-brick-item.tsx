@@ -7,6 +7,8 @@ import {
   type ReactNode,
 } from "react";
 
+import { useEditableField } from "@/hooks/use-editable-field";
+
 import {
   MapCanvas,
   type MapCanvasControls,
@@ -149,99 +151,24 @@ type MapBrickContentProps = {
 
 function MapBrickContent({ brick, mapOverrides }: MapBrickContentProps) {
   const { updateMapBrick, isEditable } = usePageGridActions();
-  const [captionDraft, setCaptionDraft] = useState(brick.data.caption ?? "");
-  const captionDraftRef = useRef(captionDraft);
-  const isEditingRef = useRef(false);
-  const hasPendingChangeRef = useRef(false);
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastSavedCaptionRef = useRef(normalizeMapCaption(brick.data.caption));
 
-  useEffect(() => {
-    if (isEditingRef.current || hasPendingChangeRef.current) {
-      return;
-    }
-
-    const nextCaption = brick.data.caption ?? "";
-    captionDraftRef.current = nextCaption;
-    setCaptionDraft(nextCaption);
-    lastSavedCaptionRef.current = normalizeMapCaption(brick.data.caption);
-  }, [brick.data.caption]);
-
-  useEffect(() => {
-    return () => {
-      if (saveTimerRef.current) {
-        clearTimeout(saveTimerRef.current);
-      }
-    };
-  }, []);
-
-  const commitCaption = useCallback(
-    (nextValue: string) => {
-      if (!isEditable || !hasPendingChangeRef.current) {
-        return;
-      }
-
+  const {
+    value: caption,
+    handleChange: handleCaptionChange,
+    handleBlur: handleCaptionBlur,
+    handleFocus: handleCaptionFocus,
+  } = useEditableField({
+    initialValue: brick.data.caption ?? "",
+    onCommit: (nextValue) => {
       const normalizedCaption = normalizeMapCaption(nextValue);
-      if (normalizedCaption === lastSavedCaptionRef.current) {
-        hasPendingChangeRef.current = false;
-        return;
-      }
-
       updateMapBrick({
         id: brick.id,
         data: { caption: normalizedCaption },
       });
-      lastSavedCaptionRef.current = normalizedCaption;
-      hasPendingChangeRef.current = false;
     },
-    [brick.id, isEditable, updateMapBrick]
-  );
-
-  const scheduleCaptionSave = useCallback(
-    (nextValue: string) => {
-      if (!isEditable) {
-        return;
-      }
-
-      if (saveTimerRef.current) {
-        clearTimeout(saveTimerRef.current);
-      }
-
-      saveTimerRef.current = setTimeout(() => {
-        saveTimerRef.current = null;
-        commitCaption(nextValue);
-      }, 650);
-    },
-    [commitCaption, isEditable]
-  );
-
-  const handleCaptionChange = useCallback(
-    (value: string) => {
-      if (!isEditable) {
-        return;
-      }
-
-      captionDraftRef.current = value;
-      setCaptionDraft(value);
-      hasPendingChangeRef.current = true;
-      scheduleCaptionSave(value);
-    },
-    [isEditable, scheduleCaptionSave]
-  );
-
-  const handleCaptionBlur = useCallback(() => {
-    if (saveTimerRef.current) {
-      clearTimeout(saveTimerRef.current);
-      saveTimerRef.current = null;
-    }
-
-    commitCaption(captionDraftRef.current);
-    isEditingRef.current = false;
-  }, [commitCaption]);
-
-  const handleCaptionFocus = useCallback(() => {
-    isEditingRef.current = true;
-  }, []);
+    normalize: normalizeMapCaption,
+    isEditable,
+  });
 
   const hasCoordinates = brick.data.lng !== null && brick.data.lat !== null;
   const center = hasCoordinates
@@ -257,7 +184,7 @@ function MapBrickContent({ brick, mapOverrides }: MapBrickContentProps) {
         showCenterIndicator
         showLocationLabel
         showGeolocateControl={false}
-        locationLabel={captionDraft}
+        locationLabel={caption}
         locationLabelEditable={isEditable}
         onLocationLabelChange={handleCaptionChange}
         onLocationLabelBlur={handleCaptionBlur}
@@ -288,98 +215,27 @@ function LinkBrickContent({ brick, grid }: LinkBrickContentProps) {
   const isUploading = brick.status === "uploading";
   const titleClampClass = resolveTitleClampClass(viewModel.titleLines);
 
-  const titleDraftRef = useRef(viewModel.title);
-  const [titleDraft, setTitleDraft] = useState(viewModel.title);
-  const isEditingRef = useRef(false);
-  const hasPendingChangeRef = useRef(false);
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastSavedTitleRef = useRef(normalizeLinkTitle(brick.data.title));
-
-  useEffect(() => {
-    if (isEditingRef.current || hasPendingChangeRef.current) {
-      return;
-    }
-
-    titleDraftRef.current = viewModel.title;
-    setTitleDraft(viewModel.title);
-    lastSavedTitleRef.current = normalizeLinkTitle(brick.data.title);
-  }, [brick.data.title, viewModel.title]);
-
-  useEffect(() => {
-    return () => {
-      if (saveTimerRef.current) {
-        clearTimeout(saveTimerRef.current);
-      }
-    };
-  }, []);
-
-  const commitTitle = useCallback(
-    (nextValue: string) => {
-      if (!isEditable || !hasPendingChangeRef.current) {
-        return;
-      }
-
+  const {
+    value: title,
+    handleChange: handleTitleChange,
+    handleBlur: handleTitleBlur,
+    handleFocus: handleTitleFocus,
+  } = useEditableField({
+    initialValue: viewModel.title,
+    onCommit: (nextValue) => {
       const normalizedTitle = normalizeLinkTitle(nextValue);
-      if (normalizedTitle === lastSavedTitleRef.current) {
-        hasPendingChangeRef.current = false;
-        return;
-      }
-
       updateLinkBrick({
         id: brick.id,
         data: { ...brick.data, title: normalizedTitle },
       });
-      lastSavedTitleRef.current = normalizedTitle;
-      hasPendingChangeRef.current = false;
     },
-    [brick.data, brick.id, isEditable, updateLinkBrick]
-  );
-
-  const scheduleTitleSave = useCallback(
-    (nextValue: string) => {
-      if (!isEditable) {
-        return;
-      }
-
-      if (saveTimerRef.current) {
-        clearTimeout(saveTimerRef.current);
-      }
-
-      saveTimerRef.current = setTimeout(() => {
-        saveTimerRef.current = null;
-        commitTitle(nextValue);
-      }, 650);
-    },
-    [commitTitle, isEditable]
-  );
-
-  const handleTitleChange = useCallback(
-    (value: string) => {
-      titleDraftRef.current = value;
-      setTitleDraft(value);
-      hasPendingChangeRef.current = true;
-      scheduleTitleSave(value);
-    },
-    [scheduleTitleSave]
-  );
-
-  const handleTitleBlur = useCallback(() => {
-    if (saveTimerRef.current) {
-      clearTimeout(saveTimerRef.current);
-      saveTimerRef.current = null;
-    }
-
-    commitTitle(titleDraftRef.current);
-    isEditingRef.current = false;
-  }, [commitTitle]);
-
-  const handleTitleFocus = useCallback(() => {
-    isEditingRef.current = true;
-  }, []);
+    normalize: normalizeLinkTitle,
+    isEditable,
+  });
 
   const renderTitle = (extraClass?: string) => (
     <EditableParagraph
-      value={titleDraft}
+      value={title}
       onValueChange={handleTitleChange}
       onValueBlur={handleTitleBlur}
       onFocus={handleTitleFocus}

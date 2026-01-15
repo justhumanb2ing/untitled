@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import type { Route } from "./+types/($lang).$handle._index";
 import { getAuth } from "@clerk/react-router/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
-import { PageAutoSaveController } from "@/components/page/page-auto-save-controller";
+import { usePageAutoSaveController } from "@/hooks/page/use-page-auto-save-controller";
 import {
   fetchUmamiVisits,
   getTodayRange,
@@ -169,33 +169,32 @@ export default function UserProfileRoute({ loaderData }: Route.ComponentProps) {
   );
 
   useUserProfilePageView({ id, isOwner });
+  usePageAutoSaveController({
+    pageId: id,
+    initialSnapshot,
+    enabled: isOwner,
+  });
 
   return (
-    <PageAutoSaveController
+    <PageGridProvider
       pageId={id}
-      initialSnapshot={initialSnapshot}
-      enabled={isOwner}
+      ownerId={owner_id}
+      isOwner={isOwner}
+      initialBricks={initialBricks}
     >
-      <PageGridProvider
+      <UserProfileLayout
         pageId={id}
         ownerId={owner_id}
+        title={title}
+        description={description}
+        imageUrl={image_url}
+        handle={handle}
         isOwner={isOwner}
-        initialBricks={initialBricks}
-      >
-        <UserProfileLayout
-          pageId={id}
-          ownerId={owner_id}
-          title={title}
-          description={description}
-          imageUrl={image_url}
-          handle={handle}
-          isOwner={isOwner}
-          isPublic={is_public}
-          isMobilePreview={isMobilePreview}
-          onTogglePreview={setPreviewLayout}
-          isEmpty={initialBricks.length === 0}
-        />
-      </PageGridProvider>
-    </PageAutoSaveController>
+        isPublic={is_public}
+        isMobilePreview={isMobilePreview}
+        onTogglePreview={setPreviewLayout}
+        isEmpty={initialBricks.length === 0}
+      />
+    </PageGridProvider>
   );
 }

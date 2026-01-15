@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { usePageAutoSaveState } from "@/components/page/page-auto-save-controller";
+import { usePageAutoSaveState } from "@/components/page/use-page-auto-save-controller";
 import { Spinner } from "../ui/spinner";
 
 interface SavingStatusIndicatorProps {
@@ -10,7 +10,10 @@ interface SavingStatusIndicatorProps {
 export default function SavingStatusIndicator({
   className,
 }: SavingStatusIndicatorProps) {
-  const { status, statusLabel } = usePageAutoSaveState();
+  const { status, statusLabel } = usePageAutoSaveState((state) => ({
+    status: state.status,
+    statusLabel: state.statusLabel,
+  }));
   const isSavingStatus = status === "dirty" || status === "saving";
 
   return (

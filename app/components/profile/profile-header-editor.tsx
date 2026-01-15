@@ -21,7 +21,7 @@ import {
 import { Popover, PopoverPanel, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "../ui/button";
 import EditableParagraph from "./editable-paragraph";
-import { usePageAutoSaveActions } from "@/components/page/page-auto-save-controller";
+import { usePageAutoSaveActions } from "@/hooks/page/use-page-auto-save-controller";
 import { usePageImageUploader } from "@/hooks/use-page-image-uploader";
 import VisibilityToggle from "./visibility-toggle";
 import { toastManager } from "@/components/ui/toast";
@@ -87,7 +87,9 @@ export default function ProfileHeaderEditor({
   isMobilePreview,
   isPublic,
 }: ProfileHeaderEditorProps) {
-  const { updateDraft, markDirty, markError } = usePageAutoSaveActions();
+  const updateDraft = usePageAutoSaveActions((actions) => actions.updateDraft);
+  const markDirty = usePageAutoSaveActions((actions) => actions.markDirty);
+  const markError = usePageAutoSaveActions((actions) => actions.markError);
   const uploadPageImage = usePageImageUploader();
   const form = useForm<ProfileHeaderFormValues>({
     resolver: zodResolver(profileHeaderSchema),

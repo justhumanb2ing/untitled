@@ -1,12 +1,13 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createElement } from "react";
 
 import {
-  PageAutoSaveController,
+  usePageAutoSaveController,
   usePageAutoSaveActions,
   usePageAutoSaveState,
-} from "@/components/page/page-auto-save-controller";
+} from "@/hooks/page/use-page-auto-save-controller";
 import type { PageSavePayload, PageSnapshot } from "../../service/pages/save-page";
 
 const { mockSavePage } = vi.hoisted(() => ({
@@ -43,19 +44,44 @@ function AutoSaveHarness({ nextTitle }: { nextTitle: string }) {
   const actions = usePageAutoSaveActions();
   const state = usePageAutoSaveState();
 
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={() => actions.updateDraft({ title: nextTitle })}
-      >
-        Update title
-      </button>
-      <div data-testid="status">{state.status}</div>
-      <div data-testid="label">{state.statusLabel}</div>
-      <div data-testid="message">{state.message ?? ""}</div>
-    </div>
+  return createElement(
+    "div",
+    null,
+    createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => actions.updateDraft({ title: nextTitle }),
+      },
+      "Update title"
+    ),
+    createElement("div", { "data-testid": "status" }, state.status),
+    createElement("div", { "data-testid": "label" }, state.statusLabel),
+    createElement("div", { "data-testid": "message" }, state.message ?? "")
   );
+}
+
+function AutoSaveControllerHarness({
+  pageId,
+  initialSnapshot,
+  debounceMs,
+  enabled,
+  nextTitle,
+}: {
+  pageId: string;
+  initialSnapshot: PageSnapshot;
+  debounceMs?: number;
+  enabled?: boolean;
+  nextTitle: string;
+}) {
+  usePageAutoSaveController({
+    pageId,
+    initialSnapshot,
+    debounceMs,
+    enabled,
+  });
+
+  return createElement(AutoSaveHarness, { nextTitle });
 }
 
 describe("PageAutoSaveController", () => {
@@ -71,13 +97,12 @@ describe("PageAutoSaveController", () => {
     const user = userEvent.setup();
 
     render(
-      <PageAutoSaveController
-        pageId="page-1"
-        initialSnapshot={initialSnapshot}
-        debounceMs={200}
-      >
-        <AutoSaveHarness nextTitle="Updated title" />
-      </PageAutoSaveController>
+      createElement(AutoSaveControllerHarness, {
+        pageId: "page-1",
+        initialSnapshot,
+        debounceMs: 200,
+        nextTitle: "Updated title",
+      })
     );
 
     await user.click(screen.getByRole("button", { name: /update title/i }));
@@ -99,13 +124,12 @@ describe("PageAutoSaveController", () => {
     const user = userEvent.setup();
 
     render(
-      <PageAutoSaveController
-        pageId="page-1"
-        initialSnapshot={initialSnapshot}
-        debounceMs={200}
-      >
-        <AutoSaveHarness nextTitle="First" />
-      </PageAutoSaveController>
+      createElement(AutoSaveControllerHarness, {
+        pageId: "page-1",
+        initialSnapshot,
+        debounceMs: 200,
+        nextTitle: "First",
+      })
     );
 
     await user.click(screen.getByRole("button", { name: /update title/i }));
@@ -119,13 +143,12 @@ describe("PageAutoSaveController", () => {
     const user = userEvent.setup();
 
     render(
-      <PageAutoSaveController
-        pageId="page-1"
-        initialSnapshot={initialSnapshot}
-        debounceMs={200}
-      >
-        <AutoSaveHarness nextTitle="Another title" />
-      </PageAutoSaveController>
+      createElement(AutoSaveControllerHarness, {
+        pageId: "page-1",
+        initialSnapshot,
+        debounceMs: 200,
+        nextTitle: "Another title",
+      })
     );
 
     await user.click(screen.getByRole("button", { name: /update title/i }));

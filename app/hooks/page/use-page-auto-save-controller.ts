@@ -2,31 +2,21 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useReducer,
   useRef,
-  type ReactNode,
 } from "react";
 import { debounce, isEqual } from "es-toolkit";
 
-import { getStrictContext } from "@/lib/get-strict-context";
 import { usePageSaver } from "@/hooks/use-page-saver";
 import type { PageSnapshot } from "../../../service/pages/save-page";
 import { trackUmamiEvent } from "@/lib/umami";
 import { UMAMI_EVENTS, UMAMI_PROP_KEYS } from "@/lib/umami-events";
-
-type AutoSaveStatus = "idle" | "dirty" | "saving" | "synced" | "error";
-
-type AutoSaveState = {
-  status: AutoSaveStatus;
-  message: string | null;
-};
-
-type AutoSaveAction =
-  | { type: "MARK_IDLE" }
-  | { type: "MARK_DIRTY" }
-  | { type: "MARK_SAVING" }
-  | { type: "MARK_SYNCED" }
-  | { type: "MARK_ERROR"; message: string };
+import {
+  pageAutoSaveStore,
+  usePageAutoSaveStore,
+  type AutoSaveState,
+  type AutoSaveStatus,
+  type PageAutoSaveControllerActions,
+} from "./use-page-auto-save-store";
 
 const statusLabels: Record<AutoSaveStatus, string> = {
   idle: "Up to date",
@@ -36,67 +26,11 @@ const statusLabels: Record<AutoSaveStatus, string> = {
   error: "Save failed",
 };
 
-const initialState: AutoSaveState = {
-  status: "idle",
-  message: null,
-};
-
-function autoSaveReducer(
-  state: AutoSaveState,
-  action: AutoSaveAction
-): AutoSaveState {
-  switch (action.type) {
-    case "MARK_IDLE":
-      if (state.status === "idle" && state.message === null) {
-        return state;
-      }
-      return { status: "idle", message: null };
-    case "MARK_DIRTY":
-      if (state.status === "dirty" && state.message === null) {
-        return state;
-      }
-      return { status: "dirty", message: null };
-    case "MARK_SAVING":
-      if (state.status === "saving" && state.message === null) {
-        return state;
-      }
-      return { status: "saving", message: null };
-    case "MARK_SYNCED":
-      if (state.status === "synced" && state.message === null) {
-        return state;
-      }
-      return { status: "synced", message: null };
-    case "MARK_ERROR":
-      if (state.status === "error" && state.message === action.message) {
-        return state;
-      }
-      return { status: "error", message: action.message };
-    default:
-      return state;
-  }
-}
-
-type PageAutoSaveState = {
-  status: AutoSaveStatus;
-  statusLabel: string;
-  message: string | null;
-};
-
-type PageAutoSaveActions = {
-  updateDraft: (changes: Partial<PageSnapshot>) => void;
-  markDirty: () => void;
-  markError: () => void;
-};
-
-const [PageAutoSaveStateProvider, usePageAutoSaveState] =
-  getStrictContext<PageAutoSaveState>("PageAutoSaveState");
-const [PageAutoSaveActionsProvider, usePageAutoSaveActions] =
-  getStrictContext<PageAutoSaveActions>("PageAutoSaveActions");
+type PageAutoSaveActions = PageAutoSaveControllerActions;
 
 interface PageAutoSaveControllerProps {
   pageId: string;
   initialSnapshot: PageSnapshot;
-  children: ReactNode;
   debounceMs?: number;
   enabled?: boolean;
 }
@@ -104,14 +38,12 @@ interface PageAutoSaveControllerProps {
 /**
  * Coordinates debounced page snapshot saves and exposes status via context.
  */
-export function PageAutoSaveController({
+export function usePageAutoSaveController({
   pageId,
   initialSnapshot,
   debounceMs = 800,
   enabled = true,
-  children,
 }: PageAutoSaveControllerProps) {
-  const [state, dispatch] = useReducer(autoSaveReducer, initialState);
   const savePage = usePageSaver();
   const savePageRef = useRef(savePage);
   const snapshotRef = useRef<PageSnapshot>(initialSnapshot);
@@ -138,7 +70,7 @@ export function PageAutoSaveController({
       return;
     }
 
-    dispatch({ type: "MARK_SAVING" });
+    pageAutoSaveStore.getState().setStatus("saving");
     const snapshot = snapshotRef.current;
 
     try {
@@ -149,7 +81,7 @@ export function PageAutoSaveController({
       }
 
       syncedSnapshotRef.current = snapshot;
-      dispatch({ type: "MARK_SYNCED" });
+      pageAutoSaveStore.getState().setStatus("synced");
       trackUmamiEvent(
         UMAMI_EVENTS.feature.pageSave.success,
         {
@@ -168,7 +100,7 @@ export function PageAutoSaveController({
 
       const message =
         error instanceof Error ? error.message : statusLabels.error;
-      dispatch({ type: "MARK_ERROR", message });
+      pageAutoSaveStore.getState().setError(message);
       trackUmamiEvent(
         UMAMI_EVENTS.feature.pageSave.error,
         {
@@ -197,13 +129,13 @@ export function PageAutoSaveController({
     syncedSnapshotRef.current = initialSnapshot;
     requestIdRef.current += 1;
     debouncedSave.cancel();
-    dispatch({ type: "MARK_IDLE" });
+    pageAutoSaveStore.getState().setStatus("idle");
   }, [initialSnapshot, debouncedSave]);
 
   useEffect(() => {
     if (!enabled) {
       debouncedSave.cancel();
-      dispatch({ type: "MARK_IDLE" });
+      pageAutoSaveStore.getState().setStatus("idle");
     }
   }, [enabled, debouncedSave]);
 
@@ -232,11 +164,11 @@ export function PageAutoSaveController({
 
       if (isEqual(nextSnapshot, syncedSnapshotRef.current)) {
         debouncedSave.cancel();
-        dispatch({ type: "MARK_IDLE" });
+        pageAutoSaveStore.getState().setStatus("idle");
         return;
       }
 
-      dispatch({ type: "MARK_DIRTY" });
+      pageAutoSaveStore.getState().setStatus("dirty");
       debouncedSave(requestIdRef.current);
     },
     [debouncedSave]
@@ -249,34 +181,77 @@ export function PageAutoSaveController({
 
     requestIdRef.current += 1;
     debouncedSave.cancel();
-    dispatch({ type: "MARK_DIRTY" });
+    pageAutoSaveStore.getState().setStatus("dirty");
   }, [debouncedSave]);
 
   const markError = useCallback(() => {
-    dispatch({ type: "MARK_ERROR", message: statusLabels.error });
+    pageAutoSaveStore.getState().setError(statusLabels.error);
   }, []);
-
-  const stateValue = useMemo(
-    () => ({
-      status: state.status,
-      statusLabel: statusLabels[state.status],
-      message: state.message,
-    }),
-    [state.status, state.message]
-  );
 
   const actionsValue = useMemo(
     () => ({ updateDraft, markDirty, markError }),
     [updateDraft, markDirty, markError]
   );
 
-  return (
-    <PageAutoSaveActionsProvider value={actionsValue}>
-      <PageAutoSaveStateProvider value={stateValue}>
-        {children}
-      </PageAutoSaveStateProvider>
-    </PageAutoSaveActionsProvider>
-  );
+  useEffect(() => {
+    pageAutoSaveStore.getState().setControllerActions(actionsValue);
+    return () => {
+      pageAutoSaveStore.getState().resetControllerActions();
+    };
+  }, [actionsValue]);
+}
+
+type PageAutoSaveState = {
+  status: AutoSaveStatus;
+  statusLabel: string;
+  message: string | null;
+};
+
+function selectPageAutoSaveState(state: AutoSaveState): PageAutoSaveState {
+  return {
+    status: state.status,
+    statusLabel: statusLabels[state.status],
+    message: state.message,
+  };
+}
+
+function usePageAutoSaveState(): PageAutoSaveState;
+function usePageAutoSaveState<T>(
+  selector: (state: PageAutoSaveState) => T
+): T;
+function usePageAutoSaveState<T>(
+  selector?: (state: PageAutoSaveState) => T
+) {
+  const viewRef = useRef<PageAutoSaveState | null>(null);
+
+  return usePageAutoSaveStore((state) => {
+    const view = selectPageAutoSaveState(state);
+    const previous = viewRef.current;
+
+    if (
+      previous &&
+      previous.status === view.status &&
+      previous.message === view.message
+    ) {
+      return selector ? selector(previous) : previous;
+    }
+
+    viewRef.current = view;
+    return selector ? selector(view) : view;
+  });
+}
+
+function usePageAutoSaveActions(): PageAutoSaveActions;
+function usePageAutoSaveActions<T>(
+  selector: (actions: PageAutoSaveActions) => T
+): T;
+function usePageAutoSaveActions<T>(
+  selector?: (actions: PageAutoSaveActions) => T
+) {
+  return usePageAutoSaveStore((state) => {
+    const actions = state.controllerActions;
+    return selector ? selector(actions) : actions;
+  });
 }
 
 export { usePageAutoSaveActions, usePageAutoSaveState };

@@ -10,6 +10,8 @@
       }
     },
     "routeIdToServerBundleId": {
+      "routes/sitemap-index[.]xml": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/sitemap.$lang[.]xml": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/api.delete-account": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/($lang).changelog": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/($lang).feedback": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
@@ -19,8 +21,7 @@
       "routes/($lang)._auth.onboarding": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/($lang)._auth.sign-in": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/($lang)._auth.sign-in.create.sso-callback": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
-      "routes/sitemap.xml": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
-      "routes/robots.txt": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/robots[.]txt": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/en._index": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
       "routes/ko._index": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0"
     },
@@ -30,6 +31,24 @@
         "file": "app/root.tsx",
         "path": "",
         "config": {}
+      },
+      "routes/sitemap-index[.]xml": {
+        "id": "routes/sitemap-index[.]xml",
+        "parentId": "root",
+        "file": "app/routes/sitemap-index[.]xml.ts",
+        "path": "sitemap-index.xml",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/sitemap.$lang[.]xml": {
+        "id": "routes/sitemap.$lang[.]xml",
+        "parentId": "root",
+        "file": "app/routes/sitemap.$lang[.]xml.ts",
+        "path": "sitemap/:lang.xml",
+        "config": {
+          "runtime": "nodejs"
+        }
       },
       "routes/api.delete-account": {
         "id": "routes/api.delete-account",
@@ -114,20 +133,11 @@
         "path": "create/sso-callback",
         "config": {}
       },
-      "routes/sitemap.xml": {
-        "id": "routes/sitemap.xml",
+      "routes/robots[.]txt": {
+        "id": "routes/robots[.]txt",
         "parentId": "root",
-        "file": "app/routes/sitemap.xml.tsx",
-        "path": "sitemap/xml",
-        "config": {
-          "runtime": "nodejs"
-        }
-      },
-      "routes/robots.txt": {
-        "id": "routes/robots.txt",
-        "parentId": "root",
-        "file": "app/routes/robots.txt.tsx",
-        "path": "robots/txt",
+        "file": "app/routes/robots[.]txt.ts",
+        "path": "robots.txt",
         "config": {
           "runtime": "nodejs"
         }
@@ -170,6 +180,18 @@
         "id": "root",
         "file": "root.tsx",
         "path": ""
+      },
+      "routes/sitemap-index[.]xml": {
+        "id": "routes/sitemap-index[.]xml",
+        "parentId": "root",
+        "file": "routes/sitemap-index[.]xml.ts",
+        "path": "sitemap-index.xml"
+      },
+      "routes/sitemap.$lang[.]xml": {
+        "id": "routes/sitemap.$lang[.]xml",
+        "parentId": "root",
+        "file": "routes/sitemap.$lang[.]xml.ts",
+        "path": "sitemap/:lang.xml"
       },
       "routes/api.delete-account": {
         "id": "routes/api.delete-account",
@@ -232,17 +254,11 @@
         "file": "routes/($lang)._auth.sign-in.create.sso-callback.tsx",
         "path": "create/sso-callback"
       },
-      "routes/sitemap.xml": {
-        "id": "routes/sitemap.xml",
+      "routes/robots[.]txt": {
+        "id": "routes/robots[.]txt",
         "parentId": "root",
-        "file": "routes/sitemap.xml.tsx",
-        "path": "sitemap/xml"
-      },
-      "routes/robots.txt": {
-        "id": "routes/robots.txt",
-        "parentId": "root",
-        "file": "routes/robots.txt.tsx",
-        "path": "robots/txt"
+        "file": "routes/robots[.]txt.ts",
+        "path": "robots.txt"
       },
       "routes/en._index": {
         "id": "routes/en._index",
@@ -272,6 +288,16 @@
         "path": "",
         "file": "root.tsx",
         "children": [
+          {
+            "id": "routes/sitemap-index[.]xml",
+            "file": "routes/sitemap-index[.]xml.ts",
+            "path": "sitemap-index.xml"
+          },
+          {
+            "id": "routes/sitemap.$lang[.]xml",
+            "file": "routes/sitemap.$lang[.]xml.ts",
+            "path": "sitemap/:lang.xml"
+          },
           {
             "id": "routes/api.delete-account",
             "file": "routes/api.delete-account.tsx",
@@ -330,14 +356,9 @@
             ]
           },
           {
-            "id": "routes/sitemap.xml",
-            "file": "routes/sitemap.xml.tsx",
-            "path": "sitemap/xml"
-          },
-          {
-            "id": "routes/robots.txt",
-            "file": "routes/robots.txt.tsx",
-            "path": "robots/txt"
+            "id": "routes/robots[.]txt",
+            "file": "routes/robots[.]txt.ts",
+            "path": "robots.txt"
           },
           {
             "id": "routes/en._index",

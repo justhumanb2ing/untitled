@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Layout } from "react-grid-layout";
 import { gridBounds, type LayoutConstraint } from "react-grid-layout/core";
 import { Responsive, useContainerWidth } from "react-grid-layout";
+import { useMapBrickAutoSave } from "@/hooks/use-map-brick-auto-save";
+import { useMediaBrickLinkEditor } from "@/hooks/use-media-brick-link-editor";
 import {
   BREAKPOINTS,
   CONTAINER_PADDING,
@@ -237,94 +239,24 @@ export default function PageGridBrickSection({
     updateMapBrick,
     updateMediaBrickLink,
   } = usePageGridActions();
-  const mapBrickZoomRef = useRef<Record<string, number | null>>({});
-  const linkInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const [mediaLinkPopovers, setMediaLinkPopovers] = useState<
-    Record<string, boolean>
-  >({});
-  const [mediaLinkInputs, setMediaLinkInputs] = useState<
-    Record<string, string>
-  >({});
-  useEffect(() => {
-    const nextZooms: Record<string, number | null> = {};
-    for (const brick of bricks) {
-      if (!isMapPageGridBrick(brick)) {
-        continue;
-      }
 
-      nextZooms[brick.id] = brick.data.zoom;
-    }
-    mapBrickZoomRef.current = nextZooms;
-  }, [bricks]);
+  const { handleViewportChange: handleMapViewportChange, handleSearchSelection: handleMapSearchSelection } =
+    useMapBrickAutoSave({
+      bricks,
+      updateMapBrick,
+    });
 
-  const mapAutoSaveTimersRef = useRef<
-    Record<string, ReturnType<typeof setTimeout>>
-  >({});
-  const pendingMapViewportsRef = useRef<Record<string, MapCanvasViewport>>({});
-
-  useEffect(() => {
-    return () => {
-      Object.values(mapAutoSaveTimersRef.current).forEach(clearTimeout);
-    };
-  }, []);
-  const scheduleMapUpdate = useCallback(
-    (brickId: string, viewport: MapCanvasViewport) => {
-      pendingMapViewportsRef.current[brickId] = viewport;
-
-      if (mapAutoSaveTimersRef.current[brickId]) {
-        clearTimeout(mapAutoSaveTimersRef.current[brickId]);
-      }
-
-      mapAutoSaveTimersRef.current[brickId] = setTimeout(() => {
-        const nextViewport = pendingMapViewportsRef.current[brickId];
-        if (!nextViewport) {
-          delete mapAutoSaveTimersRef.current[brickId];
-          return;
-        }
-
-        const [lng, lat] = nextViewport.center;
-        const normalizedZoom = Number.isFinite(nextViewport.zoom)
-          ? Number(nextViewport.zoom.toFixed(2))
-          : MAP_DEFAULT_ZOOM;
-
-        updateMapBrick({
-          id: brickId,
-          data: {
-            lat,
-            lng,
-            zoom: normalizedZoom,
-            href: buildGoogleMapsHref(lat, lng, normalizedZoom),
-          },
-        });
-
-        delete pendingMapViewportsRef.current[brickId];
-        delete mapAutoSaveTimersRef.current[brickId];
-      }, 650);
-    },
-    [updateMapBrick]
-  );
-
-  const handleMapSearchSelection = useCallback(
-    (brickId: string, nextCenter: [number, number]) => {
-      const recordedZoom = mapBrickZoomRef.current[brickId];
-      const targetZoom = Number.isFinite(recordedZoom ?? NaN)
-        ? recordedZoom!
-        : MAP_DEFAULT_ZOOM;
-
-      scheduleMapUpdate(brickId, {
-        center: nextCenter,
-        zoom: targetZoom,
-      });
-    },
-    [scheduleMapUpdate]
-  );
-
-  const handleMapViewportChange = useCallback(
-    (brickId: string, viewport: MapCanvasViewport) => {
-      scheduleMapUpdate(brickId, viewport);
-    },
-    [scheduleMapUpdate]
-  );
+  const {
+    linkInputRefs,
+    isPopoverOpen: isMediaLinkPopoverOpen,
+    getInputValue: getMediaLinkInputValue,
+    handlePopoverChange: handleMediaLinkPopoverChange,
+    handleInputChange: handleMediaLinkInputChange,
+    handleInputClear: handleMediaLinkInputClear,
+    handleSubmit: handleMediaLinkSubmit,
+  } = useMediaBrickLinkEditor({
+    updateMediaBrickLink,
+  });
   const layouts = useMemo(() => {
     const baseLayouts = buildLayoutsFromBricks(bricks);
     if (isEditable) {
@@ -415,55 +347,6 @@ export default function PageGridBrickSection({
     updateLayout(layout, breakpoint);
   };
 
-  const handleMediaLinkPopoverChange = useCallback(
-    (brickId: string, open: boolean, currentValue: string) => {
-      setMediaLinkPopovers((prev) => ({
-        ...prev,
-        [brickId]: open,
-      }));
-
-      if (open) {
-        setMediaLinkInputs((prev) => ({
-          ...prev,
-          [brickId]: currentValue,
-        }));
-      }
-    },
-    []
-  );
-
-  const handleMediaLinkInputChange = useCallback(
-    (brickId: string, value: string) => {
-      setMediaLinkInputs((prev) => ({
-        ...prev,
-        [brickId]: value,
-      }));
-    },
-    []
-  );
-
-  const handleMediaLinkInputClear = useCallback((brickId: string) => {
-    setMediaLinkInputs((prev) => ({
-      ...prev,
-      [brickId]: "",
-    }));
-    linkInputRefs.current[brickId]?.focus();
-  }, []);
-
-  const handleMediaLinkSubmit = useCallback(
-    (brickId: string, value: string) => {
-      updateMediaBrickLink({
-        id: brickId,
-        linkUrl: value.length > 0 ? value : null,
-      });
-      setMediaLinkPopovers((prev) => ({
-        ...prev,
-        [brickId]: false,
-      }));
-    },
-    [updateMediaBrickLink]
-  );
-
   return (
     <div className={"space-y-4"}>
       <div
@@ -510,8 +393,7 @@ export default function PageGridBrickSection({
               const mediaLinkValue = isMediaBrick
                 ? (brick.data.link_url ?? "")
                 : "";
-              const mediaLinkInputValue =
-                mediaLinkInputs[brick.id] ?? mediaLinkValue;
+              const mediaLinkInputValue = getMediaLinkInputValue(brick.id, mediaLinkValue);
               const centerOverride =
                 mapCenters[brick.id] ?? baseCenter ?? undefined;
               const mapPopoverState = activeMapPopover[brick.id] ?? null;
@@ -524,10 +406,10 @@ export default function PageGridBrickSection({
                       handleMapViewportChange(brick.id, viewport),
                   }
                 : undefined;
-              const isMediaLinkPopoverOpen = !!mediaLinkPopovers[brick.id];
+              const popoverOpen = isMediaLinkPopoverOpen(brick.id);
               const controlsAvailable = !!controlsReady[brick.id];
               const controlsPinned =
-                isMediaLinkPopoverOpen || mapPopoverState !== null;
+                popoverOpen || mapPopoverState !== null;
 
               return (
                 <div
@@ -611,7 +493,7 @@ export default function PageGridBrickSection({
                         {isMediaBrick && (
                           <div className="flex items-center">
                             <Popover
-                              open={isMediaLinkPopoverOpen}
+                              open={popoverOpen}
                               onOpenChange={(open) =>
                                 handleMediaLinkPopoverChange(
                                   brick.id,
@@ -629,11 +511,11 @@ export default function PageGridBrickSection({
                                     data-no-drag
                                     className={cn(
                                       "transition-colors rounded-lg focus-visible:z-10",
-                                      isMediaLinkPopoverOpen
+                                      popoverOpen
                                         ? "bg-brand! hover:bg-brand! text-white"
                                         : "hover:bg-white/10"
                                     )}
-                                    aria-pressed={isMediaLinkPopoverOpen}
+                                    aria-pressed={popoverOpen}
                                   >
                                     <motion.p whileTap={{ scale: 0.8 }}>
                                       {mediaLinkValue ? (
