@@ -10,9 +10,7 @@ import {
 } from "@/hooks/page/use-page-auto-save-controller";
 import type { PageSavePayload, PageSnapshot } from "../../service/pages/save-page";
 
-const { mockSavePage } = vi.hoisted(() => ({
-  mockSavePage: vi.fn(async (_payload: PageSavePayload) => undefined),
-}));
+const mockSavePage = vi.fn(async (_payload: PageSavePayload) => undefined);
 
 vi.mock("es-toolkit", async () => {
   const actual = await vi.importActual<typeof import("es-toolkit")>(

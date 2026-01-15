@@ -1,10 +1,13 @@
-import { useCallback, useEffect, useRef, type RefObject } from "react";
+import { useCallback, useRef, type RefObject } from "react";
 
 import EditableParagraph from "@/components/profile/editable-paragraph";
 import { usePageGridActions } from "@/components/page/page-grid-context";
 import { GRID_MARGIN, type GridBreakpoint } from "@/config/grid-rule";
 import type { PageGridBrick } from "../../../service/pages/page-grid";
 import { cn } from "@/lib/utils";
+import { usePageGridTextBrickResize } from "./hooks/use-page-grid-text-brick-resize";
+import { usePageGridTextBrickEditHandlers } from "./hooks/use-page-grid-text-brick-edit-handlers";
+import { calculatePageGridTextRowSpan } from "./page-grid-text-brick-utils";
 
 type PageGridTextBrickProps = {
   brick: PageGridBrick<"text">;
@@ -19,36 +22,14 @@ export default function PageGridTextBrick({
 }: PageGridTextBrickProps) {
   const { updateTextBrick, updateTextBrickRowSpanLocal, isEditable } =
     usePageGridActions();
-  const paragraphRef = useRef<HTMLParagraphElement>(null);
-  const latestTextRef = useRef(brick.data.text);
-
-  useEffect(() => {
-    latestTextRef.current = brick.data.text;
-  }, [brick.data.text]);
+  const paragraphRef = useRef<HTMLParagraphElement | null>(null);
 
   const resolveRowSpan = useCallback(() => {
-    const element = paragraphRef.current;
-    if (!element || rowHeight <= 0) {
-      return 1;
-    }
-
-    const scrollHeight = element.scrollHeight;
-    const computed = window.getComputedStyle(element);
-    const lineHeight = Number.parseFloat(computed.lineHeight);
-    const paddingTop = Number.parseFloat(computed.paddingTop);
-    const paddingBottom = Number.parseFloat(computed.paddingBottom);
-    const singleLineHeight = Number.isFinite(lineHeight)
-      ? lineHeight + paddingTop + paddingBottom
-      : scrollHeight;
-    const targetHeight = Math.max(scrollHeight, singleLineHeight);
-
-    if (!Number.isFinite(targetHeight) || targetHeight <= 0) {
-      return 1;
-    }
-
-    const marginY = GRID_MARGIN["desktop"]![1];
-    const rawSpan = (targetHeight + marginY) / (rowHeight + marginY);
-    return Number(rawSpan.toFixed(2));
+    return calculatePageGridTextRowSpan(
+      paragraphRef.current,
+      rowHeight,
+      GRID_MARGIN["desktop"]![1]
+    );
   }, [rowHeight]);
 
   const pushUpdate = useCallback(
@@ -65,56 +46,20 @@ export default function PageGridTextBrick({
     [brick.id, breakpoint, resolveRowSpan, updateTextBrick]
   );
 
-  const handleValueChange = useCallback(
-    (value: string) => {
-      latestTextRef.current = value;
-      pushUpdate(value, true);
-    },
-    [pushUpdate]
-  );
+  const { latestTextRef, handleValueChange, handleValueBlur } =
+    usePageGridTextBrickEditHandlers(brick.data.text, pushUpdate);
 
-  const handleValueBlur = useCallback(() => {
-    pushUpdate(latestTextRef.current, false);
-  }, [pushUpdate]);
-
-  useEffect(() => {
-    const element = paragraphRef.current;
-    if (!element) {
-      return;
-    }
-
-    const handleResize = () => {
-      if (!isEditable && breakpoint === "mobile") {
-        updateTextBrickRowSpanLocal({
-          id: brick.id,
-          rowSpan: resolveRowSpan(),
-          breakpoint,
-        });
-        return;
-      }
-
-      if (!isEditable) {
-        return;
-      }
-
-      const isEditing = brick.status === "editing";
-      pushUpdate(latestTextRef.current, isEditing, isEditing);
-    };
-
-    handleResize();
-    const observer = new ResizeObserver(handleResize);
-    observer.observe(element);
-
-    return () => observer.disconnect();
-  }, [
-    brick.id,
-    brick.status,
+  usePageGridTextBrickResize({
+    paragraphRef: paragraphRef as RefObject<HTMLParagraphElement>,
     breakpoint,
     isEditable,
-    pushUpdate,
+    brickId: brick.id,
+    brickStatus: brick.status,
+    latestTextRef,
     resolveRowSpan,
+    pushUpdate,
     updateTextBrickRowSpanLocal,
-  ]);
+  });
 
   return (
     <div className="flex w-full min-w-0 box-border items-center rounded-xl min-h-16! px-2 hover:shadow-[0px_6px_13px_-6px_rgba(0,0,0,0.1)] hover:border-[0.5px] transition-all duration-150 py-2">
